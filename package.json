@@ -1,0 +1,25 @@
+{
+  "name": "pest-plugin-browser",
+  "version": "1.0.0",
+  "description": "This repository contains the Pest Plugin Browser.",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pestphp/pest-plugin-browser.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/pestphp/pest-plugin-browser/issues"
+  },
+  "homepage": "https://github.com/pestphp/pest-plugin-browser#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.50.1",
+    "@types/node": "^22.13.1"
+  }
+}
