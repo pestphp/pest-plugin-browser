@@ -1,0 +1,53 @@
+{
+    "name": "pestphp/pest-plugin-browser",
+    "description": "Pest plugin to test browser interactions",
+    "keywords": [
+        "php",
+        "framework",
+        "pest",
+        "unit",
+        "test",
+        "testing",
+        "browser"
+    ],
+    "license": "MIT",
+    "require": {
+        "php": "^8.2",
+        "pestphp/pest": "^3.0.0",
+        "pestphp/pest-plugin": "^3.0.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Pest\\PluginName\\": "src/"
+        },
+        "files": [
+            "src/Autoload.php"
+        ]
+    },
+    "require-dev": {
+        "pestphp/pest-dev-tools": "^3.4.0"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "sort-packages": true,
+        "preferred-install": "dist",
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "scripts": {
+        "refacto": "rector",
+        "lint": "pint",
+        "test:refacto": "rector --dry-run",
+        "test:lint": "pint --test",
+        "test:types": "phpstan analyse --ansi",
+        "test:unit": "pest --colors=always",
+        "test": [
+            "@test:refacto",
+            "@test:lint",
+            "@test:types",
+            "@test:unit"
+        ]
+    }
+}
