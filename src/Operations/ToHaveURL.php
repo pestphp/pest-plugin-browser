@@ -10,15 +10,17 @@ use Pest\Browser\Traits\NotOperationTrait;
 /**
  * @internal
  */
-final class ToHaveTitle implements Operation
+final class ToHaveURL implements Operation
 {
     use NotOperationTrait;
 
     /**
      * Creates an operation instance.
+     * @param string $url
+     * @param bool $not
      */
     public function __construct(
-        private string $title,
+        private string $url,
         bool $not = false,
     ) {
         $this->initializeNot($not);
@@ -26,9 +28,9 @@ final class ToHaveTitle implements Operation
 
     public function compile(): string
     {
-        return sprintf("await expect(page)%s.toHaveTitle(/%s/);",
+        return sprintf("await expect(page)%s.toHaveURL(/%s/);",
             $this->getNotSuffix(),
-            $this->title
+            $this->url
         );
     }
 }

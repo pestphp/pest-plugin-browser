@@ -27,9 +27,39 @@ final class PendingTest
     /**
      * Checks if the page has a title.
      */
-    public function toHaveTitle(string $title): self
+    public function toHaveTitle(string $title, bool $not = false): self
     {
-        $this->operations[] = new Operations\ToHaveTitle($title);
+        $this->operations[] = new Operations\ToHaveTitle($title, $not);
+
+        return $this;
+    }
+
+    /**
+     * Checks if the page doesn't have a title.
+     */
+    public function doesntHaveTitle(string $title): self
+    {
+        $this->operations[] = new Operations\DoesntHaveTitle($title);
+
+        return $this;
+    }
+
+    /**
+     * Checks if the page has a URL.
+     */
+    public function toHaveURL(string $url, bool $not = false): self
+    {
+        $this->operations[] = new Operations\ToHaveURL($url, $not);
+
+        return $this;
+    }
+
+    /**
+     * Checks if the page doesn't have a URL.
+     */
+    public function doesntHaveURL(string $url): self
+    {
+        $this->operations[] = new Operations\DoesntHaveURL($url);
 
         return $this;
     }
