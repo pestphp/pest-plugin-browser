@@ -35,6 +35,16 @@ final class PendingTest
     }
 
     /**
+     * Checks if the page does not have a title.
+     */
+    public function toNotHaveTitle(string $title): self
+    {
+        $this->operations[] = new Operations\ToNotHaveTitle($title);
+
+        return $this;
+    }
+
+    /**
      * Build the test result.
      */
     public function build(): void
