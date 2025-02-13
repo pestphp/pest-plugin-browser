@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Pest\Browser;
 
+use Pest\Browser\Contracts\Operation;
+
 /**
  * @internal
  */
@@ -11,8 +13,18 @@ final class PendingTest
 {
     /**
      * The pending operations.
+     *
+     * @var array<int, Operation>
      */
     private array $operations = [];
+
+    /**
+     * Ends the chain and builds the test result.
+     */
+    public function __destruct()
+    {
+        $this->build();
+    }
 
     /**
      * Visits a URL.
@@ -48,13 +60,5 @@ final class PendingTest
         $result = $worker->run();
 
         expect($result->ok())->toBeTrue();
-    }
-
-    /**
-     * Ends the chain and builds the test result.
-     */
-    public function __destruct()
-    {
-        $this->build();
     }
 }
