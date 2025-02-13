@@ -14,13 +14,13 @@ it('may have a title at laravel', function () {
 
 it('may click the "get started" button at laravel', function () {
     visit('https://laravel.com')
-        ->click('Get Started')
+        ->clickLink('Get Started')
         ->assertUrlIs('https://laravel.com/docs/11.x');
 
     // -- or --
 
     $browser = visit('https://laravel.com')
-        ->click('Get Started');
+        ->clickLink('Get Started');
 
     expect($browser->response()->url())->toBe('https://laravel.com/docs/11.x');
 });

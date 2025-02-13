@@ -9,7 +9,7 @@ use Pest\Browser\Contracts\Operation;
 /**
  * @internal
  */
-final readonly class Click implements Operation
+final readonly class ClickLink implements Operation
 {
     /**
      * Creates an operation instance.
@@ -22,6 +22,6 @@ final readonly class Click implements Operation
 
     public function compile(): string
     {
-        return sprintf("await page.getByText(/%s/).click();", $this->text);
+        return sprintf("await page.locator('a').filter({ hasText: /%s/i }).click();", $this->text);
     }
 }

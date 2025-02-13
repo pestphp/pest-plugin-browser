@@ -40,9 +40,9 @@ final class PendingTest
     /**
      * Clicks some text on the page.
      */
-    public function click(string $text): self
+    public function clickLink(string $text): self
     {
-        $this->operations[] = new Operations\Click($text);
+        $this->operations[] = new Operations\ClickLink($text);
 
         return $this;
     }
