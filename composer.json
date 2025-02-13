@@ -13,7 +13,6 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
-        "laravel/pint": "^1.20",
         "pestphp/pest": "^3.0.0",
         "pestphp/pest-plugin": "^3.0.0",
         "symfony/process": "^7.2"
@@ -27,6 +26,7 @@
         ]
     },
     "require-dev": {
+        "laravel/pint": "^1.20",
         "pestphp/pest-dev-tools": "^3.4.0"
     },
     "minimum-stability": "dev",
