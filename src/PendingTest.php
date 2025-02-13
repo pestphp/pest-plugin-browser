@@ -35,7 +35,7 @@ final class PendingTest
     }
 
     /**
-     * Build the test result.
+     * Compile the JavaScript test file.
      */
     public function compile(): void
     {
