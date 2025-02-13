@@ -33,7 +33,7 @@ final class Compiler
         $content = implode(
             "\n",
             array_map(
-                static fn (Operation $operation): string => $operation->compile(),
+                static fn (Operation $operation): string => "\t{$operation->compile()}",
                 $this->operations,
             ),
         );
@@ -42,7 +42,17 @@ final class Compiler
             import { test, expect } from '@playwright/test';
 
             test('runtime', async ({ page }) => {
-                $content
+            $content
+
+                const response = await page.reload();
+                test.info().annotations.push({
+                    type: '_response',
+                    description: JSON.stringify({
+                        headers: response.headers(),
+                        status: response.status(),
+                        url: response.url(),
+                    })
+                });
             });
             JS,
         );
