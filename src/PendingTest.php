@@ -35,6 +35,16 @@ final class PendingTest
     }
 
     /**
+     * Takes a screenshot of the page.
+     */
+    public function pageScreenshot(string $path, bool $fullPage = false): self
+    {
+        $this->operations[] = new Operations\PageScreenshot($path, $fullPage);
+
+        return $this;
+    }
+
+    /**
      * Build the test result.
      */
     public function build(): void
