@@ -50,6 +50,13 @@ final class PendingTest
         expect($result->ok())->toBeTrue();
     }
 
+    public function elementScreenshot(string $selector, string $path): self
+    {
+        $this->operations[] = new Operations\ElementScreenshot($selector, $path);
+
+        return $this;
+    }
+
     /**
      * Ends the chain and builds the test result.
      */
