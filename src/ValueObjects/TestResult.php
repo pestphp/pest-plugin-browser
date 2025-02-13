@@ -28,7 +28,7 @@ final readonly class TestResult
     }
 
     /**
-     * Get the final response the test landed on.
+     * Get the final response from the test result.
      */
     public function response(): TestResultResponse
     {

@@ -22,6 +22,7 @@ final readonly class TestResultResponse
      */
     public function __construct(array $annotations)
     {
+        /** @todo would be cleaner with collect() and Str facade */
         $annotation = Arr::last(array_filter($annotations, function ($annotation) {
             return Arr::get($annotation, 'type') === '_response';
         }));
