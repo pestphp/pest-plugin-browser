@@ -4,25 +4,25 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Operations;
 
+use Pest\Browser\Contracts\Locator;
 use Pest\Browser\Contracts\Operation;
 
 /**
  * @internal
  */
-final readonly class DoesntHaveTitle implements Operation
+final readonly class Click implements Operation
 {
     /**
      * Creates an operation instance.
+     * @param Locator $locator
      */
-    public function __construct(
-        private string $title,
-    )
+    public function __construct(private Locator $locator)
     {
         //
     }
 
     public function compile(): string
     {
-        return (new ToHaveTitle($this->title, not: true))->compile();
+        return sprintf("await %s.click();", $this->locator->compile());
     }
 }

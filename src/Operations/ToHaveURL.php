@@ -20,9 +20,10 @@ final class ToHaveURL implements Operation
      * @param bool $not
      */
     public function __construct(
-        private string $url,
-        bool $not = false,
-    ) {
+        private readonly string $url,
+        bool                    $not = false,
+    )
+    {
         $this->initializeNot($not);
     }
 

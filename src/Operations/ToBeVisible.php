@@ -11,27 +11,28 @@ use Pest\Browser\Traits\NotOperationTrait;
 /**
  * @internal
  */
-final class ToHaveTitle implements Operation
+final readonly class ToBeVisible implements Operation
 {
     use StrOrRegExp;
-    use NotOperationTrait;
 
     /**
      * Creates an operation instance.
+     * @param string $element
+     * @param string $name
      */
     public function __construct(
-        private readonly string $title,
-        bool                    $not = false,
+        private string $element,
+        private string $name
     )
     {
-        $this->initializeNot($not);
+        //
     }
 
     public function compile(): string
     {
-        return sprintf("await expect(page)%s.toHaveTitle(%s);",
-            $this->getNotSuffix(),
-            $this->strOrRegExp($this->title)
+        return sprintf("await expect(page.getByRole('%s', { name: %s })).toBeVisible();",
+            $this->element,
+            $this->strOrRegExp($this->name)
         );
     }
 }

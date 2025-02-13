@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Pest\Browser;
 
+use Pest\Browser\Locators\GetByRole;
+
 /**
  * @internal
  */
@@ -60,6 +62,26 @@ final class PendingTest
     public function doesntHaveURL(string $url): self
     {
         $this->operations[] = new Operations\DoesntHaveURL($url);
+
+        return $this;
+    }
+
+    /**
+     * Clicks an element.
+     */
+    public function click(string $locator, string $role, string $name): self
+    {
+        $this->operations[] = new Operations\Click(new $locator($role, $name));
+
+        return $this;
+    }
+
+    /**
+     * Checks if an element is visible.
+     */
+    public function toBeVisible(string $element, string $name): self
+    {
+        $this->operations[] = new Operations\ToBeVisible($element, $name);
 
         return $this;
     }
