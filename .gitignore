@@ -10,7 +10,7 @@ coverage.xml
 *.swp
 *.swo
 .phpunit.cache
-
+.temp
 # Playwright
 node_modules/
 /test-results/
