@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Pest\Browser;
 
+use Pest\Browser\Contracts\Operation;
+use Pest\Browser\ValueObjects\TestResult;
+
 /**
  * @internal
  */
@@ -11,8 +14,18 @@ final class PendingTest
 {
     /**
      * The pending operations.
+     *
+     * @var array<int, Operation>
      */
     private array $operations = [];
+
+    /**
+     * Ends the chain and builds the test result.
+     */
+    public function __destruct()
+    {
+        $this->compile();
+    }
 
     /**
      * Visits a URL.
@@ -40,14 +53,32 @@ final class PendingTest
     public function toNotHaveTitle(string $title): self
     {
         $this->operations[] = new Operations\ToNotHaveTitle($title);
+    }
+
+    /**
+     * Clicks some text on the page.
+     */
+    public function clickLink(string $text): self
+    {
+        $this->operations[] = new Operations\ClickLink($text);
 
         return $this;
     }
 
     /**
-     * Build the test result.
+     * Checks if the page url is matching.
      */
-    public function build(): void
+    public function assertUrlIs(string $url): self
+    {
+        $this->operations[] = new Operations\AssertUrlIs($url);
+
+        return $this;
+    }
+
+    /**
+     * Compile the JavaScript test file.
+     */
+    public function compile(): TestResult
     {
         $compiler = new Compiler($this->operations);
 
@@ -58,13 +89,7 @@ final class PendingTest
         $result = $worker->run();
 
         expect($result->ok())->toBeTrue();
-    }
 
-    /**
-     * Ends the chain and builds the test result.
-     */
-    public function __destruct()
-    {
-        $this->build();
+        return $result;
     }
 }
