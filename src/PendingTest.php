@@ -53,6 +53,8 @@ final class PendingTest
     public function toNotHaveTitle(string $title): self
     {
         $this->operations[] = new Operations\ToNotHaveTitle($title);
+
+        return $this;
     }
 
     /**
