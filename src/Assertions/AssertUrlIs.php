@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Pest\Browser\Operations;
+namespace Pest\Browser\Assertions;
 
 use Pest\Browser\Contracts\Operation;
 

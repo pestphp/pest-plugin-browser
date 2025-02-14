@@ -14,7 +14,7 @@ final readonly class Compiler
     /**
      * The path to the tests.
      */
-    private const TEST_PATH = __DIR__.'/../.temp/e2e/runtime.spec.js';
+    public const TEST_PATH = __DIR__.'/../.temp/e2e/runtime.spec.js';
 
     /**
      * @param  array<int, Operation>  $operations

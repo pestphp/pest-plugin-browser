@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Pest\Browser;
 
+use Pest\Browser\Contracts\Assertions;
 use Pest\Browser\Contracts\Operation;
 use Pest\Browser\ValueObjects\TestResult;
 
@@ -84,7 +85,7 @@ final class PendingTest
      */
     public function assertUrlIs(string $url): self
     {
-        $this->operations[] = new Operations\AssertUrlIs($url);
+        $this->operations[] = new Assertions\AssertUrlIs($url);
 
         return $this;
     }
