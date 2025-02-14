@@ -21,16 +21,16 @@ final class ToHaveURL implements Operation
      */
     public function __construct(
         private readonly string $url,
-        bool                    $not = false,
+        protected readonly bool $not = false,
     )
     {
-        $this->initializeNot($not);
+        //
     }
 
     public function compile(): string
     {
         return sprintf("await expect(page)%s.toHaveURL(/%s/);",
-            $this->getNotSuffix(),
+            $this->isNotOperation(),
             $this->url
         );
     }

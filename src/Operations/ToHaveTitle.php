@@ -21,16 +21,16 @@ final class ToHaveTitle implements Operation
      */
     public function __construct(
         private readonly string $title,
-        bool                    $not = false,
+        protected readonly bool $not = false,
     )
     {
-        $this->initializeNot($not);
+        //
     }
 
     public function compile(): string
     {
         return sprintf("await expect(page)%s.toHaveTitle(%s);",
-            $this->getNotSuffix(),
+            $this->isNotOperation(),
             $this->strOrRegExp($this->title)
         );
     }

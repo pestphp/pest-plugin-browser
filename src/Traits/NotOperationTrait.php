@@ -7,16 +7,11 @@ namespace Pest\Browser\Traits;
 trait NotOperationTrait
 {
     /**
-     * Whether the assertion is negated.
+     * Get the not operation.
+     *
+     * @return string
      */
-    private bool $not;
-
-    public function initializeNot(bool $not = false): void
-    {
-        $this->not = $not;
-    }
-
-    protected function getNotSuffix(): string
+    protected function isNotOperation(): string
     {
         return $this->not ? '.not' : '';
     }
