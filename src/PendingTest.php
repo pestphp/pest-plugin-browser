@@ -7,6 +7,8 @@ namespace Pest\Browser;
 use Pest\Browser\Contracts\Operation;
 use Pest\Browser\ValueObjects\TestResult;
 
+// Modern PHP Tooling
+
 /**
  * @internal
  */
@@ -38,6 +40,16 @@ final class PendingTest
     }
 
     /**
+     * Takes a screenshot.
+     */
+    public function screenshot(?string $path = null): self
+    {
+        $this->operations[] = new Operations\Screenshot($path);
+
+        return $this;
+    }
+
+    /**
      * Checks if the page has a title.
      */
     public function toHaveTitle(string $title): self
@@ -53,6 +65,8 @@ final class PendingTest
     public function toNotHaveTitle(string $title): self
     {
         $this->operations[] = new Operations\ToNotHaveTitle($title);
+
+        return $this;
     }
 
     /**
