@@ -48,6 +48,14 @@ final class PendingTest
     }
 
     /**
+     * Checks if the page does not have a title.
+     */
+    public function toNotHaveTitle(string $title): self
+    {
+        $this->operations[] = new Operations\ToNotHaveTitle($title);
+    }
+
+    /**
      * Clicks some text on the page.
      */
     public function clickLink(string $text): self

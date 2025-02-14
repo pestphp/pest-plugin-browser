@@ -23,3 +23,8 @@ it('may click the "get started" button at laravel', function () {
         ->clickLink('Get Started')
         ->assertUrlIs('https://laravel.com/docs/11.x');
 });
+
+it('should not have the title "Laravel Dusk"', function () {
+    visit('https://laravel.com')
+        ->toNotHaveTitle('Laravel Dusk');
+});
