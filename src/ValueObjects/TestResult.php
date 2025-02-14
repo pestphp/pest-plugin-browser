@@ -14,6 +14,7 @@ final readonly class TestResult
      */
     public function __construct(
         private bool $ok,
+        private TestResultResponse $response,
     ) {
         //
     }
@@ -24,5 +25,13 @@ final readonly class TestResult
     public function ok(): bool
     {
         return $this->ok;
+    }
+
+    /**
+     * Get the final response from the test result.
+     */
+    public function response(): TestResultResponse
+    {
+        return $this->response;
     }
 }

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Pest\Browser;
 
+use Pest\Browser\ValueObjects\TestResult;
+use Pest\Browser\ValueObjects\TestResultResponse;
 use Pest\Browser\Contracts\Operation;
 
 /**
@@ -47,9 +49,37 @@ final class PendingTest
     }
 
     /**
+     * Clicks some text on the page.
+     */
+    public function clickLink(string $text): self
+    {
+        $this->operations[] = new Operations\ClickLink($text);
+
+        return $this;
+    }
+
+    /**
+     * Checks if the page url is matching.
+     */
+    public function assertUrlIs(string $url): self
+    {
+        $this->operations[] = new Operations\AssertUrlIs($url);
+
+        return $this;
+    }
+
+    /**
+     * Build and return the final response the test received.
+     */
+    public function response(): TestResultResponse
+    {
+        return $this->build()->response();
+    }
+
+    /**
      * Compile the JavaScript test file.
      */
-    public function compile(): void
+    public function build(): void
     {
         $compiler = new Compiler($this->operations);
 
@@ -60,5 +90,7 @@ final class PendingTest
         $result = $worker->run();
 
         expect($result->ok())->toBeTrue();
+
+        return $result;
     }
 }

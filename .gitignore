@@ -16,3 +16,4 @@ node_modules/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+.temp/e2e

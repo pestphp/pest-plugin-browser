@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Pest\Browser;
 
 use Pest\Browser\ValueObjects\TestResult;
+use Pest\Browser\ValueObjects\TestResultResponse;
+use Pest\Support\Arr;
 use Symfony\Component\Process\Process;
 
 /**
@@ -26,6 +28,9 @@ final class Worker
         // @phpstan-ignore-next-line
         $outputAsArray = json_decode($output, true);
 
-        return new TestResult($outputAsArray['suites'][0]['specs'][0]['ok']);
+        $ok = Arr::get($outputAsArray, 'suites.0.specs.0.ok');
+        $annotations = Arr::get($outputAsArray, 'suites.0.specs.0.tests.0.annotations');
+
+        return new TestResult($ok, new TestResultResponse($annotations));
     }
 }
