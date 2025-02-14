@@ -47,9 +47,9 @@ final class PendingTest
     }
 
     /**
-     * Build the test result.
+     * Compile the JavaScript test file.
      */
-    public function build(): void
+    public function compile(): void
     {
         $compiler = new Compiler($this->operations);
 
@@ -60,5 +60,13 @@ final class PendingTest
         $result = $worker->run();
 
         expect($result->ok())->toBeTrue();
+    }
+
+    /**
+     * Ends the chain and builds the test result.
+     */
+    public function __destruct()
+    {
+        $this->compile();
     }
 }
