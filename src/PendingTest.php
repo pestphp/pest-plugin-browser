@@ -23,7 +23,7 @@ final class PendingTest
      */
     public function __destruct()
     {
-        $this->build();
+        $this->compile();
     }
 
     /**
@@ -60,13 +60,5 @@ final class PendingTest
         $result = $worker->run();
 
         expect($result->ok())->toBeTrue();
-    }
-
-    /**
-     * Ends the chain and builds the test result.
-     */
-    public function __destruct()
-    {
-        $this->compile();
     }
 }
