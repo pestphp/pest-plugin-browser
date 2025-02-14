@@ -6,6 +6,7 @@ namespace Pest\Browser;
 
 use Pest\Browser\ValueObjects\TestResult;
 use Pest\Browser\ValueObjects\TestResultResponse;
+use Pest\Browser\Contracts\Operation;
 
 /**
  * @internal
@@ -14,8 +15,18 @@ final class PendingTest
 {
     /**
      * The pending operations.
+     *
+     * @var array<int, Operation>
      */
     private array $operations = [];
+
+    /**
+     * Ends the chain and builds the test result.
+     */
+    public function __destruct()
+    {
+        $this->compile();
+    }
 
     /**
      * Visits a URL.
@@ -66,9 +77,9 @@ final class PendingTest
     }
 
     /**
-     * Build the test result.
+     * Compile the JavaScript test file.
      */
-    public function build(): TestResult
+    public function build(): void
     {
         $compiler = new Compiler($this->operations);
 
@@ -81,13 +92,5 @@ final class PendingTest
         expect($result->ok())->toBeTrue();
 
         return $result;
-    }
-
-    /**
-     * Ends the chain and builds the test result.
-     */
-    public function __destruct()
-    {
-        $this->build();
     }
 }

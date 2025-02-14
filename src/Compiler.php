@@ -20,7 +20,7 @@ final class Compiler
      * @param  array<int, Operation>  $operations
      */
     public function __construct(
-        private array $operations
+        private readonly array $operations
     ) {
         //
     }
