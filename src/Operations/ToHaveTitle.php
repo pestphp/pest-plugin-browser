@@ -22,6 +22,6 @@ final readonly class ToHaveTitle implements Operation
 
     public function compile(): string
     {
-        return sprintf("await expect(page).toHaveTitle(/%s/);", $this->title);
+        return sprintf('await expect(page).toHaveTitle(/%s/);', $this->title);
     }
 }
