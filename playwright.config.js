@@ -74,10 +74,10 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
-  // webServer: {
-  //   command: 'npm run start',
-  //   url: 'http://127.0.0.1:3000',
-  //   reuseExistingServer: !process.env.CI,
-  // },
+  webServer: {
+    command: 'cd playground && php artisan serve --port=9357',
+    url: 'http://127.0.0.1:9357', // 9357 => PEST  || 9 is the most similar with P
+    reuseExistingServer: !process.env.CI,
+  },
 });
 

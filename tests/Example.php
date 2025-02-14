@@ -11,3 +11,8 @@ it('may have a title at laravel', function () {
     visit('https://laravel.com')
         ->toHaveTitle('Laravel');
 });
+
+it('can visit our website', function () {
+    visit('http://localhost:9357')
+        ->toHaveTitle('Pest Browser Testing');
+});
