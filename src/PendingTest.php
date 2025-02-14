@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Pest\Browser;
 
-use Pest\Browser\ValueObjects\TestResult;
-use Pest\Browser\ValueObjects\TestResultResponse;
 use Pest\Browser\Contracts\Operation;
+use Pest\Browser\ValueObjects\TestResult;
 
 /**
  * @internal
@@ -69,17 +68,9 @@ final class PendingTest
     }
 
     /**
-     * Build and return the final response the test received.
-     */
-    public function response(): TestResultResponse
-    {
-        return $this->build()->response();
-    }
-
-    /**
      * Compile the JavaScript test file.
      */
-    public function build(): void
+    public function compile(): TestResult
     {
         $compiler = new Compiler($this->operations);
 

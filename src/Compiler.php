@@ -9,7 +9,7 @@ use Pest\Browser\Contracts\Operation;
 /**
  * @internal
  */
-final class Compiler
+final readonly class Compiler
 {
     /**
      * The path to the tests.
@@ -20,7 +20,7 @@ final class Compiler
      * @param  array<int, Operation>  $operations
      */
     public function __construct(
-        private readonly array $operations
+        private array $operations
     ) {
         //
     }
@@ -43,16 +43,6 @@ final class Compiler
 
             test('runtime', async ({ page }) => {
             $content
-
-                const response = await page.reload();
-                test.info().annotations.push({
-                    type: '_response',
-                    description: JSON.stringify({
-                        headers: response.headers(),
-                        status: response.status(),
-                        url: response.url(),
-                    })
-                });
             });
             JS,
         );

@@ -18,16 +18,10 @@ final class Str
             return false;
         }
 
-        // If the first and last characters are not the same, it's not a regex
         if (($delimiter = mb_substr($target, 0, 1)) !== mb_substr($target, -1, 1)) {
             return false;
         }
 
-        // If the delimiter is alphanumeric, it's not a regex
-        if (! preg_match('/[^a-zA-Z0-9]/', $delimiter)) {
-            return false;
-        }
-
-        return true;
+        return preg_match('/[^a-zA-Z0-9]/', $delimiter) !== false;
     }
 }

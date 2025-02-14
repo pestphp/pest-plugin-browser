@@ -22,11 +22,4 @@ it('may click the "get started" button at laravel', function () {
     visit('https://laravel.com')
         ->clickLink('Get Started')
         ->assertUrlIs('https://laravel.com/docs/11.x');
-
-    // -- or --
-
-    $browser = visit('https://laravel.com')
-        ->clickLink('Get Started');
-
-    expect($browser->response()->url())->toBe('https://laravel.com/docs/11.x');
 });
