@@ -14,12 +14,12 @@ final class Str
      */
     public static function isRegex(string $target): bool
     {
-        if (strlen($target) < 2) {
+        if (mb_strlen($target) < 2) {
             return false;
         }
 
         // If the first and last characters are not the same, it's not a regex
-        if (($delimiter = substr($target, 0, 1)) !== substr($target, -1, 1)) {
+        if (($delimiter = mb_substr($target, 0, 1)) !== mb_substr($target, -1, 1)) {
             return false;
         }
 
