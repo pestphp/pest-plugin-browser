@@ -7,6 +7,8 @@ namespace Pest\Browser;
 use Pest\Browser\Contracts\Operation;
 use Pest\Browser\ValueObjects\TestResult;
 
+// Modern PHP Tooling
+
 /**
  * @internal
  */
@@ -33,6 +35,16 @@ final class PendingTest
     public function visit(string $url): self
     {
         $this->operations[] = new Operations\Visit($url);
+
+        return $this;
+    }
+
+    /**
+     * Takes a screenshot.
+     */
+    public function screenshot(?string $path = null): self
+    {
+        $this->operations[] = new Operations\Screenshot($path);
 
         return $this;
     }
