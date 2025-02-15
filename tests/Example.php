@@ -28,3 +28,8 @@ it('should not have the title "Laravel Dusk"', function () {
     visit('https://laravel.com')
         ->toNotHaveTitle('Laravel Dusk');
 });
+
+it('can visit our website', function () {
+    visit('/')
+        ->toHaveTitle('Pest Browser Testing');
+});
