@@ -32,7 +32,7 @@ final readonly class Screenshot implements Operation
 
     public function compile(): string
     {
-        return sprintf("await page.screenshot({ path: '%s' });", $this->path);
+        return sprintf("await page.screenshot({ path: '%s', fullPage: true });", $this->path);
     }
 
     private function generateFilename(): string
