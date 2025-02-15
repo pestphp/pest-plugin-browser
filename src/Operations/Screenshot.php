@@ -7,6 +7,8 @@ namespace Pest\Browser\Operations;
 use Pest\Browser\Contracts\Operation;
 use Pest\TestSuite;
 
+use function mb_ltrim;
+
 /**
  * @internal
  */
