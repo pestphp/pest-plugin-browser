@@ -9,4 +9,3 @@ test('assert url is', function (): void {
 
     $browser->assertUrlIs($url);
 });
-

@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Pest\Browser;
 
-use PHPUnit\Framework\TestCase;
-
 /**
  * @internal
  */

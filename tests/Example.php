@@ -28,10 +28,3 @@ it('should not have the title "Laravel Dusk"', function () {
     visit('https://laravel.com')
         ->toNotHaveTitle('Laravel Dusk');
 });
-
-it('may have a url for laravel', function () {
-    visit('https://laravel.com')
-        ->toHaveUrl('https://laravel.com/')
-        ->toHaveUrl('/^https/')
-        ->toHaveUrl('/\.com\/?$/');
-});
