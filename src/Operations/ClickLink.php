@@ -21,6 +21,9 @@ final readonly class ClickLink implements Operation
         //
     }
 
+    /**
+     * Compile the operation.
+     */
     public function compile(): string
     {
         return "await page.locator('{$this->element}').filter({ hasText: /{$this->text}/i }).click();";
