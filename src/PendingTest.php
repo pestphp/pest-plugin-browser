@@ -68,6 +68,16 @@ final class PendingTest
     }
 
     /**
+     * Checks if the page does not contain the given text.
+     */
+    public function assertDontSee(string $text, bool $ignoreCase = false): self
+    {
+        $this->operations[] = new Operations\AssertDontSee($text, $ignoreCase);
+
+        return $this;
+    }
+
+    /**
      * Checks if the page has a URL.
      */
     public function assertUrlIs(string $url): self
