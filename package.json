@@ -6,7 +6,9 @@
   "directories": {
     "test": "tests"
   },
-  "scripts": {},
+  "scripts": {
+    "playright": "playright"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pestphp/pest-plugin-browser.git"

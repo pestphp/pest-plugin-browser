@@ -19,7 +19,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Use Node.js ${{ matrix.node }}
+      - name: Setup Node ${{ matrix.node }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
@@ -42,7 +42,7 @@ jobs:
       - name: Install NPM dependencies
         run: |
           npm install
-          npx playright install
+          npm run playright -- install
 
       - name: Unit Tests
         run: composer test:unit
