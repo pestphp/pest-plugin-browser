@@ -73,6 +73,14 @@ final class PendingTest
     public function assertSee(string $text, bool $ignoreCase = false): self
     {
         $this->operations[] = new Operations\AssertSee($text, $ignoreCase);
+    }
+
+    /**
+     * Checks if the page does not contain the given text.
+     */
+    public function assertDontSee(string $text, bool $ignoreCase = false): self
+    {
+        $this->operations[] = new Operations\AssertDontSee($text, $ignoreCase);
 
         return $this;
     }
