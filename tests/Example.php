@@ -29,7 +29,9 @@ it('should not have the title "Laravel Dusk"', function () {
         ->toNotHaveTitle('Laravel Dusk');
 });
 
-it('can visit our website', function () {
-    visit('/')
-        ->toHaveTitle('Pest Browser Testing');
+it('may have a url for laravel', function () {
+    visit('https://laravel.com')
+        ->toHaveUrl('https://laravel.com/')
+        ->toHaveUrl('/^https/')
+        ->toHaveUrl('/\.com\/?$/');
 });

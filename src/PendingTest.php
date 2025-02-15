@@ -70,6 +70,16 @@ final class PendingTest
     }
 
     /**
+     * Checks if the page has a url.
+     */
+    public function toHaveUrl(string $url): self
+    {
+        $this->operations[] = new Operations\ToHaveUrl($url);
+
+        return $this;
+    }
+
+    /**
      * Clicks some text on the page.
      */
     public function clickLink(string $text): self
