@@ -8,7 +8,12 @@ use Pest\Plugin;
 
 Plugin::uses(Browser::class);
 
-function visit(string $url): PendingTest
-{
-    return (new PendingTest)->visit($url);
+if (! function_exists('\Pest\Browser\visit')) {
+    /**
+     * Visits the given URL, and starts a new browser test.
+     */
+    function visit(string $url): PendingTest
+    {
+        return (new PendingTest)->visit($url);
+    }
 }

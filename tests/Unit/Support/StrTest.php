@@ -4,6 +4,14 @@ declare(strict_types=1);
 
 use Pest\Browser\Support\Str;
 
+test('one character non-regex string', function () {
+    $string = 'a';
+
+    $result = Str::isRegex($string);
+
+    expect($result)->toBeFalse();
+});
+
 it('detects regex expressions', function () {
     $regex = '/^.*$/';
 

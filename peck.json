@@ -1,0 +1,11 @@
+{
+    "preset": "base",
+    "ignore": {
+        "words": [
+            "php",
+            "autoload",
+            "str"
+        ],
+        "paths": []
+    }
+}

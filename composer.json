@@ -27,7 +27,9 @@
     },
     "require-dev": {
         "laravel/pint": "^1.20",
-        "pestphp/pest-dev-tools": "^3.4.0"
+        "peckphp/peck": "^0.1.2",
+        "pestphp/pest-dev-tools": "^3.4.0",
+        "pestphp/pest-plugin-type-coverage": "^3.3"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
@@ -39,17 +41,21 @@
         }
     },
     "scripts": {
-        "refacto": "rector",
         "lint": "pint",
-        "test:refacto": "rector --dry-run",
+        "refactor": "rector",
+        "test:type-coverage": "pest --type-coverage --min=100",
+        "test:typos": "peck",
         "test:lint": "pint --test",
-        "test:types": "phpstan analyse --ansi",
-        "test:unit": "pest --colors=always",
+        "test:unit": "pest --coverage --exactly=100",
+        "test:types": "phpstan",
+        "test:refactor": "rector --dry-run",
         "test": [
-            "@test:refacto",
+            "@test:type-coverage",
+            "@test:typos",
+            "@test:unit",
             "@test:lint",
             "@test:types",
-            "@test:unit"
+            "@test:refactor"
         ]
     }
 }
