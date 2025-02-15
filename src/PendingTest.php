@@ -72,9 +72,9 @@ final class PendingTest
     /**
      * Clicks some text on the page.
      */
-    public function clickLink(string $text): self
+    public function clickLink(string $text, string $selector = 'a'): self
     {
-        $this->operations[] = new Operations\ClickLink($text);
+        $this->operations[] = new Operations\ClickLink($text, $selector);
 
         return $this;
     }
