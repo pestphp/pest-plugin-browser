@@ -62,7 +62,7 @@ final class PendingTest
     /**
      * Checks if the page does not have a title.
      */
-    public function asserTitleIsNot(string $title): self
+    public function assertTitleIsNot(string $title): self
     {
         $this->operations[] = new Operations\AssertTitleIsNot($title);
 
