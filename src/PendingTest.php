@@ -57,9 +57,12 @@ final class PendingTest
         return $this;
     }
 
-    public function assertTitleContains(string $title): self
+    /**
+     * Checks if the page has a title that contains the given text.
+     */
+    public function assertTitleContains(string $text): self
     {
-        $this->operations[] = new Operations\AssertTitleContains($title);
+        $this->operations[] = new Operations\AssertTitleContains($text);
 
         return $this;
     }
