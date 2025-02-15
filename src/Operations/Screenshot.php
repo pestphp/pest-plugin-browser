@@ -30,11 +30,17 @@ final readonly class Screenshot implements Operation
         $this->path = $basePath.'/'.$path;
     }
 
+    /**
+     * Compile the operation.
+     */
     public function compile(): string
     {
         return sprintf("await page.screenshot({ path: '%s', fullPage: true });", $this->path);
     }
 
+    /**
+     * Generates a filename for the screenshot.
+     */
     private function generateFilename(): string
     {
         $name = test()->name(); // @phpstan-ignore-line

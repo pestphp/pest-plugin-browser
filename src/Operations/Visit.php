@@ -20,6 +20,9 @@ final readonly class Visit implements Operation
         //
     }
 
+    /**
+     * Compile the operation.
+     */
     public function compile(): string
     {
         return sprintf("await page.goto('%s');", $this->url);
