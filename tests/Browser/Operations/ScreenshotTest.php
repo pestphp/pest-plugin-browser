@@ -6,18 +6,6 @@ use Pest\TestSuite;
 
 use function Pest\Browser\visit;
 
-afterEach(function () {
-    $basePath = TestSuite::getInstance()->testPath.'/Browser/screenshots';
-
-    foreach (glob($basePath.'/*') as $file) {
-        if (is_file($file)) {
-            unlink($file);
-        }
-    }
-
-    rmdir($basePath);
-});
-
 it('takes a screenshot', function (): void {
     $basePath = TestSuite::getInstance()->testPath.'/Browser/screenshots';
 
@@ -33,7 +21,9 @@ it('takes a screenshot and generates a path', function (): void {
     visit('https://laravel.com')
         ->screenshot();
 
-    $files = glob($basePath.'/*');
+    $testName = mb_ltrim(test()->name(), '__pest_evaluable_'); // @phpstan-ignore-line
+
+    $files = glob($basePath.DIRECTORY_SEPARATOR.'*'.$testName.'*');
 
     expect(count($files))->toBe(1);
 });
