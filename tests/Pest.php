@@ -4,20 +4,19 @@ declare(strict_types=1);
 
 use Pest\TestSuite;
 
-pest()->beforeAll(function () {
-    cleanupScreenshots();
-})
-    ->afterAll(function () {
-        cleanupScreenshots();
-    });
+pest()
+    ->beforeEach(fn () => cleanupScreenshots())
+    ->afterEach(fn () => cleanupScreenshots());
 
 function cleanupScreenshots(): void
 {
-    foreach (glob(TestSuite::getInstance()->testPath.'/Browser/screenshots/*') as $file) {
+    $basePath = TestSuite::getInstance()->testPath.'/Browser/screenshots';
+
+    foreach (glob("$basePath/*") as $file) {
         if (is_file($file)) {
             unlink($file);
         }
     }
 
-    rmdir(TestSuite::getInstance()->testPath.'/Browser/screenshots');
+    file_exists($basePath) && rmdir($basePath);
 }
