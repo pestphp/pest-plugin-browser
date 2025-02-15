@@ -57,6 +57,13 @@ final class PendingTest
         return $this;
     }
 
+    public function assertTitleContains(string $title): self
+    {
+        $this->operations[] = new Operations\AssertTitleContains($title);
+
+        return $this;
+    }
+
     /**
      * Checks if the page has a URL.
      */
