@@ -8,6 +8,9 @@ use Pest\Browser\Contracts\Operation;
 
 final readonly class AssertSee implements Operation
 {
+    /**
+     * Creates an operation instance.
+     */
     public function __construct(
         private string $text,
         private bool $ignoreCase = false,
@@ -15,6 +18,9 @@ final readonly class AssertSee implements Operation
         //
     }
 
+    /**
+     * Compile the operation.
+     */
     public function compile(): string
     {
         $ignoreCase = $this->ignoreCase ? 'i' : '';
