@@ -22,6 +22,8 @@ final readonly class AssertUrlIs implements Operation
 
     public function compile(): string
     {
-        return sprintf("await expect(page.url()).toBe('%s');", $this->url);
+        $pattern = str_replace('\*', '.*', preg_quote($this->url, '/'));
+
+        return sprintf('await expect(page.url()).toMatch(/%s/i);', $pattern);
     }
 }

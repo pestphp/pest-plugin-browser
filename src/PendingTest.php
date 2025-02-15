@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Pest\Browser;
 
-use Pest\Browser\Contracts\Assertions;
 use Pest\Browser\Contracts\Operation;
 use Pest\Browser\ValueObjects\TestResult;
 
