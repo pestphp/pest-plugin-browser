@@ -16,13 +16,13 @@ final readonly class ClickLink implements Operation
      */
     public function __construct(
         private string $text,
-        private string $selector = 'a',
+        private string $element = 'a',
     ) {
         //
     }
 
     public function compile(): string
     {
-        return "await page.locator('{$this->selector}').filter({ hasText: /{$this->text}/i }).click();";
+        return "await page.locator('{$this->element}').filter({ hasText: /{$this->text}/i }).click();";
     }
 }
