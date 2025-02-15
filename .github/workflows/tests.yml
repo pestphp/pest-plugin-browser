@@ -10,7 +10,7 @@ jobs:
         os: [ubuntu-latest]
         node: ['20.x', '22.x']
         php: ['8.3', '8.4']
-        dependency-version: [prefer-lowest, prefer-stable]
+        dependency-version: [prefer-stable]
         parallel: ['']
 
     name: PHP ${{ matrix.php }} - Node ${{ matrix.node }} - ${{ matrix.os }} - ${{ matrix.dependency-version }} - ${{ matrix.parallel }}
@@ -29,7 +29,7 @@ jobs:
       with:
         php-version: ${{ matrix.php }}
         tools: composer:v2
-        coverage: none
+        coverage: xdebug
 
     - name: Setup Problem Matches
       run: |
@@ -44,5 +44,5 @@ jobs:
         npm install
         npm run playwright -- install
 
-    - name: Unit Tests
-      run: composer test:unit
+    - name: Tests
+      run: composer test
