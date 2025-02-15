@@ -25,6 +25,11 @@
             "src/Autoload.php"
         ]
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
     "require-dev": {
         "laravel/pint": "^1.20",
         "pestphp/pest-dev-tools": "^3.4.0"
