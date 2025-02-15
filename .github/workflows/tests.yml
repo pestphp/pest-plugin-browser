@@ -8,15 +8,21 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest] # (macos-latest, windows-latest) 3.x-dev is under development
+        node: ["20.x", "22.x"]
         php: ['8.2', '8.3']
         dependency-version: [prefer-lowest, prefer-stable]
         parallel: ['', '--parallel']
 
-    name: PHP ${{ matrix.php }} - ${{ matrix.os }} - ${{ matrix.dependency-version }} - ${{ matrix.parallel }}
+    name: PHP ${{ matrix.php }} - Node ${{ matrix.node }} - ${{ matrix.os }} - ${{ matrix.dependency-version }} - ${{ matrix.parallel }}
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
+
+    - name: Setup Node ${{ matrix.node }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node }}
 
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
@@ -32,6 +38,11 @@ jobs:
 
     - name: Install PHP dependencies
       run: composer update --${{ matrix.dependency-version }} --no-interaction --no-progress --ansi
+
+    - name: Install NPM dependencies
+      run: |
+        npm install
+        npm run playwright -- install
 
     - name: Unit Tests
       run: composer test:unit
