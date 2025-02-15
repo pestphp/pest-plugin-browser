@@ -42,7 +42,7 @@ jobs:
       - name: Install NPM dependencies
         run: |
           npm install
-          npm run playright -- install
+          npm run playwright -- install
 
       - name: Unit Tests
         run: composer test:unit
