@@ -7,8 +7,6 @@ namespace Pest\Browser;
 use Pest\Browser\Contracts\Operation;
 use Pest\Browser\ValueObjects\TestResult;
 
-// Modern PHP Tooling
-
 /**
  * @internal
  */
@@ -62,9 +60,19 @@ final class PendingTest
     /**
      * Checks if the page does not have a title.
      */
-    public function toNotHaveTitle(string $title): self
+    public function assertTitleIsNot(string $title): self
     {
-        $this->operations[] = new Operations\ToNotHaveTitle($title);
+        $this->operations[] = new Operations\AssertTitleIsNot($title);
+
+        return $this;
+    }
+
+    /**
+     * Checks if the page has a URL.
+     */
+    public function assertUrlIs(string $url): self
+    {
+        $this->operations[] = new Operations\AssertUrlIs($url);
 
         return $this;
     }
@@ -75,16 +83,6 @@ final class PendingTest
     public function clickLink(string $text, string $selector = 'a'): self
     {
         $this->operations[] = new Operations\ClickLink($text, $selector);
-
-        return $this;
-    }
-
-    /**
-     * Checks if the page url is matching.
-     */
-    public function assertUrlIs(string $url): self
-    {
-        $this->operations[] = new Operations\AssertUrlIs($url);
 
         return $this;
     }

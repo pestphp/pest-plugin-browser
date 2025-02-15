@@ -9,7 +9,7 @@ use Pest\Browser\Contracts\Operation;
 /**
  * @internal
  */
-final readonly class ToNotHaveTitle implements Operation
+final readonly class AssertTitleIsNot implements Operation
 {
     /**
      * Creates an operation instance.
