@@ -10,11 +10,10 @@ coverage.xml
 *.swp
 *.swo
 .phpunit.cache
-
 # Playwright
 node_modules/
 /test-results/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
-.temp
+.temp/e2e

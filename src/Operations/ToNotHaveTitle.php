@@ -5,12 +5,11 @@ declare(strict_types=1);
 namespace Pest\Browser\Operations;
 
 use Pest\Browser\Contracts\Operation;
-use Pest\Browser\Support\Str;
 
 /**
  * @internal
  */
-final readonly class ToHaveTitle implements Operation
+final readonly class ToNotHaveTitle implements Operation
 {
     /**
      * Creates an operation instance.
@@ -23,8 +22,6 @@ final readonly class ToHaveTitle implements Operation
 
     public function compile(): string
     {
-        $title = Str::isRegex($this->title) ? $this->title : json_encode($this->title);
-
-        return sprintf('await expect(page).toHaveTitle(%s);', $title);
+        return sprintf('await expect(page).not.toHaveTitle(/%s/);', $this->title);
     }
 }

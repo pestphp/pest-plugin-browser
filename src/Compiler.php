@@ -9,7 +9,7 @@ use Pest\Browser\Contracts\Operation;
 /**
  * @internal
  */
-final class Compiler
+final readonly class Compiler
 {
     /**
      * The path to the tests.
@@ -33,7 +33,7 @@ final class Compiler
         $content = implode(
             "\n",
             array_map(
-                static fn (Operation $operation): string => $operation->compile(),
+                static fn (Operation $operation): string => "\t{$operation->compile()}",
                 $this->operations,
             ),
         );
@@ -42,7 +42,7 @@ final class Compiler
             import { test, expect } from '@playwright/test';
 
             test('runtime', async ({ page }) => {
-                $content
+            $content
             });
             JS,
         );
