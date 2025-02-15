@@ -10,7 +10,7 @@ import {defineConfig, devices} from '@playwright/test';
 // dotenv.config({ path: path.resolve(__dirname, '.env') });
 
 const port = process.env.PORT || 9357;
-const host = process.env.PORT || '127.0.0.1';
+const host = process.env.HOST || '127.0.0.1';
 const baseURL = process.env.BASE_URL || `http://${host}:${port}`;
 
 /**
@@ -79,7 +79,7 @@ export default defineConfig({
 
     /* Run your local dev server before starting the tests */
     webServer: {
-        cwd: __dirname + '/playground',
+        cwd: `${__dirname}/playground`,
         command: `php artisan serve --port=${port}`,
         url: baseURL,
         reuseExistingServer: !process.env.CI,
