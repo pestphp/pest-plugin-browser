@@ -73,6 +73,8 @@ final class PendingTest
     public function assertSee(string $text, bool $ignoreCase = false): self
     {
         $this->operations[] = new Operations\AssertSee($text, $ignoreCase);
+
+        return $this;
     }
 
     /**
