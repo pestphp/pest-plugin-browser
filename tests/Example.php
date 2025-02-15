@@ -13,6 +13,6 @@ it('may have a title at laravel', function () {
 });
 
 it('can visit our website', function () {
-    visit('http://localhost:9357')
+    visit('/')
         ->toHaveTitle('Pest Browser Testing');
 });
