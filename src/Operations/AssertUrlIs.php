@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Pest\Browser\Operations;
 
 use Pest\Browser\Contracts\Operation;
+use Pest\Browser\Support\Str;
 
 /**
  * @internal
@@ -20,8 +21,13 @@ final readonly class AssertUrlIs implements Operation
         //
     }
 
+    /**
+     * Compile the operation.
+     */
     public function compile(): string
     {
-        return sprintf("await expect(page.url()).toBe('%s');", $this->url);
+        $url = Str::isRegex($this->url) ? $this->url : json_encode($this->url);
+
+        return sprintf('await expect(page).toHaveURL(%s);', $url);
     }
 }

@@ -6,7 +6,7 @@ namespace Pest\Browser;
 
 use Pest\Plugin;
 
-Plugin::uses(Example::class);
+Plugin::uses(Browser::class);
 
 function visit(string $url): PendingTest
 {

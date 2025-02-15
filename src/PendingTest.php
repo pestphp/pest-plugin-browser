@@ -7,8 +7,6 @@ namespace Pest\Browser;
 use Pest\Browser\Contracts\Operation;
 use Pest\Browser\ValueObjects\TestResult;
 
-// Modern PHP Tooling
-
 /**
  * @internal
  */
@@ -70,11 +68,11 @@ final class PendingTest
     }
 
     /**
-     * Checks if the page has a url.
+     * Checks if the page has a URL.
      */
-    public function toHaveUrl(string $url): self
+    public function assertUrlIs(string $url): self
     {
-        $this->operations[] = new Operations\ToHaveUrl($url);
+        $this->operations[] = new Operations\AssertUrlIs($url);
 
         return $this;
     }
@@ -85,16 +83,6 @@ final class PendingTest
     public function clickLink(string $text): self
     {
         $this->operations[] = new Operations\ClickLink($text);
-
-        return $this;
-    }
-
-    /**
-     * Checks if the page url is matching.
-     */
-    public function assertUrlIs(string $url): self
-    {
-        $this->operations[] = new Operations\AssertUrlIs($url);
 
         return $this;
     }
