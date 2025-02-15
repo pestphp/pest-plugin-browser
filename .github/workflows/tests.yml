@@ -33,5 +33,10 @@ jobs:
     - name: Install PHP dependencies
       run: composer update --${{ matrix.dependency-version }} --no-interaction --no-progress --ansi
 
+    - name: Install Node dependencies
+      run: |
+        npm install
+        npx playwright install
+
     - name: Unit Tests
       run: composer test:unit
