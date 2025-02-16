@@ -128,6 +128,26 @@ final class PendingTest
     }
 
     /**
+     * Checks if the URL schema matches the given schema.
+     */
+    public function assertSchemaIs(string $schema): self
+    {
+        $this->operations[] = new Operations\AssertSchemaIs($schema);
+
+        return $this;
+    }
+
+    /**
+     * Checks if the URL schema does not match the given schema.
+     */
+    public function assertSchemaIsNot(string $schema): self
+    {
+        $this->operations[] = new Operations\AssertSchemaIsNot($schema);
+
+        return $this;
+    }
+
+    /**
      * Clicks some text on the page.
      */
     public function clickLink(string $text, string $selector = 'a'): self
