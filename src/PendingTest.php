@@ -67,7 +67,6 @@ final class PendingTest
         return $this;
     }
 
-
     /**
      * Takes a screenshot.
      */
