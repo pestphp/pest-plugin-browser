@@ -41,7 +41,6 @@
         }
     },
     "scripts": {
-        "playground": "",
         "lint": "pint",
         "refactor": "rector",
         "test:type-coverage": "pest --type-coverage --min=100",
