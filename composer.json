@@ -41,6 +41,7 @@
         }
     },
     "scripts": {
+        "playground": "",
         "lint": "pint",
         "refactor": "rector",
         "test:type-coverage": "pest --type-coverage --min=100",
@@ -56,6 +57,9 @@
             "@test:unit",
             "@test:types",
             "@test:refactor"
+        ],
+        "post-install-cmd": [
+            "cd playground && composer install"
         ]
     }
 }
