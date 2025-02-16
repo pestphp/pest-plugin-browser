@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-test('assert a title', function (): void {
+test('assert title', function (): void {
     $url = 'https://laravel.com';
 
     $browser = $this->visit($url);
