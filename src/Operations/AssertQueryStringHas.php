@@ -21,15 +21,15 @@ final readonly class AssertQueryStringHas implements Operation
      */
     public function compile(): string
     {
-        if ((bool)$this->value) {
+        if ((bool) $this->value) {
             return sprintf(
-                "const url = new URL(page.url());\nawait expect(url.searchParams.get('%s')).toBe('%s')",
+                "const url = new URL(page.url());\n\tawait expect(url.searchParams.get('%s')).toBe('%s')",
                 $this->name,
                 $this->value
             );
         }
 
-        return sprintf("const url = new URL(page.url());\n await expect(url.searchParams.has('%s')).toBeTruthy()", $this->name);
+        return sprintf("const url = new URL(page.url());\n\tawait expect(url.searchParams.has('%s')).toBeTruthy()", $this->name);
 
     }
 }
