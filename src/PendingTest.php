@@ -205,6 +205,26 @@ final class PendingTest
     }
 
     /**
+     * Checks if the given element is visible.
+     */
+    public function assertVisible(string $selector): self
+    {
+        $this->operations[] = new Operations\AssertVisible($selector);
+
+        return $this;
+    }
+
+    /**
+     * Checks if the given element is not visible.
+     */
+    public function assertMissing(string $selector): self
+    {
+        $this->operations[] = new Operations\AssertMissing($selector);
+
+        return $this;
+    }
+
+    /**
      * Compile the JavaScript test file.
      */
     public function compile(): TestResult
