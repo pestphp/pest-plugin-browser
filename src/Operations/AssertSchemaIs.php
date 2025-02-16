@@ -13,8 +13,7 @@ final readonly class AssertSchemaIs implements Operation
      */
     public function __construct(
         private string $schema
-    )
-    {
+    ) {
         //
     }
 
