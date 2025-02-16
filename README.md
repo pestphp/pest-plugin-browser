@@ -62,3 +62,21 @@ test('assert does not see', function () {
         ->assertDontSee('we are a streaming service');
 });
 ```
+
+### Available Operations
+
+#### pause
+
+It will pause the process for the specified number of milliseconds you provide.
+
+Pause the test execution for 5 seconds:
+
+```php
+test('pause', function () {
+    $url = 'https://laravel.com';
+
+    $this->visit($url)
+        ->pause(5000)
+        ->assertSee('Laravel');
+});
+```
