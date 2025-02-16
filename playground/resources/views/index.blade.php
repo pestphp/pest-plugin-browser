@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title>Pest Browser Testing</title>
+        <title>Pest Plugin - Browser Playground</title>
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -19,9 +19,37 @@
             </style>
         @endif
     </head>
-    <body class="font-sans antialiased dark:bg-black dark:text-white/50">
-        <h1>
-            Pest Browser Testing
-        </h1>
+    <body class="w-full h-screen text-white bg-gray-900">
+        <main id="app">
+            <header class="2xl:min-h-screen md:py-12 flex flex-col items-center justify-center text-center">
+                <div class="from-gray-200 via-black to-black bg-gradient-to-br flex items-center justify-center rounded-[0.55rem] select-none mt-16 md:mt-0" style="padding:1px">
+                    <figure class="shadow-white flex items-center justify-center w-32 h-32 p-3 bg-black rounded-lg shadow-2xl">
+                        <img src="https://pestphp.com/www/assets/logo.svg" alt="pestphp logo" class="ml-1">
+                    </figure>
+                </div>
+                <h1 class="sr-only">PESTPHP</h1>
+                <h2 class="lg:text-8xl md:text-6xl drop-shadow-2xl md:mt-9 mt-6 text-3xl font-bold">
+                    Pest Plugin<br>Browser Playground
+                </h2>
+                <h3 class="lg:text-2xl md:text-xl px-6 mt-6 text-lg leading-tight">
+                    Pest is a testing framework with a focus on simplicity, <br class="sm:block hidden">meticulously designed to bring back the joy of testing in PHP.
+                </h3>
+                <div class="sm:flex-row sm:space-x-6 flex flex-col items-center mt-6">
+                    <a href="https://pestphp.com/docs/installation"
+                        class="sm:w-auto focus:outline-none w-full px-12 py-4 text-lg font-bold text-gray-900 bg-white border border-white rounded-lg">
+                        Get started
+                    </a>
+                    <a href="https://github.com/pestphp/pest" target="_blank"
+                        class="sm:w-auto focus:outline-none sm:mt-0 w-full px-12 py-4 mt-3 text-lg font-bold text-white bg-transparent border border-white rounded-lg">
+                        Source code
+                    </a>
+                </div>
+            </header>
+
+            <footer class="md:px-0 p-12">
+                <small class="text-white/75 md:text-xs block text-sm text-center">&copy; <span><script>document.write(new Date().getFullYear());</script></span> Pest</small>
+            </footer>
+
+        </main>
     </body>
 </html>

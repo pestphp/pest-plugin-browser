@@ -1,3 +1,20 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+main {
+    background: url(https://pestphp.com/www/assets/pattern.svg);
+    background-repeat: repeat;
+    background-position: 10px 10px;
+    background-size: 30px 30px;
+}
+
+@media (min-width: 768px) {
+    main {
+        background: url(https://pestphp.com/www/assets/pattern.svg),
+            url(https://pestphp.com/www/assets/bg-foot.webp);
+        background-repeat: repeat, no-repeat;
+        background-position: 10px 10px, center bottom;
+        background-size: 40px 40px, contain;
+    }
+}
