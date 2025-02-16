@@ -58,7 +58,7 @@
             "@test:refactor"
         ],
         "post-install-cmd": [
-            "cd playground && composer install"
+            "composer install -d playground"
         ]
     }
 }
