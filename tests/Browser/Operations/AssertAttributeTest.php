@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-test('assert element has attribute that matches expected content', function () {
+test('assert attribute', function () {
     $url = 'https://laravel.com';
 
     $this->visit($url)
