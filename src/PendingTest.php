@@ -38,6 +38,36 @@ final class PendingTest
     }
 
     /**
+     * Goes back.
+     */
+    public function back(): self
+    {
+        $this->operations[] = new Operations\Back();
+
+        return $this;
+    }
+
+    /**
+     * Goes forward.
+     */
+    public function forward(): self
+    {
+        $this->operations[] = new Operations\Forward();
+
+        return $this;
+    }
+
+    /**
+     * Refreshes.
+     */
+    public function refresh(): self
+    {
+        $this->operations[] = new Operations\Refresh();
+
+        return $this;
+    }
+
+    /**
      * Takes a screenshot.
      */
     public function screenshot(?string $path = null): self
