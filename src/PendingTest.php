@@ -78,6 +78,26 @@ final class PendingTest
     }
 
     /**
+     * Determines if the screenshot matches stored screenshot
+     */
+    public function assertMatchesScreenshot(string $filename): self
+    {
+        $this->operations[] = new Operations\AssertMatchesScreenshot($filename);
+
+        return $this;
+    }
+
+    /**
+     * Determines if the screenshot doesn't match stored screenshot
+     */
+    public function assertNotMatchesScreenshot(string $filename): self
+    {
+        $this->operations[] = new Operations\AssertNotMatchesScreenshot($filename);
+
+        return $this;
+    }
+
+    /**
      * Checks if the page has a title.
      */
     public function assertTitle(string $title): self
