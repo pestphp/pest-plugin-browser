@@ -57,11 +57,8 @@
             "@test:types",
             "@test:refactor"
         ],
-        "post-update-cmd": [
-            "composer install -d playground"
-        ],
         "post-install-cmd": [
-            "composer install -d playground"
+            "composer install -d playground --ansi"
         ]
     }
 }
