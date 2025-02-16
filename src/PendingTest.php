@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Pest\Browser;
 
+use InvalidArgumentException;
 use Pest\Browser\Contracts\Operation;
 use Pest\Browser\ValueObjects\TestResult;
 
@@ -12,6 +13,11 @@ use Pest\Browser\ValueObjects\TestResult;
  */
 final class PendingTest
 {
+    /**
+     * The list of supported browsers.
+     */
+    private const SUPPORTED_BROWSERS = ['chrome', 'firefox', 'safari'];
+
     /**
      * The list of browsers for the test.
      */
@@ -37,6 +43,17 @@ final class PendingTest
      */
     public function withBrowser(array ...$browsers): self
     {
+        $browsers = array_filter(
+            $browsers,
+            fn ($browser) => in_array($browser, self::SUPPORTED_BROWSERS)
+        );
+
+        if (! $browsers) {
+            throw new InvalidArgumentException(
+                'At least one supported browser (chrome, firefox, safari) must be provided.'
+            );
+        }
+
         $this->browsers = $browsers;
 
         return $this;
