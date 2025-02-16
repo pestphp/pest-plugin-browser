@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 test('goes back and forward', function (): void {
     $this->visit('/')
-        ->clickLink('Get Started')
+        ->clickLink('Link')
         ->assertUrlIs('https://pestphp.com/docs/installation')
         ->back()
         ->assertUrlIs('http://127.0.0.1:9357')

@@ -46,6 +46,13 @@
                 </div>
             </header>
 
+            <section class="sm:py-24 md:w-full sm:w-2/3 container max-w-5xl py-12 text-center mx-auto">
+                <h4 class="md:text-3xl text-2xl font-bold text-center">Using the Mouse</h4>
+                <div class="my-10 grid grid-cols-4 gap-4">
+                    <a href="https://pestphp.com/docs/installation" class="sm:w-auto focus:outline-none w-full px-12 py-4 text-lg font-bold text-gray-900 bg-white border border-white rounded-lg">Link</a>
+                </div>
+            </section>
+
             <footer class="md:px-0 p-12">
                 <small class="text-white/75 md:text-xs block text-sm text-center">&copy; <span><script>document.write(new Date().getFullYear());</script></span> Pest</small>
             </footer>
