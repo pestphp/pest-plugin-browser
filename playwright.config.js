@@ -40,22 +40,18 @@ export default defineConfig({
     /* Configure projects for major browsers */
     projects: [
         {
-            name: 'chromium',
-            use: {...devices['Desktop Chrome']},
+            name: 'chrome',
+            use: { ...devices['Desktop Chrome'] },
         },
-
+        {
+            name: 'firefox',
+            use: { ...devices['Desktop Firefox'] },
+        },
+        {
+            name: 'safari',
+            use: { ...devices['Desktop Safari'] },
+        }
         /*
-
-      {
-        name: 'firefox',
-        use: { ...devices['Desktop Firefox'] },
-      },
-
-      {
-        name: 'webkit',
-        use: { ...devices['Desktop Safari'] },
-      },
-
       /* Test against mobile viewports. */
         // {
         //   name: 'Mobile Chrome',
@@ -85,4 +81,3 @@ export default defineConfig({
     //    reuseExistingServer: !process.env.CI,
     // },
 });
-

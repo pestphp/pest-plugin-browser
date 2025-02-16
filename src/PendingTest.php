@@ -13,6 +13,11 @@ use Pest\Browser\ValueObjects\TestResult;
 final class PendingTest
 {
     /**
+     * The list of browsers for the test.
+     */
+    private array $browsers = ['chrome'];
+
+    /**
      * The pending operations.
      *
      * @var array<int, Operation>
@@ -25,6 +30,16 @@ final class PendingTest
     public function __destruct()
     {
         $this->compile();
+    }
+
+    /**
+     * Sets the browsers for the test.
+     */
+    public function withBrowser(array ...$browsers): self
+    {
+        $this->browsers = $browsers;
+
+        return $this;
     }
 
     /**
@@ -146,7 +161,7 @@ final class PendingTest
 
         $compiler->compile();
 
-        $worker = new Worker;
+        $worker = new Worker($this->browsers);
 
         $result = $worker->run();
 
