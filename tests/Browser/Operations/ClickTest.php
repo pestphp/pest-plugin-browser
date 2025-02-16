@@ -7,5 +7,5 @@ describe('click', function () {
         $this->visit('https://laravel.com')
             ->click('header a[href="/docs/11.x"]:visible')
             ->assertUrlIs('https://laravel.com/docs/11.x');
-    })->only();
+    });
 });
