@@ -45,6 +45,22 @@ jobs:
         echo "::add-matcher::${{ runner.tool_cache }}/php.json"
         echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
 
+    - name: Cache Node Modules
+      uses: actions/cache@v3
+      with:
+        path: node_modules
+        key: node-cache-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          node-cache-${{ runner.os }}-
+
+    - name: Cache Playwright Browsers
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-cache-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          playwright-cache-${{ runner.os }}-
+
     - name: Install PHP dependencies
       run: composer update --${{ matrix.dependency-version }} --no-interaction --no-progress --ansi
 
