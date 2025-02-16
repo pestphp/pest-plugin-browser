@@ -8,16 +8,13 @@ use Pest\Browser\Contracts\Operation;
 
 final readonly class AssertQueryStringHas implements Operation
 {
-
     /**
      * Creates an operation instance.
      */
     public function __construct(
-        private string  $name,
+        private string $name,
         private ?string $value = null,
-    )
-    {
-    }
+    ) {}
 
     /**
      * Compile the operation.
@@ -30,8 +27,9 @@ final readonly class AssertQueryStringHas implements Operation
                 $this->name,
                 $this->value
             );
-        } else {
-            return sprintf("const url = new URL(page.url());\n await expect(url.searchParams.has('%s')).toBeTruthy()", $this->name);
         }
+
+        return sprintf("const url = new URL(page.url());\n await expect(url.searchParams.has('%s')).toBeTruthy()", $this->name);
+
     }
 }
