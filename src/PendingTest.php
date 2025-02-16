@@ -128,6 +128,16 @@ final class PendingTest
     }
 
     /**
+     * Clicks a given element.
+     */
+    public function click(string $selector): self
+    {
+        $this->operations[] = new Operations\Click($selector);
+
+        return $this;
+    }
+
+    /**
      * Clicks some text on the page.
      */
     public function clickLink(string $text, string $selector = 'a'): self
