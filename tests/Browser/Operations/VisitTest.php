@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 test('visit', function (): void {
-    $url = 'https://laravel.com';
+    $faked = htmlfixture('default');
 
-    $browser = $this->visit($url);
+    $browser = $this->visit($faked);
 
-    $browser->assertUrlIs($url);
+    $browser->assertUrlIs($faked);
 });
