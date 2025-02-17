@@ -7,16 +7,9 @@ test('assert does not see', function () {
         ->assertDontSee('The PHP Foobar');
 });
 
-test('assert does not see ignoring case by default', function () {
-    expect(function () {
-        $this->visit('https://laravel.com')
-            ->assertDontSee('the php framework');
-    })->toThrow(Exception::class);
-});
-
-test('assert does not see can be case sensitive', function () {
+test('assert does not see ignoring case', function () {
     $this->visit('https://laravel.com')
-        ->assertDontSee('the php framework', false);
+        ->assertDontSee('the php foobar');
 });
 
 test('assert does not see escaping regex special characters', function () {
