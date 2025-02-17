@@ -9,7 +9,7 @@ test('assert does not see', function () {
 
 test('assert does not see ignoring case', function () {
     $this->visit('https://laravel.com')
-        ->assertDontSee('the php foobar');
+        ->assertDontSee('the php foobar', true);
 });
 
 test('assert does not see escaping regex special characters', function () {
