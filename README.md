@@ -50,7 +50,6 @@ tbd
 ### Available Assertions
 - [assertAttribute](#assertattribute) – Ensures an element has the expected attribute and value.
 - [assertAttributeMissing](#assertattribute) – Ensures an element has the expected attribute and value.
-
 - [assertDontSee](#assertdontsee) – Ensures the given text is not present on the page.
 
 
