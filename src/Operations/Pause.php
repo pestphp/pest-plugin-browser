@@ -25,6 +25,6 @@ final readonly class Pause implements Operation
      */
     public function compile(): string
     {
-        return sprintf('await (new Promise(resolve => setTimeout(resolve, %d)));', $this->milliseconds);
+        return sprintf('await page.waitForTimeout(%d);', $this->milliseconds);
     }
 }
