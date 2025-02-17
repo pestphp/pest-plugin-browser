@@ -64,7 +64,7 @@ Pause the test for the specified number of milliseconds.
 ## Available Assertions
 
 - [assertAttribute](#assertattribute)
-- [assertDontSee](#assertdontsee)
+- [assertAttributeMissing](#assertattributemissing)
 - [assertDontSee](#assertdontsee)
 
 #### assertAttribute
@@ -77,6 +77,19 @@ test('assert has expected attribute', function () {
 
     $this->visit($url)
         ->assertAttribute('html', 'data-theme', 'light');
+});
+```
+
+#### assertAttributeMissing
+
+Assert that the specified element is missing a particular attribute :
+
+```php
+test('assert has expected attribute', function () {
+    $url = 'https://laravel.com';
+
+    $this->visit($url)
+        ->assertAttributeMissing('html', 'data-missing');
 });
 ```
 

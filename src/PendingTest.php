@@ -99,6 +99,16 @@ final class PendingTest
     }
 
     /**
+     * Checks if a selector does not have a particular attribute.
+     */
+    public function assertAttributeMissing(string $selector, string $attribute): self
+    {
+        $this->operations[] = new Operations\AssertAttributeMissing($selector, $attribute);
+
+        return $this;
+    }
+
+    /**
      * Checks if the page has a title that contains the given text.
      */
     public function assertTitleContains(string $text): self
