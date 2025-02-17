@@ -78,11 +78,10 @@ export default defineConfig({
     ],
 
     /* Run your local dev server before starting the tests */
-    // webServer: {
-    //    cwd: `${__dirname}/playground`,
-    //    command: `php install && php artisan serve --port=${port}`,
-    //    url: baseURL,
-    //    reuseExistingServer: !process.env.CI,
-    // },
+    webServer: {
+        cwd: `${__dirname}/playground`,
+        command: `php artisan serve --port=${port}`,
+        url: baseURL,
+        reuseExistingServer: !process.env.CI,
+    },
 });
-

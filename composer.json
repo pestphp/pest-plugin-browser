@@ -50,12 +50,18 @@
         "test:types": "phpstan",
         "test:refactor": "rector --dry-run",
         "test": [
+            "@test:lint",
             "@test:type-coverage",
             "@test:typos",
             "@test:unit",
-            "@test:lint",
             "@test:types",
             "@test:refactor"
+        ],
+        "post-update-cmd": [
+            "composer install -d playground --ansi"
+        ],
+        "post-install-cmd": [
+            "composer install -d playground --ansi"
         ]
     }
 }
