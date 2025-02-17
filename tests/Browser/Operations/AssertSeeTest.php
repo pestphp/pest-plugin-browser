@@ -16,3 +16,8 @@ test('assert sees escaping regex special characters', function () {
     $this->visit('https://laravel.com')
         ->assertSee('I tried (many) different ecosystems');
 });
+
+test('lol', function () {
+    $this->visit('https://laravel.com')
+        ->assertSee('“Laravel’s best-in-class testing tools');
+})->only();
