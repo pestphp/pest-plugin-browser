@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-test('assert schema is not', function () {
+test('assert scheme is not', function () {
     $url = 'https://laravel.com';
 
     $this->visit($url)
-        ->assertSchemaIsNot('http');
+        ->assertSchemeIsNot('http');
 });
