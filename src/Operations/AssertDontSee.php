@@ -13,7 +13,7 @@ final readonly class AssertDontSee implements Operation
      */
     public function __construct(
         private string $text,
-        private bool $ignoreCase = false,
+        private bool $ignoreCase = true,
     ) {
         //
     }
