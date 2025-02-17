@@ -63,7 +63,6 @@ Pause the test for the specified number of milliseconds.
 
 ## Available Assertions
 
-
 - [assertAttribute](#assertAttribute)
 - [assertAttributeContains](#assertAttributeContains)
 - [assertAttributeMissing](#assertAttributeMissing)
@@ -72,6 +71,7 @@ Pause the test for the specified number of milliseconds.
 - [assertQueryStringMissing](#assertQueryStringMissing)
 - [assertPresent](#assertpresent)
 - [assertNotPresent](#assertnotpresent)
+- [assertScript](#assertscript)
 
 #### assertAttribute
 
@@ -147,6 +147,18 @@ test('assert query string missing', function () {
     $this->visit($url)
         ->assertQueryStringMissing('q', 'test-1');
 });
+```
+
+#### assertScript
+
+Assert that the given script returns the expected value:
+
+```php
+test('assert does not see', function () {
+    $url = 'https://laravel.com';
+
+    $this->visit($url)
+        ->assertScript('document.querySelector("title").textContent.includes("Laravel")', true);
 ```
 
 #### assertPresent

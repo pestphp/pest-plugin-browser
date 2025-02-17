@@ -239,6 +239,16 @@ final class PendingTest
     }
 
     /**
+     * Checks if the given script returns the expected value.
+     */
+    public function assertScript(string $expression, array|bool|float|int|null|string $expected): self
+    {
+        $this->operations[] = new Operations\AssertScript($expression, $expected);
+
+        return $this;
+    }
+
+    /**
      * Clicks some text on the page.
      */
     public function clickLink(string $text, string $selector = 'a'): self
