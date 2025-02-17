@@ -55,3 +55,9 @@ jobs:
 
     - name: Tests
       run: composer test
+
+    - name: Expose test artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: screenshots
+        path: tests/Browser/screenshots
