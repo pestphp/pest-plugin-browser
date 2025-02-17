@@ -65,6 +65,7 @@ Pause the test for the specified number of milliseconds.
 
 - [assertAttribute](#assertAttribute)
 - [assertAttributeContains](#assertAttributeContains)
+- [assertAttributeDoesntContain](#assertAttributeDoesntContain)
 - [assertAttributeMissing](#assertAttributeMissing)
 - [assertDontSee](#assertDontSee)
 - [assertQueryStringHas](#assertQueryStringHas)
@@ -93,6 +94,19 @@ test('assert has expected attribute that contains value', function () {
 
     $this->visit($url)
         ->assertAttributeContains('html', 'data-theme', 'ight');
+});
+```
+
+#### assertAttributeDoesntContain
+
+Assert that the specified element has the expected attribute and the value contains a specific value:
+
+```php
+test('assert has expected attribute that does not contain value', function () {
+    $url = 'https://laravel.com';
+
+    $this->visit($url)
+        ->assertAttributeContains('html', 'data-theme', 'not here');
 });
 ```
 
