@@ -38,19 +38,34 @@ To run the test suite, execute:
 Pest is an open-sourced software licensed under the **[MIT license](https://opensource.org/licenses/MIT)**.
 
 
-## Documentation
+# Documentation
 
 Pest Plugin Browser brings end-to-end testing to the elegant syntax from Pest.
 This allows to test your application in a browser environment, enabling to test all the components, such as frontend, backend and database.
 
-### Installation
+## Installation
 
 tbd
 
-### Available Assertions
-- [assertAttribute](#assertattribute) – Ensures an element has the expected attribute and value.
-- [assertDontSee](#assertdontsee) – Ensures the given text is not present on the page.
 
+## Interacting with Elements
+
+### Waiting for Elements
+
+#### Waiting
+
+Pause the test for the specified number of milliseconds.
+
+```php
+    // Pause for 5 seconds
+    $this->pause(5000);
+```
+
+## Available Assertions
+
+- [assertAttribute](#assertattribute)
+- [assertAttributeMissing](#assertattributemissing)
+- [assertDontSee](#assertdontsee)
 
 #### assertAttribute
 
@@ -65,8 +80,6 @@ test('assert has expected attribute', function () {
 });
 ```
 
-
-
 #### assertAttributeContains
 
 Assert that the specified element has the expected attribute and value contains a specific value:
@@ -77,6 +90,17 @@ test('assert has expected attribute that contains value', function () {
 
     $this->visit($url)
         ->assertAttribute('html', 'data-theme', 'ight');
+
+#### assertAttributeMissing
+
+Assert that the specified element is missing a particular attribute :
+
+```php
+test('assert has expected attribute', function () {
+    $url = 'https://laravel.com';
+
+    $this->visit($url)
+        ->assertAttributeMissing('html', 'data-missing');
 });
 ```
 
