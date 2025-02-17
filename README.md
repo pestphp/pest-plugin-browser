@@ -105,3 +105,27 @@ test('assert does not see', function () {
         ->assertDontSee('we are a streaming service');
 });
 ```
+
+#### assertQueryStringHas
+
+Assert that the given query string is present in the url:
+
+```php
+test('assert query string has', function () {
+    $url = 'https://laravel.com?q=test';
+    $this->visit($url)
+        ->assertQueryStringHas('q', 'test');
+});
+```
+
+#### assertQueryStringMissing
+
+Assert that the given query string is not present in the url:
+
+```php
+test('assert query string missing', function () {
+    $url = 'https://laravel.com?q=test';
+    $this->visit($url)
+        ->assertQueryStringMissing('q', 'test-1');
+});
+```
