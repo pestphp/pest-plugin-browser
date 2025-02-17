@@ -149,6 +149,26 @@ final class PendingTest
     }
 
     /**
+     * Checks if the page has a specific element.
+     */
+    public function assertPresent(string $selector): self
+    {
+        $this->operations[] = new Operations\AssertPresent($selector);
+
+        return $this;
+    }
+
+    /**
+     * Checks if the page does not have a specific element.
+     */
+    public function assertNotPresent(string $selector): self
+    {
+        $this->operations[] = new Operations\AssertNotPresent($selector);
+
+        return $this;
+    }
+
+    /**
      * Checks if the page url has the given query string.
      */
     public function assertQueryStringHas(string $name, ?string $value = null): self

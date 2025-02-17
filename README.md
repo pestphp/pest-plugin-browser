@@ -63,12 +63,15 @@ Pause the test for the specified number of milliseconds.
 
 ## Available Assertions
 
+
 - [assertAttribute](#assertAttribute)
 - [assertAttributeContains](#assertAttributeContains)
 - [assertAttributeMissing](#assertAttributeMissing)
 - [assertDontSee](#assertDontSee)
 - [assertQueryStringHas](#assertQueryStringHas)
 - [assertQueryStringMissing](#assertQueryStringMissing)
+- [assertPresent](#assertpresent)
+- [assertNotPresent](#assertnotpresent)
 
 #### assertAttribute
 
@@ -143,5 +146,31 @@ test('assert query string missing', function () {
     $url = 'https://laravel.com?q=test';
     $this->visit($url)
         ->assertQueryStringMissing('q', 'test-1');
+});
+```
+
+#### assertPresent
+
+Assert that the element with a given selector is present on the page:
+
+```php
+test('assert present', function () {
+    $url = 'https://laravel.com';
+
+    $this->visit($url)
+        ->assertPresent('h1:visible');
+});
+```
+
+#### assertNotPresent
+
+Assert that the element with a given selector is not present on the page:
+
+```php
+test('assert not present', function () {
+    $url = 'https://laravel.com';
+
+    $this->visit($url)
+        ->assertNotPresent('a.non-existing-class');
 });
 ```
