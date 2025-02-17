@@ -128,21 +128,21 @@ final class PendingTest
     }
 
     /**
-     * Checks if the URL schema matches the given schema.
+     * Checks if the URL scheme matches the given scheme.
      */
-    public function assertSchemaIs(string $schema): self
+    public function assertSchemeIs(string $scheme): self
     {
-        $this->operations[] = new Operations\AssertSchemaIs($schema);
+        $this->operations[] = new Operations\AssertSchemeIs($scheme);
 
         return $this;
     }
 
     /**
-     * Checks if the URL schema does not match the given schema.
+     * Checks if the URL scheme does not match the given scheme.
      */
-    public function assertSchemaIsNot(string $schema): self
+    public function assertSchemeIsNot(string $scheme): self
     {
-        $this->operations[] = new Operations\AssertSchemaIsNot($schema);
+        $this->operations[] = new Operations\AssertSchemeIsNot($scheme);
 
         return $this;
     }
