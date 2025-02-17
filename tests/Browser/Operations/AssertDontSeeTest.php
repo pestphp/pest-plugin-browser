@@ -3,15 +3,16 @@
 declare(strict_types=1);
 
 test('assert does not see', function () {
-    $url = 'https://laravel.com';
-
-    $this->visit($url)
-        ->assertDontSee('The PHP Framework For Artisans test');
+    $this->visit('https://laravel.com')
+        ->assertDontSee('The PHP Foobar');
 });
 
 test('assert does not see ignoring case', function () {
-    $url = 'https://laravel.com';
+    $this->visit('https://laravel.com')
+        ->assertDontSee('the php foobar');
+});
 
-    $this->visit($url)
-        ->assertDontSee('the php framework for artisans test', true);
+test('assert does not see escaping regex special characters', function () {
+    $this->visit('https://laravel.com')
+        ->assertDontSee('I tried (some) different ecosystems');
 });
