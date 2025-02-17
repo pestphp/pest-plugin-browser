@@ -89,11 +89,21 @@ final class PendingTest
     }
 
     /**
-     * Checks if a selector has a particular attribute.
+     * Checks if a selector has a particular attribute, with a specific value.
      */
     public function assertAttribute(string $selector, string $attribute, string $value): self
     {
         $this->operations[] = new Operations\AssertAttribute($selector, $attribute, $value);
+
+        return $this;
+    }
+
+    /**
+     * Checks if a selector has a particular attribute that contains a specific value.
+     */
+    public function assertAttributeContains(string $selector, string $attribute, string $value): self
+    {
+        $this->operations[] = new Operations\AssertAttributeContains($selector, $attribute, $value);
 
         return $this;
     }
@@ -134,6 +144,26 @@ final class PendingTest
     public function assertDontSee(string $text, bool $ignoreCase = false): self
     {
         $this->operations[] = new Operations\AssertDontSee($text, $ignoreCase);
+
+        return $this;
+    }
+
+    /**
+     * Checks if the page has a specific element.
+     */
+    public function assertPresent(string $selector): self
+    {
+        $this->operations[] = new Operations\AssertPresent($selector);
+
+        return $this;
+    }
+
+    /**
+     * Checks if the page does not have a specific element.
+     */
+    public function assertNotPresent(string $selector): self
+    {
+        $this->operations[] = new Operations\AssertNotPresent($selector);
 
         return $this;
     }
@@ -204,6 +234,16 @@ final class PendingTest
     public function assertHostIsNot(string $host): self
     {
         $this->operations[] = new Operations\AssertHostIsNot($host);
+
+        return $this;
+    }
+
+    /**
+     * Checks if the given script returns the expected value.
+     */
+    public function assertScript(string $expression, array|bool|float|int|null|string $expected): self
+    {
+        $this->operations[] = new Operations\AssertScript($expression, $expected);
 
         return $this;
     }

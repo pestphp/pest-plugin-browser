@@ -45,8 +45,7 @@ This allows to test your application in a browser environment, enabling to test 
 
 ## Installation
 
-tbd
-
+TBD
 
 ## Interacting with Elements
 
@@ -57,15 +56,20 @@ tbd
 Pause the test for the specified number of milliseconds.
 
 ```php
-    // Pause for 5 seconds
-    $this->pause(5000);
+    $this->pause(5000); // Pause for 5 seconds
 ```
 
 ## Available Assertions
 
-- [assertAttribute](#assertattribute)
-- [assertAttributeMissing](#assertattributemissing)
-- [assertDontSee](#assertdontsee)
+- [assertAttribute](#assertAttribute)
+- [assertAttributeContains](#assertAttributeContains)
+- [assertAttributeMissing](#assertAttributeMissing)
+- [assertDontSee](#assertDontSee)
+- [assertQueryStringHas](#assertQueryStringHas)
+- [assertQueryStringMissing](#assertQueryStringMissing)
+- [assertPresent](#assertpresent)
+- [assertNotPresent](#assertnotpresent)
+- [assertScript](#assertscript)
 - [assertVisible](#assertvisible)
 - [assertMissing](#assertmissing)
 
@@ -74,12 +78,17 @@ Pause the test for the specified number of milliseconds.
 Assert that the specified element has the expected attribute and value:
 
 ```php
-test('assert has expected attribute', function () {
-    $url = 'https://laravel.com';
+$this->visit($url)
+    ->assertAttribute('html', 'data-theme', 'light');
+```
 
-    $this->visit($url)
-        ->assertAttribute('html', 'data-theme', 'light');
-});
+#### assertAttributeContains
+
+Assert that the specified element has the expected attribute and the value contains a specific value:
+
+```php
+$this->visit($url)
+    ->assertAttributeContains('html', 'data-theme', 'ight');
 ```
 
 #### assertAttributeMissing
@@ -87,12 +96,8 @@ test('assert has expected attribute', function () {
 Assert that the specified element is missing a particular attribute :
 
 ```php
-test('assert has expected attribute', function () {
-    $url = 'https://laravel.com';
-
-    $this->visit($url)
-        ->assertAttributeMissing('html', 'data-missing');
-});
+$this->visit($url)
+    ->assertAttributeMissing('html', 'data-missing');
 ```
 
 #### assertDontSee
@@ -100,12 +105,8 @@ test('assert has expected attribute', function () {
 Assert that the given text is not present on the page:
 
 ```php
-test('assert does not see', function () {
-    $url = 'https://laravel.com';
-
-    $this->visit($url)
-        ->assertDontSee('we are a streaming service');
-});
+$this->visit($url)
+    ->assertDontSee('we are a streaming service');
 ```
 
 #### assertVisible
@@ -138,11 +139,8 @@ test('assert missing', function () {
 Assert that the given query string is present in the url:
 
 ```php
-test('assert query string has', function () {
-    $url = 'https://laravel.com?q=test';
-    $this->visit($url)
-        ->assertQueryStringHas('q', 'test');
-});
+$this->visit($url)
+    ->assertQueryStringHas('q', 'test');
 ```
 
 #### assertQueryStringMissing
@@ -150,9 +148,33 @@ test('assert query string has', function () {
 Assert that the given query string is not present in the url:
 
 ```php
-test('assert query string missing', function () {
-    $url = 'https://laravel.com?q=test';
-    $this->visit($url)
-        ->assertQueryStringMissing('q', 'test-1');
-});
+$this->visit($url)
+    ->assertQueryStringMissing('q', 'test-1');
+```
+
+#### assertScript
+
+Assert that the given script returns the expected value:
+
+```php
+$this->visit($url)
+    ->assertScript('document.querySelector("title").textContent.includes("Laravel")', true);
+```
+
+#### assertPresent
+
+Assert that the element with a given selector is present on the page:
+
+```php
+$this->visit($url)
+    ->assertPresent('h1:visible');
+```
+
+#### assertNotPresent
+
+Assert that the element with a given selector is not present on the page:
+
+```php
+$this->visit($url)
+    ->assertNotPresent('a.non-existing-class');
 ```
