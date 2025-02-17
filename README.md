@@ -89,7 +89,8 @@ test('assert has expected attribute that contains value', function () {
     $url = 'https://laravel.com';
 
     $this->visit($url)
-        ->assertAttribute('html', 'data-theme', 'ight');
+        ->assertAttributeContains('html', 'data-theme', 'ight');
+});
 ```
 
 #### assertAttributeMissing
