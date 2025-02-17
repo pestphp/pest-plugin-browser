@@ -90,6 +90,7 @@ test('assert has expected attribute that contains value', function () {
 
     $this->visit($url)
         ->assertAttribute('html', 'data-theme', 'ight');
+```
 
 #### assertAttributeMissing
 
