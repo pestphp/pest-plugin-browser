@@ -51,7 +51,7 @@ jobs:
     - name: Install NPM dependencies
       run: |
         npm install
-        npm run playwright -- install chromium
+        npm run playwright -- install
 
     - name: Tests
       run: composer test
