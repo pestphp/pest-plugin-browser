@@ -128,6 +128,16 @@ final class PendingTest
     }
 
     /**
+     * Checks if the page url does not have the given query string.
+     */
+    public function assertQueryStringMissing(string $name, ?string $value = null): self
+    {
+        $this->operations[] = new Operations\AssertQueryStringMissing($name, $value);
+
+        return $this;
+    }
+
+    /**
      * Checks if the page has a URL.
      */
     public function assertUrlIs(string $url): self
