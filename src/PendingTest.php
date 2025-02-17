@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Pest\Browser;
 
+use Pest\Browser\Contracts\Assertion;
 use Pest\Browser\Contracts\Operation;
-use Pest\Browser\ValueObjects\TestResult;
 
 /**
  * @internal
@@ -150,7 +150,23 @@ final class PendingTest
 
         $result = $worker->run();
 
-        expect($result->ok())->toBeTrue();
+        if ($result->ok()) {
+            expect($result->ok())->toBeTrue();
+        } else {
+            $failedLine = $result->getFailedLine();
+
+            $failedAssertions = array_filter(
+                $this->operations,
+                fn ($operation) => $operation instanceof Assertion && $operation->compile() === $failedLine
+            );
+
+            /** @var Assertion $failedAssertion */
+            $failedAssertion = reset($failedAssertions);
+
+            if ($failedAssertion) {
+                $failedAssertion->fail($result->getFailedBrowser());
+            }
+        }
 
         return $result;
     }

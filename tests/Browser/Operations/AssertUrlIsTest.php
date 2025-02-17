@@ -2,10 +2,16 @@
 
 declare(strict_types=1);
 
-test('assert url is', function (): void {
-    $url = 'https://laravel.com';
+use PHPUnit\Framework\ExpectationFailedException;
 
-    $browser = $this->visit($url);
+describe('assertUrlIs', function () {
+    it('passes when url matches', function () {
+        $this->visit('https://laravel.com')
+            ->assertUrlIs('https://laravel.com');
+    });
 
-    $browser->assertUrlIs($url);
+    it('fails when url does not match', function () {
+        $this->visit('https://laravel.com')
+            ->assertUrlIs('https://symfony.com');
+    })->throws(ExpectationFailedException::class);
 });

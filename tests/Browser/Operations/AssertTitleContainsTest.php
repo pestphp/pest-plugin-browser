@@ -2,9 +2,16 @@
 
 declare(strict_types=1);
 
-test('assert title contains', function () {
-    $url = 'https://laravel.com';
+use PHPUnit\Framework\ExpectationFailedException;
 
-    $this->visit($url)
-        ->assertTitleContains('Laravel');
+describe('assertTitleContains', function () {
+    it('passes when title contains expected string', function () {
+        $this->visit('https://laravel.com')
+            ->assertTitleContains('Laravel');
+    });
+
+    it('fails when title does not contain expected string', function () {
+        $this->visit('https://laravel.com')
+            ->assertTitleContains('Symfony');
+    })->throws(ExpectationFailedException::class);
 });

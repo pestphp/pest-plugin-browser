@@ -2,16 +2,17 @@
 
 declare(strict_types=1);
 
-test('assert sees', function () {
-    $url = 'https://laravel.com';
+use PHPUnit\Framework\ExpectationFailedException;
 
-    $this->visit($url)
-        ->assertSee('The PHP Framework');
-});
+describe('assertSee', function () {
+    it('passes when the text is present in the page', function () {
+        $this->visit('https://laravel.com')
+            ->assertSee('The PHP Framework')
+            ->assertSee('the php framework', true);
+    });
 
-test('assert sees ignoring case', function () {
-    $url = 'https://laravel.com';
-
-    $this->visit($url)
-        ->assertSee('the php framework', true);
+    it('fails when the text is not present in the page', function () {
+        $this->visit('https://laravel.com')
+            ->assertSee('Non-existent text');
+    })->throws(ExpectationFailedException::class);
 });
