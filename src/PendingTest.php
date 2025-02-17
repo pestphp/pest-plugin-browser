@@ -148,6 +148,26 @@ final class PendingTest
     }
 
     /**
+     * Checks if the page URL matches the given host.
+     */
+    public function assertHostIs(string $host): self
+    {
+        $this->operations[] = new Operations\AssertHostIs($host);
+
+        return $this;
+    }
+
+    /**
+     * Checks if the page URL does not match the given host.
+     */
+    public function assertHostIsNot(string $host): self
+    {
+        $this->operations[] = new Operations\AssertHostIsNot($host);
+
+        return $this;
+    }
+
+    /**
      * Clicks some text on the page.
      */
     public function clickLink(string $text, string $selector = 'a'): self
