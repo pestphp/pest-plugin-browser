@@ -64,7 +64,7 @@ Pause the test for the specified number of milliseconds.
 ## Available Assertions
 
 - [assertAttribute](#assertattribute)
-- [assertDontSee](#assertdontsee)
+- [assertAttributeMissing](#assertattributemissing)
 - [assertDontSee](#assertdontsee)
 
 #### assertAttribute
