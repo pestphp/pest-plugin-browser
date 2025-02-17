@@ -25,6 +25,8 @@ final readonly class DoubleClick implements Operation
      */
     public function compile(): string
     {
-        return "await page.locator('{$this->selector}').dblclick();";
+        $selector = json_encode($this->selector);
+
+        return "await page.locator({$selector}).dblclick();";
     }
 }

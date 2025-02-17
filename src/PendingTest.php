@@ -198,6 +198,16 @@ final class PendingTest
     }
 
     /**
+     * Right click the element at the given selector.
+     */
+    public function rightClick(string $selector): self
+    {
+        $this->operations[] = new Operations\RightClick($selector);
+
+        return $this;
+    }
+
+    /**
      * Compile the JavaScript test file.
      */
     public function compile(): TestResult

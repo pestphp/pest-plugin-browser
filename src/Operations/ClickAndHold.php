@@ -26,6 +26,8 @@ final readonly class ClickAndHold implements Operation
      */
     public function compile(): string
     {
-        return "await page.locator('{$this->selector}').click({ delay: {$this->duration} });";
+        $selector = json_encode($this->selector);
+
+        return "await page.locator({$selector}).click({ delay: {$this->duration} });";
     }
 }

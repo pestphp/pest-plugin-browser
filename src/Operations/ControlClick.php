@@ -25,6 +25,8 @@ final readonly class ControlClick implements Operation
      */
     public function compile(): string
     {
-        return "await page.locator('{$this->selector}').click({ modifiers: ['ControlOrMeta'] });";
+        $selector = json_encode($this->selector);
+
+        return "await page.locator({$selector}).click({ modifiers: ['ControlOrMeta'] });";
     }
 }

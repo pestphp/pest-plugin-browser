@@ -7,3 +7,9 @@ it('clicks a link', function (): void {
         ->clickLink('Get Started')
         ->assertUrlIs('https://pestphp.com/docs/installation');
 });
+
+it('is case insensitive', function (): void {
+    $this->visit('/')
+        ->clickLink('get started')
+        ->assertUrlIs('https://pestphp.com/docs/installation');
+});

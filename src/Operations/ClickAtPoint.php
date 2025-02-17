@@ -26,6 +26,6 @@ final readonly class ClickAtPoint implements Operation
      */
     public function compile(): string
     {
-        return "await page.click({ position: { x: {$this->x}}, y: {$this->y} } });";
+        return "await page.mouse.click({$this->x}, {$this->y});";
     }
 }

@@ -35,12 +35,10 @@
                     Pest is a testing framework with a focus on simplicity, <br class="sm:block hidden">meticulously designed to bring back the joy of testing in PHP.
                 </h3>
                 <div class="sm:flex-row sm:space-x-6 flex flex-col items-center mt-6">
-                    <a href="https://pestphp.com/docs/installation"
-                        class="sm:w-auto focus:outline-none w-full px-12 py-4 text-lg font-bold text-gray-900 bg-white border border-white rounded-lg">
+                    <a href="https://pestphp.com/docs/installation" class="sm:w-auto focus:outline-none w-full px-12 py-4 text-lg font-bold text-gray-900 bg-white border border-white rounded-lg" title="Documentation">
                         Get started
                     </a>
-                    <a href="https://github.com/pestphp/pest" target="_blank"
-                        class="sm:w-auto focus:outline-none sm:mt-0 w-full px-12 py-4 mt-3 text-lg font-bold text-white bg-transparent border border-white rounded-lg">
+                    <a href="https://github.com/pestphp/pest" class="sm:w-auto focus:outline-none sm:mt-0 w-full px-12 py-4 mt-3 text-lg font-bold text-white bg-transparent border border-white rounded-lg">
                         Source code
                     </a>
                 </div>
