@@ -3,15 +3,11 @@
 declare(strict_types=1);
 
 test('assert sees', function () {
-    $url = 'https://laravel.com';
-
-    $this->visit($url)
-        ->assertSee('The PHP Framework');
+    $this->visit('/')
+        ->assertSee('Pest is a testing framework');
 });
 
 test('assert sees ignoring case', function () {
-    $url = 'https://laravel.com';
-
-    $this->visit($url)
-        ->assertSee('the php framework', true);
+    $this->visit('/')
+        ->assertSee('pest is a testing framework', true);
 });

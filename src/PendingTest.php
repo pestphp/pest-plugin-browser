@@ -88,6 +88,16 @@ final class PendingTest
     }
 
     /**
+     * Checks if a selector has a particular attribute.
+     */
+    public function assertAttribute(string $selector, string $attribute, string $value): self
+    {
+        $this->operations[] = new Operations\AssertAttribute($selector, $attribute, $value);
+
+        return $this;
+    }
+
+    /**
      * Checks if the page has a title that contains the given text.
      */
     public function assertTitleContains(string $text): self
@@ -143,6 +153,46 @@ final class PendingTest
     public function assertUrlIs(string $url): self
     {
         $this->operations[] = new Operations\AssertUrlIs($url);
+
+        return $this;
+    }
+
+    /**
+     * Checks if the URL scheme matches the given scheme.
+     */
+    public function assertSchemeIs(string $scheme): self
+    {
+        $this->operations[] = new Operations\AssertSchemeIs($scheme);
+
+        return $this;
+    }
+
+    /**
+     * Checks if the URL scheme does not match the given scheme.
+     */
+    public function assertSchemeIsNot(string $scheme): self
+    {
+        $this->operations[] = new Operations\AssertSchemeIsNot($scheme);
+
+        return $this;
+    }
+
+    /**
+     * Checks if the page URL matches the given host.
+     */
+    public function assertHostIs(string $host): self
+    {
+        $this->operations[] = new Operations\AssertHostIs($host);
+
+        return $this;
+    }
+
+    /**
+     * Checks if the page URL does not match the given host.
+     */
+    public function assertHostIsNot(string $host): self
+    {
+        $this->operations[] = new Operations\AssertHostIsNot($host);
 
         return $this;
     }
