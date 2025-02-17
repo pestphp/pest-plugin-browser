@@ -38,19 +38,34 @@ To run the test suite, execute:
 Pest is an open-sourced software licensed under the **[MIT license](https://opensource.org/licenses/MIT)**.
 
 
-## Documentation
+# Documentation
 
 Pest Plugin Browser brings end-to-end testing to the elegant syntax from Pest.
 This allows to test your application in a browser environment, enabling to test all the components, such as frontend, backend and database.
 
-### Installation
+## Installation
 
 tbd
 
-### Available Assertions
-- [assertAttribute](#assertattribute) – Ensures an element has the expected attribute and value.
-- [assertDontSee](#assertdontsee) – Ensures the given text is not present on the page.
 
+## Interacting with Elements
+
+### Waiting for Elements
+
+#### Waiting
+
+Pause the test for the specified number of milliseconds.
+
+```php
+    // Pause for 5 seconds
+    $this->pause(5000);
+```
+
+## Available Assertions
+
+- [assertAttribute](#assertattribute)
+- [assertDontSee](#assertdontsee)
+- [assertDontSee](#assertdontsee)
 
 #### assertAttribute
 
@@ -75,23 +90,5 @@ test('assert does not see', function () {
 
     $this->visit($url)
         ->assertDontSee('we are a streaming service');
-});
-```
-
-### Available Operations
-
-#### pause
-
-It will pause the process for the specified number of milliseconds you provide.
-
-Pause the test execution for 5 seconds:
-
-```php
-test('pause', function () {
-    $url = 'https://laravel.com';
-
-    $this->visit($url)
-        ->pause(5000)
-        ->assertSee('Laravel');
 });
 ```
