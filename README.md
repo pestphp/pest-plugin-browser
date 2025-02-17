@@ -47,10 +47,6 @@ This allows to test your application in a browser environment, enabling to test 
 
 tbd
 
-### Available Assertions
-- [assertAttribute](#assertattribute) – Ensures an element has the expected attribute and value.
-- [assertAttributeMissing](#assertattributeMissing) – Ensures an element has the expected attribute and value.
-- [assertDontSee](#assertdontsee) – Ensures the given text is not present on the page.
 
 ## Interacting with Elements
 
@@ -86,14 +82,14 @@ test('assert has expected attribute', function () {
 
 #### assertAttributeMissing
 
-Assert that the specified element is missing an attribute:
+Assert that the specified element is missing a particular attribute :
 
 ```php
-test('assert missing expected attribute', function () {
+test('assert has expected attribute', function () {
     $url = 'https://laravel.com';
 
     $this->visit($url)
-        ->assertAttributeMissing('html', 'data-test-attribute-missing');
+        ->assertAttributeMissing('html', 'data-missing');
 });
 ```
 
