@@ -70,6 +70,8 @@ Pause the test for the specified number of milliseconds.
 - [assertPresent](#assertpresent)
 - [assertNotPresent](#assertnotpresent)
 - [assertScript](#assertscript)
+- [assertVisible](#assertvisible)
+- [assertMissing](#assertmissing)
 
 #### assertAttribute
 
@@ -105,6 +107,31 @@ Assert that the given text is not present on the page:
 ```php
 $this->visit($url)
     ->assertDontSee('we are a streaming service');
+```
+
+#### assertVisible
+
+Assert that an element with the given selector is visible:
+
+```php
+test('assert visible', function () {
+    $url = 'https://laravel.com';
+
+    $this->visit($url)
+        ->assertVisible('h1:visible');
+});
+```
+
+#### assertMissing
+
+Assert that an element with the given selector is hidden:
+
+```php
+test('assert missing', function () {
+    $url = 'https://laravel.com';
+
+    $this->visit($url)
+        ->assertMissing('a.hidden');
 ```
 
 #### assertQueryStringHas
