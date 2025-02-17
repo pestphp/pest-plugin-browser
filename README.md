@@ -66,6 +66,7 @@ Pause the test for the specified number of milliseconds.
 - [assertAttribute](#assertattribute)
 - [assertDontSee](#assertdontsee)
 - [assertDontSee](#assertdontsee)
+- [assertScript](#assertscript)
 
 #### assertAttribute
 
@@ -90,5 +91,18 @@ test('assert does not see', function () {
 
     $this->visit($url)
         ->assertDontSee('we are a streaming service');
+});
+```
+
+#### assertScript
+
+Assert that the given script returns the expected value:
+
+```php
+test('assert does not see', function () {
+    $url = 'https://laravel.com';
+
+    $this->visit($url)
+        ->assertScript('document.querySelector("title").textContent.includes("Laravel")', true);
 });
 ```
