@@ -49,6 +49,8 @@ tbd
 
 ### Available Assertions
 - [assertAttribute](#assertattribute) – Ensures an element has the expected attribute and value.
+- [assertAttributeMissing](#assertattribute) – Ensures an element has the expected attribute and value.
+
 - [assertDontSee](#assertdontsee) – Ensures the given text is not present on the page.
 
 
@@ -62,6 +64,19 @@ test('assert has expected attribute', function () {
 
     $this->visit($url)
         ->assertAttribute('html', 'data-theme', 'light');
+});
+```
+
+#### assertAttributeMissing
+
+Assert that the specified element is missing an attribute:
+
+```php
+test('assert missing expected attribute', function () {
+    $url = 'https://laravel.com';
+
+    $this->visit($url)
+        ->assertAttributeMissing('html', 'data-test-attribute-missing');
 });
 ```
 
