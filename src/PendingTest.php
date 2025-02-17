@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Pest\Browser;
 
+use InvalidArgumentException;
 use Pest\Browser\Contracts\Operation;
 use Pest\Browser\ValueObjects\TestResult;
 
@@ -193,6 +194,22 @@ final class PendingTest
     public function clickLink(string $text, string $selector = 'a'): self
     {
         $this->operations[] = new Operations\ClickLink($text, $selector);
+
+        return $this;
+    }
+
+    /**
+     * Pauses the execution for a specified number of milliseconds.
+     *
+     * @param  int  $milliseconds  The number of milliseconds to pause. Default is 1000.
+     */
+    public function pause(int $milliseconds = 1000): self
+    {
+        if ($milliseconds <= 0) {
+            throw new InvalidArgumentException('The number of milliseconds must be greater than 0.');
+        }
+
+        $this->operations[] = new Operations\Pause($milliseconds);
 
         return $this;
     }
