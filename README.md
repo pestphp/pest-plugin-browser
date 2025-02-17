@@ -106,7 +106,7 @@ test('assert has expected attribute that does not contain value', function () {
     $url = 'https://laravel.com';
 
     $this->visit($url)
-        ->assertAttributeContains('html', 'data-theme', 'not here');
+        ->assertAttributeDoesntContain('html', 'data-theme', 'not here');
 });
 ```
 
