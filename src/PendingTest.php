@@ -134,7 +134,6 @@ final class PendingTest
     {
         $this->operations[] = new Operations\AssertSchemeIs($scheme);
 
-
         return $this;
     }
 
@@ -147,7 +146,7 @@ final class PendingTest
 
         return $this;
     }
-      
+
     /**
      * Checks if the page URL matches the given host.
      */
