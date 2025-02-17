@@ -48,8 +48,23 @@ This allows to test your application in a browser environment, enabling to test 
 tbd
 
 ### Available Assertions
+- [assertAttribute](#assertattribute) – Ensures an element has the expected attribute and value.
+- [assertDontSee](#assertdontsee) – Ensures the given text is not present on the page.
 
-<a name="assert-dont-see"></a>
+
+#### assertAttribute
+
+Assert that the specified element has the expected attribute and value:
+
+```php
+test('assert has expected attribute', function () {
+    $url = 'https://laravel.com';
+
+    $this->visit($url)
+        ->assertAttribute('html', 'data-theme', 'light');
+});
+```
+
 #### assertDontSee
 
 Assert that the given text is not present on the page:
