@@ -97,7 +97,6 @@ final class PendingTest
         return $this;
     }
 
-
     /**
      * Checks if a selector has a particular attribute that contains a specific value.
      */
