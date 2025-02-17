@@ -99,6 +99,16 @@ final class PendingTest
     }
 
     /**
+     * Checks if a selector does not have a particular attribute.
+     */
+    public function assertAttributeMissing(string $selector, string $attribute): self
+    {
+        $this->operations[] = new Operations\AssertAttributeMissing($selector, $attribute);
+
+        return $this;
+    }
+
+    /**
      * Checks if the page has a title that contains the given text.
      */
     public function assertTitleContains(string $text): self
@@ -124,6 +134,26 @@ final class PendingTest
     public function assertDontSee(string $text, bool $ignoreCase = false): self
     {
         $this->operations[] = new Operations\AssertDontSee($text, $ignoreCase);
+
+        return $this;
+    }
+
+    /**
+     * Checks if the page url has the given query string.
+     */
+    public function assertQueryStringHas(string $name, ?string $value = null): self
+    {
+        $this->operations[] = new Operations\AssertQueryStringHas($name, $value);
+
+        return $this;
+    }
+
+    /**
+     * Checks if the page url does not have the given query string.
+     */
+    public function assertQueryStringMissing(string $name, ?string $value = null): self
+    {
+        $this->operations[] = new Operations\AssertQueryStringMissing($name, $value);
 
         return $this;
     }
