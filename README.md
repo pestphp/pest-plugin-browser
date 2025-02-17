@@ -66,6 +66,8 @@ Pause the test for the specified number of milliseconds.
 - [assertAttribute](#assertattribute)
 - [assertDontSee](#assertdontsee)
 - [assertDontSee](#assertdontsee)
+- [assertPresent](#assertpresent)
+- [assertNotPresent](#assertnotpresent)
 
 #### assertAttribute
 
@@ -90,5 +92,31 @@ test('assert does not see', function () {
 
     $this->visit($url)
         ->assertDontSee('we are a streaming service');
+});
+```
+
+#### assertPresent
+
+Assert that the element with a given selector is present on the page:
+
+```php
+test('assert present', function () {
+    $url = 'https://laravel.com';
+
+    $this->visit($url)
+        ->assertPresent('h1:visible');
+});
+```
+
+#### assertNotPresent
+
+Assert that the element with a given selector is not present on the page:
+
+```php
+test('assert not present', function () {
+    $url = 'https://laravel.com';
+
+    $this->visit($url)
+        ->assertNotPresent('a.non-existing-class');
 });
 ```
