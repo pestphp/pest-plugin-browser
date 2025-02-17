@@ -57,10 +57,12 @@ tbd
 Assert that the specified element has the expected attribute and value:
 
 ```php
+test('assert has expected attribute', function () {
     $url = 'https://laravel.com';
 
     $this->visit($url)
         ->assertAttribute('html', 'data-theme', 'light');
+});
 ```
 
 #### assertDontSee
@@ -68,8 +70,10 @@ Assert that the specified element has the expected attribute and value:
 Assert that the given text is not present on the page:
 
 ```php
+test('assert does not see', function () {
     $url = 'https://laravel.com';
 
     $this->visit($url)
         ->assertDontSee('we are a streaming service');
+});
 ```
