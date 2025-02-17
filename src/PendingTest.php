@@ -89,11 +89,21 @@ final class PendingTest
     }
 
     /**
-     * Checks if a selector has a particular attribute.
+     * Checks if a selector has a particular attribute, with a specific value.
      */
     public function assertAttribute(string $selector, string $attribute, string $value): self
     {
         $this->operations[] = new Operations\AssertAttribute($selector, $attribute, $value);
+
+        return $this;
+    }
+
+    /**
+     * Checks if a selector has a particular attribute that contains a specific value.
+     */
+    public function assertAttributeContains(string $selector, string $attribute, string $value): self
+    {
+        $this->operations[] = new Operations\AssertAttributeContains($selector, $attribute, $value);
 
         return $this;
     }

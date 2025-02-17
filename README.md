@@ -80,6 +80,19 @@ test('assert has expected attribute', function () {
 });
 ```
 
+#### assertAttributeContains
+
+Assert that the specified element has the expected attribute and the value contains a specific value:
+
+```php
+test('assert has expected attribute that contains value', function () {
+    $url = 'https://laravel.com';
+
+    $this->visit($url)
+        ->assertAttributeContains('html', 'data-theme', 'ight');
+});
+```
+
 #### assertAttributeMissing
 
 Assert that the specified element is missing a particular attribute :
