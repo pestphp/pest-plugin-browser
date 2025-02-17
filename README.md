@@ -45,7 +45,7 @@ This allows to test your application in a browser environment, enabling to test 
 
 ## Installation
 
-tbd
+TBD
 
 
 ## Interacting with Elements
@@ -63,9 +63,12 @@ Pause the test for the specified number of milliseconds.
 
 ## Available Assertions
 
-- [assertAttribute](#assertattribute)
-- [assertAttributeMissing](#assertattributemissing)
-- [assertDontSee](#assertdontsee)
+- [assertAttribute](#assertAttribute)
+- [assertAttributeContains](#assertAttributeContains)
+- [assertAttributeMissing](#assertAttributeMissing)
+- [assertDontSee](#assertDontSee)
+- [assertQueryStringHas](#assertQueryStringHas)
+- [assertQueryStringMissing](#assertQueryStringMissing)
 
 #### assertAttribute
 
