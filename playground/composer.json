@@ -44,12 +44,12 @@
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force",
             "@php -r \"file_exists('database/database.sqlite') || touch('database/database.sqlite');\"",
             "@php artisan migrate --graceful --ansi",
-            "@npm install"
+            "npm install"
         ],
         "post-install-cmd": [
             "@php -r \"file_exists('database/database.sqlite') || touch('database/database.sqlite');\"",
             "@php artisan migrate --graceful --ansi",
-            "@npm install"
+            "npm install"
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",

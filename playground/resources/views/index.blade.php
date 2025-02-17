@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title>Pest Plugin - Browser Playground</title>
+        <title>Pest Plugin Browser - Playground</title>
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -29,7 +29,8 @@
                 </div>
                 <h1 class="sr-only">PESTPHP</h1>
                 <h2 class="lg:text-8xl md:text-6xl drop-shadow-2xl md:mt-9 mt-6 text-3xl font-bold">
-                    Pest Plugin<br>Browser Playground
+                    Pest Plugin Browser<br />
+                    Playground
                 </h2>
                 <h3 class="lg:text-2xl md:text-xl px-6 mt-6 text-lg leading-tight">
                     Pest is a testing framework with a focus on simplicity, <br class="sm:block hidden">meticulously designed to bring back the joy of testing in PHP.
