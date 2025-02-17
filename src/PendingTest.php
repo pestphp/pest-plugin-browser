@@ -128,6 +128,27 @@ final class PendingTest
     }
 
     /**
+     * Checks if the URL scheme matches the given scheme.
+     */
+    public function assertSchemeIs(string $scheme): self
+    {
+        $this->operations[] = new Operations\AssertSchemeIs($scheme);
+
+
+        return $this;
+    }
+
+    /**
+     * Checks if the URL scheme does not match the given scheme.
+     */
+    public function assertSchemeIsNot(string $scheme): self
+    {
+        $this->operations[] = new Operations\AssertSchemeIsNot($scheme);
+
+        return $this;
+    }
+      
+    /**
      * Checks if the page URL matches the given host.
      */
     public function assertHostIs(string $host): self
