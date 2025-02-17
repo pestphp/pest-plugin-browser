@@ -7,16 +7,16 @@ use Pest\TestSuite;
 it('takes a screenshot', function (): void {
     $basePath = TestSuite::getInstance()->testPath.'/Browser/screenshots';
 
-    $this->visit('https://laravel.com')
-        ->screenshot('laravel.png');
+    $this->visit('/')
+        ->screenshot('index.png');
 
-    expect(file_exists($basePath.'/laravel.png'))->toBeTrue();
+    expect(file_exists($basePath.'/index.png'))->toBeTrue();
 });
 
 it('takes a screenshot and generates a path', function (): void {
     $basePath = TestSuite::getInstance()->testPath.'/Browser/screenshots';
 
-    $this->visit('https://laravel.com')
+    $this->visit('/')
         ->screenshot();
 
     $testName = mb_ltrim(test()->name(), '__pest_evaluable_'); // @phpstan-ignore-line
