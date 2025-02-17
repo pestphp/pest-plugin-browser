@@ -104,9 +104,10 @@ final class PendingTest
     public function assertAttributeContains(string $selector, string $attribute, string $value): self
     {
         $this->operations[] = new Operations\AssertAttributeContains($selector, $attribute, $value);
+
         return $this;
     }
-  
+
     /**
      * Checks if a selector does not have a particular attribute.
      */
