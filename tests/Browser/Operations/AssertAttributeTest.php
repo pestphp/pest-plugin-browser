@@ -3,9 +3,6 @@
 declare(strict_types=1);
 
 test('assert attribute', function () {
-    $url = 'https://laravel.com';
-
-    $this->visit($url)
-        ->assertAttribute('html', 'data-theme', 'light');
-
+    $this->visit(playgroundUrl('/test/interactive-elements'))
+        ->assertAttribute('#i-have-data-testid', 'data-testid', 'i-exist-to-be-seen');
 });
