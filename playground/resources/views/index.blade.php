@@ -21,42 +21,42 @@
     </head>
     <body class="w-full h-screen text-white bg-gray-900">
         <main id="app">
-            <header class="2xl:min-h-screen md:py-12 flex flex-col items-center justify-center text-center">
+            <header class="flex flex-col justify-center items-center text-center 2xl:min-h-screen md:py-12">
                 <div class="from-gray-200 via-black to-black bg-gradient-to-br flex items-center justify-center rounded-[0.55rem] select-none mt-16 md:mt-0" style="padding:1px">
-                    <figure class="shadow-white flex items-center justify-center w-32 h-32 p-3 bg-black rounded-lg shadow-2xl">
+                    <figure class="flex justify-center items-center p-3 w-32 h-32 bg-black rounded-lg shadow-2xl shadow-white">
                         <img src="https://pestphp.com/www/assets/logo.svg" alt="pestphp logo" class="ml-1">
                     </figure>
                 </div>
                 <h1 class="sr-only">PESTPHP</h1>
-                <h2 class="lg:text-8xl md:text-6xl drop-shadow-2xl md:mt-9 mt-6 text-3xl font-bold">
+                <h2 class="mt-6 text-3xl font-bold drop-shadow-2xl lg:text-8xl md:text-6xl md:mt-9">
                     Pest Plugin Browser<br />
                     Playground
                 </h2>
-                <h3 class="lg:text-2xl md:text-xl px-6 mt-6 text-lg leading-tight">
-                    Pest is a testing framework with a focus on simplicity, <br class="sm:block hidden">meticulously designed to bring back the joy of testing in PHP.
+                <h3 class="px-6 mt-6 text-lg leading-tight lg:text-2xl md:text-xl">
+                    Pest is a testing framework with a focus on simplicity, <br class="hidden sm:block">meticulously designed to bring back the joy of testing in PHP.
                 </h3>
-                <div class="sm:flex-row sm:space-x-6 flex flex-col items-center mt-6">
+                <div class="flex flex-col items-center mt-6 sm:flex-row sm:space-x-6">
                     <a href="https://pestphp.com/docs/installation"
-                        class="sm:w-auto focus:outline-none w-full px-12 py-4 text-lg font-bold text-gray-900 bg-white border border-white rounded-lg">
+                        class="px-12 py-4 w-full text-lg font-bold text-gray-900 bg-white rounded-lg border border-white sm:w-auto focus:outline-none">
                         Get started
                     </a>
                     <a href="https://github.com/pestphp/pest" target="_blank"
-                        class="sm:w-auto focus:outline-none sm:mt-0 w-full px-12 py-4 mt-3 text-lg font-bold text-white bg-transparent border border-white rounded-lg">
+                        class="px-12 py-4 mt-3 w-full text-lg font-bold text-white bg-transparent rounded-lg border border-white sm:w-auto focus:outline-none sm:mt-0">
                         Source code
                     </a>
                 </div>
             </header>
 
-            <section class="sm:py-24 md:w-full sm:w-2/3 container max-w-5xl py-12 text-center mx-auto">
-                <h2 class="md:text-4xl text-3xl font-bold mt-14 mb-5">Interacting With Elements</h2>
-                <h3 class="md:text-3xl text-2xl font-bold text-center mt-10 mb-4">Using the Mouse</h3>
-                <div class="my-10 grid grid-cols-3 gap-4">
+            <section class="container py-12 mx-auto max-w-5xl text-center sm:py-24 md:w-full sm:w-2/3">
+                <h2 class="mt-14 mb-5 text-3xl font-bold md:text-4xl">Interacting With Elements</h2>
+                <h3 class="mt-10 mb-4 text-2xl font-bold text-center md:text-3xl">Using the Mouse</h3>
+                <div class="grid grid-cols-3 gap-4 my-10">
                     <a
-                        href="https://pestphp.com/docs/installation" class="focus:outline-none w-full px-12 py-4 text-lg font-bold text-gray-900 bg-white border border-white rounded-lg flex items-center justify-center"
+                        href="https://pestphp.com/docs/installation" class="flex justify-center items-center px-12 py-4 w-full text-lg font-bold text-gray-900 bg-white rounded-lg border border-white focus:outline-none"
                         target="_blank"
                     >
                         Link in a new tab
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 ml-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="ml-2 w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M18 13v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
                             <polyline points="15 3 21 3 21 9"></polyline>
                             <line x1="10" y1="14" x2="21" y2="3"></line>
@@ -65,8 +65,50 @@
                 </div>
             </section>
 
-            <footer class="md:px-0 p-12">
-                <small class="text-white/75 md:text-xs block text-sm text-center">&copy; <span><script>document.write(new Date().getFullYear());</script></span> Pest</small>
+            <section class="container py-12 mx-auto max-w-5xl sm:py-24 md:w-full sm:w-2/3">
+                <h2 class="mt-14 mb-5 text-3xl font-bold text-center md:text-4xl">Interacting With Form Elements</h2>
+                <h3 class="mt-10 mb-4 text-2xl font-bold text-center md:text-3xl">Checkboxes</h3>
+                <div class="grid grid-cols-3 gap-4 my-10">
+                    <div class="px-3 py-2 mx-2 bg-white rounded-lg">
+                        <fieldset>
+                            <div class="mt-4 text-left border-t border-b border-gray-200 divide-y divide-gray-200">
+                              <div class="flex relative gap-3 py-2">
+                                <div class="flex-1 min-w-0 text-sm/6">
+                                  <label for="checkbox-unchecked" class="font-medium text-gray-900 select-none">Unchecked</label>
+                                </div>
+                                <div class="flex items-center h-6 shrink-0">
+                                  <div class="grid grid-cols-1 group size-4">
+                                    <input id="checkbox-unchecked" name="checkbox-unchecked" type="checkbox" class="col-start-1 row-start-1 bg-white rounded border border-gray-300 appearance-none checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto">
+                                    <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-[:disabled]:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
+                                      <path class="opacity-0 group-has-[:checked]:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                      <path class="opacity-0 group-has-[:indeterminate]:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                  </div>
+                                </div>
+                              </div>
+                              <div class="flex relative gap-3 py-4">
+                                <div class="flex-1 min-w-0 text-sm/6">
+                                  <label for="checkbox-checked" class="font-medium text-gray-900 select-none">Checked</label>
+                                </div>
+                                <div class="flex items-center h-6 shrink-0">
+                                  <div class="grid grid-cols-1 group size-4">
+                                    <input id="checkbox-checked" name="checkbox-checked" type="checkbox" checked class="col-start-1 row-start-1 bg-white rounded border border-gray-300 appearance-none checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto">
+                                    <svg class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-[:disabled]:stroke-gray-950/25" viewBox="0 0 14 14" fill="none">
+                                      <path class="opacity-0 group-has-[:checked]:opacity-100" d="M3 8L6 11L11 3.5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                      <path class="opacity-0 group-has-[:indeterminate]:opacity-100" d="M3 7H11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </fieldset>
+                    </div>
+                </div>
+            </section>
+            
+            <footer class="p-12 md:px-0">
+                <small class="block text-sm text-center text-white/75 md:text-xs">&copy; <span><script>document.write(new Date().getFullYear());</script></span> Pest</small>
             </footer>
 
         </main>
