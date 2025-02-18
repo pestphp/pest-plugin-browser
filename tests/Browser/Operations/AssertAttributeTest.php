@@ -7,5 +7,4 @@ test('assert attribute', function () {
 
     $this->visit($url)
         ->assertAttribute('html', 'data-theme', 'light');
-
 });

@@ -5,7 +5,8 @@
             "php",
             "autoload",
             "str",
-            "dont"
+            "dont",
+            "doesnt"
         ],
         "paths": []
     }
