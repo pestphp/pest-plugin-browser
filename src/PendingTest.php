@@ -295,6 +295,46 @@ final class PendingTest
     }
 
     /**
+     * Checks if the given element is checked.
+     */
+    public function assertChecked(string $selector): self
+    {
+        $this->operations[] = new Operations\AssertChecked($selector);
+
+        return $this;
+    }
+
+    /**
+     * Checks if the given element is not checked.
+     */
+    public function assertNotChecked(string $selector): self
+    {
+        $this->operations[] = new Operations\AssertNotChecked($selector);
+
+        return $this;
+    }
+
+    /**
+     * Check the given element.
+     */
+    public function check(string $selector): self
+    {
+        $this->operations[] = new Operations\Check($selector);
+
+        return $this;
+    }
+
+    /**
+     * Uncheck the given element.
+     */
+    public function uncheck(string $selector): self
+    {
+        $this->operations[] = new Operations\UnCheck($selector);
+
+        return $this;
+    }
+
+    /**
      * Compile the JavaScript test file.
      */
     public function compile(): TestResult

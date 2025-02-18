@@ -49,6 +49,22 @@ TBD
 
 ## Interacting with Elements
 
+### Checkboxes
+
+Check the given element.
+
+```php
+$this->visit($url)
+    ->check('#checkbox-unchecked');
+```
+
+Uncheck the given element.
+
+```php
+$this->visit($url)
+    ->uncheck('#checkbox-checked');
+```
+
 ### Waiting for Elements
 
 #### Waiting
@@ -72,6 +88,9 @@ Pause the test for the specified number of milliseconds.
 - [assertScript](#assertscript)
 - [assertVisible](#assertvisible)
 - [assertMissing](#assertmissing)
+- [assertChecked](#assertchecked)
+- [assertNotChecked](#assertnotchecked)
+
 
 #### assertAttribute
 
@@ -177,4 +196,22 @@ Assert that the element with a given selector is not present on the page:
 ```php
 $this->visit($url)
     ->assertNotPresent('a.non-existing-class');
+```
+
+#### assertChecked
+
+Assert that the element with a given selector is checked:
+
+```php
+$this->visit($url)
+    ->assertChecked('input[type="checkbox"].checked');
+```
+
+#### assertNotChecked
+
+Assert that the element with a given selector is not checked:
+
+```php
+$this->visit($url)
+    ->assertNotChecked('input[type="checkbox"].checked');
 ```
