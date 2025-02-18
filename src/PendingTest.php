@@ -159,6 +159,26 @@ final class PendingTest
     }
 
     /**
+     * Checks if the page has a specific element.
+     */
+    public function assertPresent(string $selector): self
+    {
+        $this->operations[] = new Operations\AssertPresent($selector);
+
+        return $this;
+    }
+
+    /**
+     * Checks if the page does not have a specific element.
+     */
+    public function assertNotPresent(string $selector): self
+    {
+        $this->operations[] = new Operations\AssertNotPresent($selector);
+
+        return $this;
+    }
+
+    /**
      * Checks if the page url has the given query string.
      */
     public function assertQueryStringHas(string $name, ?string $value = null): self
@@ -229,6 +249,18 @@ final class PendingTest
     }
 
     /**
+     * Checks if the given script returns the expected value.
+     *
+     * @param  array<mixed>|bool|float|int|string|null  $expected
+     */
+    public function assertScript(string $expression, array|bool|float|int|null|string $expected): self
+    {
+        $this->operations[] = new Operations\AssertScript($expression, $expected);
+
+        return $this;
+    }
+
+    /**
      * Clicks some text on the page.
      */
     public function clickLink(string $text, string $selector = 'a'): self
@@ -250,6 +282,26 @@ final class PendingTest
         }
 
         $this->operations[] = new Operations\Pause($milliseconds);
+
+        return $this;
+    }
+
+    /**
+     * Checks if the given element is visible.
+     */
+    public function assertVisible(string $selector): self
+    {
+        $this->operations[] = new Operations\AssertVisible($selector);
+
+        return $this;
+    }
+
+    /**
+     * Checks if the given element is not visible.
+     */
+    public function assertMissing(string $selector): self
+    {
+        $this->operations[] = new Operations\AssertMissing($selector);
 
         return $this;
     }
