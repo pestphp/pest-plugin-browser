@@ -49,7 +49,8 @@ final readonly class AssertHasClass implements Operation
      */
     private function formatClassArray(array $classes): string
     {
-        array_walk($classes, fn(&$class) => $class = $this->formatClass($class));
-        return '[' . implode(', ', $classes) . ']';
+        array_walk($classes, fn (&$class) => $class = $this->formatClass($class));
+
+        return '['.implode(', ', $classes).']';
     }
 }
