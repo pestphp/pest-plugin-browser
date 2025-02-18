@@ -43,6 +43,16 @@ We can make use of the `playgroundUrl()` helper, to get its URL during the test.
 
 We can provide a URI that will be appended, e.g: `playgroundUrl('/test/interactive-elements')`.
 
+Attention: we can use `->visit('/foo')`, using the base URL, without the helper.
+
+The helper exists for assertion scenarios, like:
+
+```php
+$this->visit('/test/interactive-elements')
+    ->assertUrlIs(playgroundUrl('/test/interactive-elements'))
+```
+
+
 ### Routes and views for testing
 
 Check the `playground/resources/views/test-pages` folder for existing views.
