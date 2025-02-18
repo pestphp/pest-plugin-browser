@@ -87,6 +87,9 @@ TBD
 
 Pause the test for the specified number of milliseconds.
 
+> [!WARNING]  
+> Discouraged: Never pause in production. Tests that wait for an amount of time are inherently flaky. Use "wait for element" or "wait for an event" approaches - you can wait for an event your app dispatches.
+ 
 ```php
     $this->pause(5000); // Pause for 5 seconds
 ```
