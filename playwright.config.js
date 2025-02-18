@@ -10,7 +10,7 @@ import {defineConfig, devices} from '@playwright/test';
 // dotenv.config({ path: path.resolve(__dirname, '.env') });
 
 const port = process.env.PORT || 9357;
-const host = process.env.HOST || '127.0.0.1';
+const host = process.env.HOST || 'localhost';
 const baseURL = process.env.BASE_URL || `http://${host}:${port}`;
 
 /**

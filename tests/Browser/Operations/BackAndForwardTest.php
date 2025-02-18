@@ -7,7 +7,7 @@ test('goes back and forward', function (): void {
         ->clickLink('Get Started')
         ->assertUrlIs('https://pestphp.com/docs/installation')
         ->back()
-        ->assertUrlIs('http://127.0.0.1:9357')
+        ->assertUrlIs('http://localhost:9357')
         ->forward()
         ->assertUrlIs('https://pestphp.com/docs/installation');
 });
