@@ -239,6 +239,36 @@ final class PendingTest
     }
 
     /**
+     * Checks if the page URL begins with the given path.
+     */
+    public function assertPathBeginsWith(string $path): self
+    {
+        $this->operations[] = new Operations\AssertPathBeginsWith($path);
+
+        return $this;
+    }
+
+    /**
+     * Checks if the page URL ends with the given path.
+     */
+    public function assertPathEndsWith(string $path): self
+    {
+        $this->operations[] = new Operations\AssertPathEndsWith($path);
+
+        return $this;
+    }
+
+    /**
+     * Checks if the page URL contains the given path.
+     */
+    public function assertPathContains(string $path): self
+    {
+        $this->operations[] = new Operations\AssertPathContains($path);
+
+        return $this;
+    }
+
+    /**
      * Checks if the given script returns the expected value.
      */
     public function assertScript(string $expression, array|bool|float|int|null|string $expected): self
