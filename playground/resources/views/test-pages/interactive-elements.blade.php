@@ -18,6 +18,13 @@
             I'm an element with a data-attribute.
         </div>
 
+        <div
+            id="invisible-element"
+            class="hidden"
+        >
+            I'm an invisible element.
+        </div>
+
 
     </section>
 @endsection
