@@ -33,6 +33,28 @@ To run the test suite, execute:
 ./vendor/bin/pest
 ```
 
+## The Playground
+
+![Playground_interacting-with-elements.png](docs/Playground_interacting-with-elements.png)
+
+For each Operation/Assertion, we add a corresponding Test.
+
+We can make use of the `playgroundUrl()` helper, to get its URL during the test.
+
+We can provide a URI that will be appended, e.g: `playgroundUrl('/test/interactive-elements')`.
+
+### Routes and views for testing
+
+Check the `playground/resources/views/test-pages` folder for existing views.
+
+They are accessible by the playground route `/test/{page}`.
+
+E.g.: The view `resources/views/test-pages/interactive-elements.blade.php` is visited on `playgroundUrl('/test/interactive-elements')`. 
+
+The playground is standard Laravel App, where you may add a page with a feature for your test.
+
+Just add the view, and the Nav Menu will automatically update based on the view name.
+
 ## License
 
 Pest is an open-sourced software licensed under the **[MIT license](https://opensource.org/licenses/MIT)**.
