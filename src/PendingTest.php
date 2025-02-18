@@ -269,6 +269,27 @@ final class PendingTest
     }
 
     /**
+     * Checks if the page URL path matches the given path.
+     * The asterisk (*) character can be used as a wildcard.
+     */
+    public function assertPathIs(string $path): self
+    {
+        $this->operations[] = new Operations\AssertPathIs($path);
+
+        return $this;
+    }
+
+    /**
+     * Checks if the page URL path does not match the given path.
+     */
+    public function assertPathIsNot(string $path): self
+    {
+        $this->operations[] = new Operations\AssertPathIsNot($path);
+
+        return $this;
+    }
+
+    /**
      * Checks if the given script returns the expected value.
      */
     public function assertScript(string $expression, array|bool|float|int|null|string $expected): self
