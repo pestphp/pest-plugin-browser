@@ -3,6 +3,6 @@
 declare(strict_types=1);
 
 test('assert host is not', function () {
-    $this->visit(playgroundUrl())
+    $this->visit('/')
         ->assertHostIsNot('example.com');
 });
