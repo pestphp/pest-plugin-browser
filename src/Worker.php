@@ -14,11 +14,22 @@ use Symfony\Component\Process\Process;
 final class Worker
 {
     /**
+     * Creates a new Worker instance.
+     */
+    public function __construct(
+        private array $browsers = ['chrome'],
+    ) {
+        //
+    }
+
+    /**
      * Run the worker.
      */
     public function run(): TestResult
     {
-        $process = new Process(['npx', 'playwright', 'test', '--reporter=json']);
+        $browsers = array_map(fn ($browser) => "--project={$browser}", $this->browsers);
+
+        $process = new Process(['npx', 'playwright', 'test', '--reporter=json', ...$browsers]);
 
         $process->mustRun();
 
