@@ -13,6 +13,8 @@ final readonly class AssertScript implements Operation
 {
     /**
      * Creates an operation instance.
+     *
+     * @param  array<mixed>|bool|float|int|string|null  $expected
      */
     public function __construct(
         private string $expression,
