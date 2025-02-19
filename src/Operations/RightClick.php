@@ -9,7 +9,7 @@ use Pest\Browser\Contracts\Operation;
 /**
  * @internal
  */
-final readonly class Click implements Operation
+final readonly class RightClick implements Operation
 {
     /**
      * Creates an operation instance.
@@ -27,6 +27,6 @@ final readonly class Click implements Operation
     {
         $selector = json_encode($this->selector);
 
-        return "await page.locator({$selector}).click();";
+        return "await page.locator({$selector}).click({ button: 'right' });";
     }
 }

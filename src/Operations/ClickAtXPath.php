@@ -9,13 +9,13 @@ use Pest\Browser\Contracts\Operation;
 /**
  * @internal
  */
-final readonly class Click implements Operation
+final readonly class ClickAtXPath implements Operation
 {
     /**
      * Creates an operation instance.
      */
     public function __construct(
-        private string $selector,
+        private string $expression,
     ) {
         //
     }
@@ -25,8 +25,6 @@ final readonly class Click implements Operation
      */
     public function compile(): string
     {
-        $selector = json_encode($this->selector);
-
-        return "await page.locator({$selector}).click();";
+        return "await page.locator('xpath={$this->expression}').click();";
     }
 }

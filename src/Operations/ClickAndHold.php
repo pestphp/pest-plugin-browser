@@ -9,13 +9,14 @@ use Pest\Browser\Contracts\Operation;
 /**
  * @internal
  */
-final readonly class Click implements Operation
+final readonly class ClickAndHold implements Operation
 {
     /**
      * Creates an operation instance.
      */
     public function __construct(
         private string $selector,
+        private int $duration = 1000,
     ) {
         //
     }
@@ -27,6 +28,6 @@ final readonly class Click implements Operation
     {
         $selector = json_encode($this->selector);
 
-        return "await page.locator({$selector}).click();";
+        return "await page.locator({$selector}).click({ delay: {$this->duration} });";
     }
 }

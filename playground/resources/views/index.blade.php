@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="py-10 md:py-28 flex flex-col items-center justify-center text-center">
+    <div class="py-5 md:py-10 flex flex-col items-center justify-center text-center">
         <h3 class="lg:text-2xl md:text-xl px-6 mt-6 text-lg leading-tight">
             Pest is a testing framework with a focus on simplicity, <br class="sm:block hidden">meticulously designed to bring back the joy of testing in PHP.
         </h3>
@@ -16,5 +16,4 @@
             </a>
         </div>
     </div>
-
 @endsection
