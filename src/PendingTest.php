@@ -247,7 +247,6 @@ final class PendingTest
     {
         $this->operations[] = new Operations\AssertScript($expression, $expected);
 
-
         return $this;
     }
 
