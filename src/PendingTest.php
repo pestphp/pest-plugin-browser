@@ -240,6 +240,8 @@ final class PendingTest
 
     /**
      * Checks if the given script returns the expected value.
+     *
+     * @param  array<mixed>|bool|float|int|string|null  $expected
      */
     public function assertScript(string $expression, array|bool|float|int|null|string $expected): self
     {

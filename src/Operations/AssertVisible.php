@@ -6,7 +6,7 @@ namespace Pest\Browser\Operations;
 
 use Pest\Browser\Contracts\Operation;
 
-final class AssertVisible implements Operation
+final readonly class AssertVisible implements Operation
 {
     /**
      * Creates an operation instance.
