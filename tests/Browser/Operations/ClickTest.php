@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+
 it('clicks an element using css selectors', function (): void {
     $this->visit('/test/interacting-with-elements')
         ->assertSee('Click me')
@@ -24,4 +25,5 @@ it('can click multiple times', function (): void {
         ->click('button[data-testId="default-click"]')
         ->click('button[data-testId="default-click"]')
         ->assertSee('Single clicked\! \(3\)');
+
 });
