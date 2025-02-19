@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-
 it('clicks an element using css selectors', function (): void {
     $this->visit('/test/interacting-with-elements')
         ->assertSee('Click me')

@@ -28,7 +28,7 @@ it('can click and hold multiple times', function (): void {
 
 it('can click and hold for a given duration', function (): void {
     $this->visit('/test/interacting-with-elements')
-        ->clickAndHold('button[data-testId="hold-click"]', 500)
+        ->clickAndHold('button[data-testId="hold-click"]', 400)
         ->assertDontSee('Free hug!')
         ->clickAndHold('button[data-testId="hold-click"]', 1500)
         ->assertSee('Free hug!');
