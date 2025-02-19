@@ -347,7 +347,7 @@ final class PendingTest
     }
 
     /**
-     * Control click the element at the given selector.
+     * Double click the element at the given selector.
      */
     public function doubleClick(string $selector): self
     {
