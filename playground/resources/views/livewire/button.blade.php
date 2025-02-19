@@ -6,6 +6,7 @@
             x-on:{{ $event }}="$wire.handle"
         @endforeach
         @if ($flavor === 'hold')
+            {{-- 700ms --}}
             @mousedown="progress = 0; timer = setInterval(() => { progress += 100/(700/100); if (progress >= 100) { clearInterval(timer); $wire.handle(); } }, 100)"
             @mouseup="clearInterval(timer); progress = 0"
             @mouseleave="clearInterval(timer); progress = 0"
