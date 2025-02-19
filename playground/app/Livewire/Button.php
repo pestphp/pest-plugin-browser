@@ -1,0 +1,64 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Livewire;
+
+use Illuminate\Support\Arr;
+use Livewire\Attributes\Computed;
+use Livewire\Component;
+
+/**
+ * @property string[] $events
+ * @property string $label
+ */
+final class Button extends Component
+{
+    public $counter = 0;
+
+    public $flavor;
+
+    #[Computed]
+    public function events()
+    {
+        return Arr::wrap(match ($this->flavor) {
+            'control' => ['click.cmd', 'click.ctrl'],
+            'double' => 'dblclick',
+            'hold' => null,
+            'right' => 'contextmenu.prevent',
+            default => 'click',
+        });
+    }
+
+    #[Computed]
+    public function label()
+    {
+        return match ($this->flavor) {
+            'control' => 'ctrl|cmd + click me',
+            'double' => 'Double click me',
+            'hold' => 'Click and hold me',
+            'right' => 'Right click me',
+            default => 'Click me',
+        };
+    }
+
+    public function handle()
+    {
+        $this->counter++;
+
+        $message = match ($this->flavor) {
+            'control' => 'Opening in new tab!',
+            'double' => 'Double clicked!',
+            'hold' => 'Free hug!',
+            'right' => 'Right clicked!',
+            default => 'Clicked!',
+        };
+
+        $this->label = "{$message} ({$this->counter})";
+    }
+
+    public function render()
+    {
+        return view('livewire.button');
+    }
+}
