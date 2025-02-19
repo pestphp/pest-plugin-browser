@@ -84,20 +84,20 @@ TBD
 
 ## Available Operations
 
--   [back](#back)
--   [click](#click)
--   [clickAndHold](#clickAndHold)
--   [clickAtPoint](#clickAtPoint)
--   [clickAtXPath](#clickAtXPath)
--   [clickLink](#clickLink)
--   [controlClick](#controlClick)
--   [doubleClick](#doubleClick)
--   [forward](#forward)
--   [pause](#pause)
--   [refresh](#refresh)
--   [rightClick](#rightClick)
--   [screenshot](#screenshot)
--   [visit](#visit)
+- [back](#back)
+- [click](#click)
+- [clickAndHold](#clickAndHold)
+- [clickAtPoint](#clickAtPoint)
+- [clickAtXPath](#clickAtXPath)
+- [clickLink](#clickLink)
+- [controlClick](#controlClick)
+- [doubleClick](#doubleClick)
+- [forward](#forward)
+- [pause](#pause)
+- [refresh](#refresh)
+- [rightClick](#rightClick)
+- [screenshot](#screenshot)
+- [visit](#visit)
 
 ### back
 
