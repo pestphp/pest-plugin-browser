@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire;
 
+use AllowDynamicProperties;
 use Illuminate\Support\Arr;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -12,6 +13,7 @@ use Livewire\Component;
  * @property string[] $events
  * @property string $label
  */
+#[AllowDynamicProperties]
 final class Button extends Component
 {
     public $counter = 0;
