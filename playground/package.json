@@ -3,8 +3,7 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
-        "dev": "vite",
-        "postinstall": "npm run build"
+        "dev": "vite"
     },
     "devDependencies": {
         "concurrently": "^9.0.1",

@@ -20,8 +20,8 @@ it('escapes double quotes properly', function () {
 it('can double click multiple times', function (): void {
     $this->visit('/')
         ->doubleClick('button[data-testId="double-click"]')
-        ->assertSee('Double clicked! \(1\)')
+        ->assertSee('Double clicked! (1)')
         ->doubleClick('button[data-testId="double-click"]')
         ->doubleClick('button[data-testId="double-click"]')
-        ->assertSee('Double clicked! \(3\)');
+        ->assertSee('Double clicked! (3)');
 });

@@ -20,10 +20,10 @@ it('escapes double quotes properly', function () {
 it('can click and hold multiple times', function (): void {
     $this->visit('/')
         ->clickAndHold('button[data-testId="hold-click"]')
-        ->assertSee('Free hug! \(1\)')
+        ->assertSee('Free hug! (1)')
         ->clickAndHold('button[data-testId="hold-click"]')
         ->clickAndHold('button[data-testId="hold-click"]')
-        ->assertSee('Free hug! \(3\)');
+        ->assertSee('Free hug! (3)');
 });
 
 it('can click and hold for a given duration', function (): void {
