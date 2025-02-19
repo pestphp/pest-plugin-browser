@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 test('navigates back', function (): void {
     $this->visit('/')
-        ->clickLink('Get Started')
-        ->assertUrlIs('https://pestphp.com/docs/installation')
+        ->clickLink('Interacting with Elements')
+        ->assertUrlIs(playgroundUrl('/test/interacting-with-elements'))
         ->back()
         ->assertUrlIs(playgroundUrl());
 });
