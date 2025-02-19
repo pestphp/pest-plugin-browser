@@ -199,15 +199,6 @@ final class PendingTest
     }
 
     /**
-     * Clicks a given element.
-     */
-    public function click(string $selector): self
-    {
-        $this->operations[] = new Operations\Click($selector);
-
-    }
-
-    /**
      * Checks if the URL scheme matches the given scheme.
      */
     public function assertSchemeIs(string $scheme): self
