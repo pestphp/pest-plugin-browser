@@ -9,13 +9,13 @@ it('clicks and hold an element using css selectors', function (): void {
         ->clickAndHold("button[data-testId='hold-click']")
         ->assertSee('Free hug!')
         ->assertDontSee('Click and hold me');
-});
+})->only();
 
 it('escapes double quotes properly', function () {
     $this->visit('/test/interacting-with-elements')
         ->clickAndHold('button[data-testId="hold-click"]')
         ->assertSee('Free hug!');
-});
+})->only();
 
 it('can click and hold multiple times', function (): void {
     $this->visit('/test/interacting-with-elements')
@@ -24,7 +24,7 @@ it('can click and hold multiple times', function (): void {
         ->clickAndHold('button[data-testId="hold-click"]')
         ->clickAndHold('button[data-testId="hold-click"]')
         ->assertSee('Free hug! \(3\)');
-});
+})->only();
 
 it('can click and hold for a given duration', function (): void {
     $this->visit('/test/interacting-with-elements')
@@ -32,4 +32,4 @@ it('can click and hold for a given duration', function (): void {
         ->assertDontSee('Free hug!')
         ->clickAndHold('button[data-testId="hold-click"]', 1500)
         ->assertSee('Free hug!');
-});
+})->only();
