@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 test('check the unchecked checkbox', function () {
-    $this->visit('http://localhost:9357')
-        ->check('input[name="checkbox-unchecked"]')
-        ->assertChecked('input[name="checkbox-unchecked"]');
+    $this->visit('/test/form-inputs')
+        ->check('input[name="default-checkbox"]')
+        ->assertChecked('input[name="default-checkbox"]');
 });
