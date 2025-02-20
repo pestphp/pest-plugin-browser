@@ -149,7 +149,7 @@ $this->visit($url)
 
 Assert that the element has css classes bases upon string, array, regex
 
-Give the html
+Given the html
 
 ```html
 <section>
