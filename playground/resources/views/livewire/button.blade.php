@@ -1,5 +1,3 @@
-
-
 <div x-data="{ timer: null, progress: 0 }">
     <button @class([
             "overflow-hidden focus:outline-none w-full px-12 py-4 text-lg font-bold text-gray-900 bg-white border border-white rounded-lg",
