@@ -62,5 +62,4 @@ jobs:
       with:
         name: playwright-artifacts
         path: |
-          .temp/test-results/screenshots
-          .temp/test-results/videos
+          .temp/test-results
