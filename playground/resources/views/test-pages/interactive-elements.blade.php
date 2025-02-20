@@ -24,7 +24,7 @@
         </div>
 
         <div id="text-with-special-chars">
-            Some (text) with some "formatted" characters.
+            Some (text) wi/th [some] "formatted" ch@racters.
         </div>
 
     </section>
