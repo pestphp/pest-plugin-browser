@@ -47,11 +47,11 @@ final class Button extends Component
         $this->counter++;
 
         $message = match ($this->flavor) {
-            'control' => 'Opening in new tab!',
+            'control' => 'ctrl|cmd clicked!',
             'double' => 'Double clicked!',
             'hold' => 'Free hug!',
             'right' => 'Right clicked!',
-            default => 'Clicked!',
+            default => 'Single clicked!',
         };
 
         $this->label = "{$message} ({$this->counter})";

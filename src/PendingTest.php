@@ -251,6 +251,46 @@ final class PendingTest
     }
 
     /**
+     * Click the element at the given selector.
+     */
+    public function click(string $selector): self
+    {
+        $this->operations[] = new Operations\Click($selector);
+
+        return $this;
+    }
+
+    /**
+     * Perform a mouse click and hold the mouse button down at the given selector.
+     */
+    public function clickAndHold(string $selector, int $duration = 1000): self
+    {
+        $this->operations[] = new Operations\ClickAndHold($selector, $duration);
+
+        return $this;
+    }
+
+    /**
+     * Click the topmost element at the given pair of coordinates.
+     */
+    public function clickAtPoint(int $x = 0, int $y = 0): self
+    {
+        $this->operations[] = new Operations\ClickAtPoint($x, $y);
+
+        return $this;
+    }
+
+    /**
+     * Click the element at the given XPath expression.
+     */
+    public function clickAtXPath(string $expression): self
+    {
+        $this->operations[] = new Operations\ClickAtXPath($expression);
+
+        return $this;
+    }
+
+    /**
      * Clicks some text on the page.
      */
     public function clickLink(string $text, string $selector = 'a'): self
@@ -292,6 +332,36 @@ final class PendingTest
     public function assertMissing(string $selector): self
     {
         $this->operations[] = new Operations\AssertMissing($selector);
+
+        return $this;
+    }
+
+    /**
+     * Control click the element at the given selector.
+     */
+    public function controlClick(string $selector): self
+    {
+        $this->operations[] = new Operations\ControlClick($selector);
+
+        return $this;
+    }
+
+    /**
+     * Double click the element at the given selector.
+     */
+    public function doubleClick(string $selector): self
+    {
+        $this->operations[] = new Operations\DoubleClick($selector);
+
+        return $this;
+    }
+
+    /**
+     * Right click the element at the given selector.
+     */
+    public function rightClick(string $selector): self
+    {
+        $this->operations[] = new Operations\RightClick($selector);
 
         return $this;
     }
