@@ -19,7 +19,7 @@ const baseURL = process.env.BASE_URL || `http://${host}:${port}`;
 export default defineConfig({
     testDir: './.temp/e2e',
     /* Folder for test artifacts such as screenshots, videos, traces, etc. */
-    outputDir: './test-results',
+    outputDir: './.temp/test-results',
     /* Run tests in files in parallel */
     fullyParallel: true,
     /* Fail the build on CI if you accidentally left test.only in the source code. */
