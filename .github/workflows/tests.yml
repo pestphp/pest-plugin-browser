@@ -55,3 +55,12 @@ jobs:
 
     - name: Tests
       run: composer test
+
+    - if: failure()
+      name: Upload failed tests artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: playwright-artifacts
+        path: |
+          .temp/test-results/screenshots
+          .temp/test-results/videos
