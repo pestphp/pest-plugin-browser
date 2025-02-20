@@ -15,5 +15,5 @@ node_modules/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
-/.temp
+.temp/
 /tests/Browser/screenshots
