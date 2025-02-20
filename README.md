@@ -275,7 +275,6 @@ Assert that the specified element has the expected attribute, but the value does
         ->assertAttributeDoesntContain('html', 'data-theme', 'not here');
 ```
 
-
 ### assertAttributeMissing
 
 Assert that the specified element is missing a particular attribute :
@@ -300,8 +299,6 @@ Assert that an element with the given selector is visible:
 
 ```php
 test('assert visible', function () {
-    $url = 'https://laravel.com';
-
     $this->visit($url)
         ->assertVisible('h1:visible');
 });
@@ -313,8 +310,6 @@ Assert that an element with the given selector is hidden:
 
 ```php
 test('assert missing', function () {
-    $url = 'https://laravel.com';
-
     $this->visit($url)
         ->assertMissing('a.hidden');
 ```
