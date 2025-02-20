@@ -19,9 +19,7 @@ it('takes a screenshot and generates a path', function (): void {
     $this->visit('/')
         ->screenshot();
 
-    $testName = mb_ltrim(test()->name(), '__pest_evaluable_'); // @phpstan-ignore-line
-
-    $files = glob($basePath.DIRECTORY_SEPARATOR.'*'.$testName.'*');
+    $files = glob($basePath.DIRECTORY_SEPARATOR.'*'.test()->getDescription().'*');
 
     expect(count($files))->toBe(1);
 });
