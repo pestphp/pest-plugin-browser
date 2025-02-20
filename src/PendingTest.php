@@ -291,10 +291,52 @@ final class PendingTest
 
     /**
      * Checks if the given script returns the expected value.
+     *
+     * @param  array<mixed>|bool|float|int|string|null  $expected
      */
     public function assertScript(string $expression, array|bool|float|int|null|string $expected): self
     {
         $this->operations[] = new Operations\AssertScript($expression, $expected);
+
+        return $this;
+    }
+
+    /**
+     * Click the element at the given selector.
+     */
+    public function click(string $selector): self
+    {
+        $this->operations[] = new Operations\Click($selector);
+
+        return $this;
+    }
+
+    /**
+     * Perform a mouse click and hold the mouse button down at the given selector.
+     */
+    public function clickAndHold(string $selector, int $duration = 1000): self
+    {
+        $this->operations[] = new Operations\ClickAndHold($selector, $duration);
+
+        return $this;
+    }
+
+    /**
+     * Click the topmost element at the given pair of coordinates.
+     */
+    public function clickAtPoint(int $x = 0, int $y = 0): self
+    {
+        $this->operations[] = new Operations\ClickAtPoint($x, $y);
+
+        return $this;
+    }
+
+    /**
+     * Click the element at the given XPath expression.
+     */
+    public function clickAtXPath(string $expression): self
+    {
+        $this->operations[] = new Operations\ClickAtXPath($expression);
 
         return $this;
     }
@@ -341,6 +383,76 @@ final class PendingTest
     public function assertMissing(string $selector): self
     {
         $this->operations[] = new Operations\AssertMissing($selector);
+
+        return $this;
+    }
+
+    /**
+     * Control click the element at the given selector.
+     */
+    public function controlClick(string $selector): self
+    {
+        $this->operations[] = new Operations\ControlClick($selector);
+
+        return $this;
+    }
+
+    /**
+     * Checks if the given element is checked.
+     */
+    public function assertChecked(string $selector): self
+    {
+        $this->operations[] = new Operations\AssertChecked($selector);
+
+        return $this;
+    }
+
+    /**
+     * Double-click the element at the given selector.
+     */
+    public function doubleClick(string $selector): self
+    {
+        $this->operations[] = new Operations\DoubleClick($selector);
+
+        return $this;
+    }
+
+    /**
+     * Checks if the given element is not checked.
+     */
+    public function assertNotChecked(string $selector): self
+    {
+        $this->operations[] = new Operations\AssertNotChecked($selector);
+
+        return $this;
+    }
+
+    /**
+     * Right-click the element at the given selector.
+     */
+    public function rightClick(string $selector): self
+    {
+        $this->operations[] = new Operations\RightClick($selector);
+
+        return $this;
+    }
+
+    /**
+     * Check the given element.
+     */
+    public function check(string $selector): self
+    {
+        $this->operations[] = new Operations\Check($selector);
+
+        return $this;
+    }
+
+    /**
+     * Uncheck the given element.
+     */
+    public function uncheck(string $selector): self
+    {
+        $this->operations[] = new Operations\UnCheck($selector);
 
         return $this;
     }

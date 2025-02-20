@@ -1,6 +1,7 @@
 # Pest Plugin Browser
 
 This repository contains the Pest Plugin Browser.
+
 > If you want to start testing your application with Pest, visit the main **[Pest Repository](https://github.com/pestphp/pest)**.
 
 ## Community & Resources
@@ -12,16 +13,19 @@ This repository contains the Pest Plugin Browser.
 ## Installation (for development purposes)
 
 1. Install PHP dependencies using Composer:
+
 ```bash
 composer install
 ```
 
 2. Install Node.js dependencies:
+
 ```bash
 npm install
 ```
 
 3. Install Playwright browsers:
+
 ```bash
 npx playwright install
 ```
@@ -29,14 +33,45 @@ npx playwright install
 ## Running Tests
 
 To run the test suite, execute:
+
 ```bash
 ./vendor/bin/pest
 ```
 
+## The Playground
+
+![Playground_interacting-with-elements.png](docs/Playground_interacting-with-elements.png)
+
+For each Operation/Assertion, we add a corresponding Test.
+
+We can make use of the `playgroundUrl()` helper, to get its URL during the test.
+
+We can provide a URI that will be appended, e.g: `playgroundUrl('/test/interactive-elements')`.
+
+Attention: we can use `->visit('/foo')`, using the base URL, without the helper.
+
+The helper exists for assertion scenarios, like:
+
+```php
+$this->visit('/test/interactive-elements')
+    ->assertUrlIs(playgroundUrl('/test/interactive-elements'))
+```
+
+### Routes and views for testing
+
+Check the `playground/resources/views/test-pages` folder for existing views.
+
+They are accessible by the playground route `/test/{page}`.
+
+E.g.: The view `resources/views/test-pages/interactive-elements.blade.php` is visited on `playgroundUrl('/test/interactive-elements')`.
+
+The playground is standard Laravel App, where you may add a page with a feature for your test.
+
+Just add the view, and the Nav Menu will automatically update based on the view name.
+
 ## License
 
 Pest is an open-sourced software licensed under the **[MIT license](https://opensource.org/licenses/MIT)**.
-
 
 # Documentation
 
@@ -47,16 +82,152 @@ This allows to test your application in a browser environment, enabling to test 
 
 TBD
 
-## Interacting with Elements
+## Available Operations
 
-### Waiting for Elements
+- [back](#back)
+- [click](#click)
+- [clickAndHold](#clickAndHold)
+- [clickAtPoint](#clickAtPoint)
+- [clickAtXPath](#clickAtXPath)
+- [clickLink](#clickLink)
+- [controlClick](#controlClick)
+- [doubleClick](#doubleClick)
+- [forward](#forward)
+- [pause](#pause)
+- [refresh](#refresh)
+- [rightClick](#rightClick)
+- [screenshot](#screenshot)
+- [visit](#visit)
 
-#### Waiting
+### Checkboxes
 
-Pause the test for the specified number of milliseconds.
+Check the given element.
+
+```php
+$this->visit($url)
+    ->check('#checkbox-unchecked');
+```
+
+Uncheck the given element.
+
+```php
+$this->visit($url)
+    ->uncheck('#checkbox-checked');
+```
+
+### click
+
+Click the element at the given selector.
+
+```php
+$this->click('.selector');
+```
+
+### clickAndHold
+
+Perform a mouse click and hold the mouse button down at the given selector.
+
+```php
+$this->clickAndHold('.selector');
+```
+
+### clickAtPoint
+
+Click the topmost element at the given pair of coordinates.
+
+```php
+$this->clickAtPoint('//div[@class = "selector"]');
+```
+
+### clickAtXPath
+
+Click the element at the given XPath expression.
+
+```php
+$this->clickAtXPath('//div[@class = "selector"]');
+```
+
+### clickLink
+
+Clicks some text on the page.
+
+```php
+$this->clickLink('Sign In');
+```
+
+### controlClick
+
+Control click the element at the given selector.
+
+```php
+$this->controlClick('.selector');
+```
+
+### doubleClick
+
+Double-click the element at the given selector.
+
+```php
+$this->doubleClick('.selector');
+```
+
+### Navigate back
+
+Go back one page from the browser history.
+
+```php
+$this->back();
+```
+
+### Navigate forward
+
+Go forward one page from the browser history.
+
+```php
+$this->forward();
+```
+
+### pause
+
+Pauses the execution for a specified number of milliseconds.
+
+> [!WARNING]
+> Discouraged: Never pause in production. Tests that wait for an amount of time are inherently flaky. Use "wait for element" or "wait for an event" approaches - you can wait for an event your app dispatches.
 
 ```php
     $this->pause(5000); // Pause for 5 seconds
+```
+
+### refresh
+
+Refreshes the current page.
+
+```php
+$this->refresh();
+```
+
+### rightClick
+
+Right click the element at the given selector.
+
+```php
+$this->rightClick('.selector');
+```
+
+### screenshot
+
+Takes a full-page screenshot of the current page and saves it under `/Browser/screenshots`.
+
+```php
+$this->screenshot('filename');
+```
+
+### visit
+
+Visits the given URL, and starts a new browser test.
+
+```php
+$this->visit('https://pestphp.com');
 ```
 
 ## Available Assertions
@@ -72,8 +243,11 @@ Pause the test for the specified number of milliseconds.
 - [assertScript](#assertscript)
 - [assertVisible](#assertvisible)
 - [assertMissing](#assertmissing)
+- [assertChecked](#assertchecked)
+- [assertNotChecked](#assertnotchecked)
 
-#### assertAttribute
+
+### assertAttribute
 
 Assert that the specified element has the expected attribute and value:
 
@@ -82,7 +256,7 @@ $this->visit($url)
     ->assertAttribute('html', 'data-theme', 'light');
 ```
 
-#### assertAttributeContains
+### assertAttributeContains
 
 Assert that the specified element has the expected attribute and the value contains a specific value:
 
@@ -91,7 +265,7 @@ $this->visit($url)
     ->assertAttributeContains('html', 'data-theme', 'ight');
 ```
 
-#### assertAttributeMissing
+### assertAttributeMissing
 
 Assert that the specified element is missing a particular attribute :
 
@@ -100,7 +274,7 @@ $this->visit($url)
     ->assertAttributeMissing('html', 'data-missing');
 ```
 
-#### assertDontSee
+### assertDontSee
 
 Assert that the given text is not present on the page:
 
@@ -109,7 +283,7 @@ $this->visit($url)
     ->assertDontSee('we are a streaming service');
 ```
 
-#### assertVisible
+### assertVisible
 
 Assert that an element with the given selector is visible:
 
@@ -122,7 +296,7 @@ test('assert visible', function () {
 });
 ```
 
-#### assertMissing
+### assertMissing
 
 Assert that an element with the given selector is hidden:
 
@@ -134,7 +308,7 @@ test('assert missing', function () {
         ->assertMissing('a.hidden');
 ```
 
-#### assertQueryStringHas
+### assertQueryStringHas
 
 Assert that the given query string is present in the url:
 
@@ -143,7 +317,7 @@ $this->visit($url)
     ->assertQueryStringHas('q', 'test');
 ```
 
-#### assertQueryStringMissing
+### assertQueryStringMissing
 
 Assert that the given query string is not present in the url:
 
@@ -152,7 +326,7 @@ $this->visit($url)
     ->assertQueryStringMissing('q', 'test-1');
 ```
 
-#### assertScript
+### assertScript
 
 Assert that the given script returns the expected value:
 
@@ -161,7 +335,7 @@ $this->visit($url)
     ->assertScript('document.querySelector("title").textContent.includes("Laravel")', true);
 ```
 
-#### assertPresent
+### assertPresent
 
 Assert that the element with a given selector is present on the page:
 
@@ -170,11 +344,29 @@ $this->visit($url)
     ->assertPresent('h1:visible');
 ```
 
-#### assertNotPresent
+### assertNotPresent
 
 Assert that the element with a given selector is not present on the page:
 
 ```php
 $this->visit($url)
     ->assertNotPresent('a.non-existing-class');
+```
+
+#### assertChecked
+
+Assert that the element with a given selector is checked:
+
+```php
+$this->visit($url)
+    ->assertChecked('input[type="checkbox"].checked');
+```
+
+#### assertNotChecked
+
+Assert that the element with a given selector is not checked:
+
+```php
+$this->visit($url)
+    ->assertNotChecked('input[type="checkbox"].checked');
 ```
