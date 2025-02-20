@@ -20,3 +20,8 @@ function cleanupScreenshots(): void
 
     file_exists($basePath) && rmdir($basePath);
 }
+
+function playgroundUrl($uri = null): string
+{
+    return 'http://localhost:9357'.$uri;
+}

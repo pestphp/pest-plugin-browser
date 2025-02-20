@@ -3,18 +3,18 @@
 declare(strict_types=1);
 
 it('pause', function (): void {
-    $this->visit('https://laravel.com')
-        ->clickLink('Get Started')
-        ->pause(5000)
-        ->assertUrlIs('https://laravel.com/docs/11.x');
+    $this->visit('/test/interactive-elements')
+        ->assertDontSee('I appear after 2 seconds')
+        ->pause(2200)
+        ->assertSee('I appear after 2 seconds');
 });
 
 test('throws an exception when pause is negative', function (): void {
     expect(function () {
-        $this->visit('https://laravel.com')
+        $this->visit('/')
             ->clickLink('Get Started')
-            ->pause(-5000)
-            ->assertUrlIs('https://laravel.com/docs/11.x');
+            ->pause(-1000)
+            ->assertUrlIs(playgroundUrl());
     })
         ->toThrow(
             InvalidArgumentException::class,
