@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Pest\Browser\Operations;
 
 use Pest\Browser\Contracts\Operation;
-use Pest\Browser\Support\Str;
-use PHPUnit\Framework\Constraint\RegularExpression;
 
 final readonly class AssertPathIsNot implements Operation
 {
