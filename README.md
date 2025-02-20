@@ -99,12 +99,20 @@ TBD
 - [screenshot](#screenshot)
 - [visit](#visit)
 
-### back
+### Checkboxes
 
-Go back one page from the browser history.
+Check the given element.
 
 ```php
-$this->back();
+$this->visit($url)
+    ->check('#checkbox-unchecked');
+```
+
+Uncheck the given element.
+
+```php
+$this->visit($url)
+    ->uncheck('#checkbox-checked');
 ```
 
 ### click
@@ -157,13 +165,21 @@ $this->controlClick('.selector');
 
 ### doubleClick
 
-Double click the element at the given selector.
+Double-click the element at the given selector.
 
 ```php
 $this->doubleClick('.selector');
 ```
 
-### forward
+### Navigate back
+
+Go back one page from the browser history.
+
+```php
+$this->back();
+```
+
+### Navigate forward
 
 Go forward one page from the browser history.
 
@@ -227,6 +243,9 @@ $this->visit('https://pestphp.com');
 - [assertScript](#assertscript)
 - [assertVisible](#assertvisible)
 - [assertMissing](#assertmissing)
+- [assertChecked](#assertchecked)
+- [assertNotChecked](#assertnotchecked)
+
 
 ### assertAttribute
 
@@ -332,4 +351,22 @@ Assert that the element with a given selector is not present on the page:
 ```php
 $this->visit($url)
     ->assertNotPresent('a.non-existing-class');
+```
+
+#### assertChecked
+
+Assert that the element with a given selector is checked:
+
+```php
+$this->visit($url)
+    ->assertChecked('input[type="checkbox"].checked');
+```
+
+#### assertNotChecked
+
+Assert that the element with a given selector is not checked:
+
+```php
+$this->visit($url)
+    ->assertNotChecked('input[type="checkbox"].checked');
 ```
