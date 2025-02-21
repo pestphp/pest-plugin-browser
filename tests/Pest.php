@@ -10,15 +10,15 @@ pest()
 
 function cleanupScreenshots(): void
 {
-    $basePath = TestSuite::getInstance()->testPath.'/Browser/screenshots';
+    // $basePath = TestSuite::getInstance()->testPath.'/Browser/screenshots';
 
-    foreach (glob("$basePath/*") as $file) {
-        if (is_file($file)) {
-            unlink($file);
-        }
-    }
+    // foreach (glob("$basePath/*") as $file) {
+    //     if (is_file($file)) {
+    //         unlink($file);
+    //     }
+    // }
 
-    file_exists($basePath) && rmdir($basePath);
+    // file_exists($basePath) && rmdir($basePath);
 }
 
 function playgroundUrl($uri = null): string
