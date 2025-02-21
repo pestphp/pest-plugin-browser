@@ -5,9 +5,7 @@
 
         <h1
             x-init="setTimeout(() => $el.innerHTML = 'I appear after 2 seconds', 2000)"
-        >
-
-        </h1>
+        ></h1>
 
         <div class="h-12"></div>
 
@@ -25,6 +23,9 @@
             I'm an invisible element.
         </div>
 
+        <div id="text-with-special-chars">
+            Some (text) wi/th [some] "formatted" ch@racters.
+        </div>
 
     </section>
 @endsection

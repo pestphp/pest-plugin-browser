@@ -23,8 +23,9 @@ final readonly class AssertDontSee implements Operation
      */
     public function compile(): string
     {
-        $ignoreCase = $this->ignoreCase ? 'i' : '';
+        $text = json_encode($this->text);
+        $ignoreCase = json_encode($this->ignoreCase);
 
-        return sprintf('await expect(page.locator(\'body\')).not.toHaveText(/%s/'.$ignoreCase.');', $this->text);
+        return "await expect(page.locator('body')).not.toContainText({$text}, { ignoreCase: $ignoreCase });";
     }
 }
