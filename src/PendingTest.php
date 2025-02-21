@@ -119,6 +119,16 @@ final class PendingTest
     }
 
     /**
+     * Checks if a selector has a particular attribute that doesn't contain a specific value.
+     */
+    public function assertAttributeDoesntContain(string $selector, string $attribute, string $value): self
+    {
+        $this->operations[] = new Operations\AssertAttributeDoesntContain($selector, $attribute, $value);
+
+        return $this;
+    }
+
+    /**
      * Checks if the page has a title that contains the given text.
      */
     public function assertTitleContains(string $text): self
@@ -239,6 +249,57 @@ final class PendingTest
     }
 
     /**
+     * Checks if the page URL begins with the given path.
+     */
+    public function assertPathBeginsWith(string $path): self
+    {
+        $this->operations[] = new Operations\AssertPathBeginsWith($path);
+
+        return $this;
+    }
+
+    /**
+     * Checks if the page URL ends with the given path.
+     */
+    public function assertPathEndsWith(string $path): self
+    {
+        $this->operations[] = new Operations\AssertPathEndsWith($path);
+
+        return $this;
+    }
+
+    /**
+     * Checks if the page URL contains the given path.
+     */
+    public function assertPathContains(string $path): self
+    {
+        $this->operations[] = new Operations\AssertPathContains($path);
+
+        return $this;
+    }
+
+    /**
+     * Checks if the page URL path matches the given path.
+     * The asterisk (*) character can be used as a wildcard.
+     */
+    public function assertPathIs(string $path): self
+    {
+        $this->operations[] = new Operations\AssertPathIs($path);
+
+        return $this;
+    }
+
+    /**
+     * Checks if the page URL path does not match the given path.
+     */
+    public function assertPathIsNot(string $path): self
+    {
+        $this->operations[] = new Operations\AssertPathIsNot($path);
+
+        return $this;
+    }
+
+    /**
      * Checks if the given script returns the expected value.
      *
      * @param  array<mixed>|bool|float|int|string|null  $expected
@@ -347,7 +408,17 @@ final class PendingTest
     }
 
     /**
-     * Double click the element at the given selector.
+     * Checks if the given element is checked.
+     */
+    public function assertChecked(string $selector): self
+    {
+        $this->operations[] = new Operations\AssertChecked($selector);
+
+        return $this;
+    }
+
+    /**
+     * Double-click the element at the given selector.
      */
     public function doubleClick(string $selector): self
     {
@@ -357,11 +428,41 @@ final class PendingTest
     }
 
     /**
-     * Right click the element at the given selector.
+     * Checks if the given element is not checked.
+     */
+    public function assertNotChecked(string $selector): self
+    {
+        $this->operations[] = new Operations\AssertNotChecked($selector);
+
+        return $this;
+    }
+
+    /**
+     * Right-click the element at the given selector.
      */
     public function rightClick(string $selector): self
     {
         $this->operations[] = new Operations\RightClick($selector);
+
+        return $this;
+    }
+
+    /**
+     * Check the given element.
+     */
+    public function check(string $selector): self
+    {
+        $this->operations[] = new Operations\Check($selector);
+
+        return $this;
+    }
+
+    /**
+     * Uncheck the given element.
+     */
+    public function uncheck(string $selector): self
+    {
+        $this->operations[] = new Operations\UnCheck($selector);
 
         return $this;
     }

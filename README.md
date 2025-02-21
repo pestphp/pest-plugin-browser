@@ -2,13 +2,15 @@
 
 This repository contains the Pest Plugin Browser.
 
-> If you want to start testing your application with Pest, visit the main **[Pest Repository](https://github.com/pestphp/pest)**.
+> If you want to start testing your application with Pest, visit the main *
+*[Pest Repository](https://github.com/pestphp/pest)**.
 
 ## Community & Resources
 
 - Explore our docs at **[pestphp.com »](https://pestphp.com)**
 - Follow us on Twitter at **[@pestphp »](https://twitter.com/pestphp)**
-- Join us at **[discord.gg/kaHY6p54JH »](https://discord.gg/kaHY6p54JH)** or **[t.me/+kYH5G4d5MV83ODk0 »](https://t.me/+kYH5G4d5MV83ODk0)**
+- Join us at **[discord.gg/kaHY6p54JH »](https://discord.gg/kaHY6p54JH)** or *
+  *[t.me/+kYH5G4d5MV83ODk0 »](https://t.me/+kYH5G4d5MV83ODk0)**
 
 ## Installation (for development purposes)
 
@@ -63,7 +65,8 @@ Check the `playground/resources/views/test-pages` folder for existing views.
 
 They are accessible by the playground route `/test/{page}`.
 
-E.g.: The view `resources/views/test-pages/interactive-elements.blade.php` is visited on `playgroundUrl('/test/interactive-elements')`.
+E.g.: The view `resources/views/test-pages/interactive-elements.blade.php` is visited
+on `playgroundUrl('/test/interactive-elements')`.
 
 The playground is standard Laravel App, where you may add a page with a feature for your test.
 
@@ -76,7 +79,8 @@ Pest is an open-sourced software licensed under the **[MIT license](https://open
 # Documentation
 
 Pest Plugin Browser brings end-to-end testing to the elegant syntax from Pest.
-This allows to test your application in a browser environment, enabling to test all the components, such as frontend, backend and database.
+This allows to test your application in a browser environment, enabling to test all the components, such as frontend,
+backend and database.
 
 ## Installation
 
@@ -99,12 +103,20 @@ TBD
 - [screenshot](#screenshot)
 - [visit](#visit)
 
-### back
+### Checkboxes
 
-Go back one page from the browser history.
+Check the given element.
 
 ```php
-$this->back();
+$this->visit($url)
+    ->check('#checkbox-unchecked');
+```
+
+Uncheck the given element.
+
+```php
+$this->visit($url)
+    ->uncheck('#checkbox-checked');
 ```
 
 ### click
@@ -157,13 +169,21 @@ $this->controlClick('.selector');
 
 ### doubleClick
 
-Double click the element at the given selector.
+Double-click the element at the given selector.
 
 ```php
 $this->doubleClick('.selector');
 ```
 
-### forward
+### Navigate back
+
+Go back one page from the browser history.
+
+```php
+$this->back();
+```
+
+### Navigate forward
 
 Go forward one page from the browser history.
 
@@ -176,7 +196,8 @@ $this->forward();
 Pauses the execution for a specified number of milliseconds.
 
 > [!WARNING]
-> Discouraged: Never pause in production. Tests that wait for an amount of time are inherently flaky. Use "wait for element" or "wait for an event" approaches - you can wait for an event your app dispatches.
+> Discouraged: Never pause in production. Tests that wait for an amount of time are inherently flaky. Use "wait for
+> element" or "wait for an event" approaches - you can wait for an event your app dispatches.
 
 ```php
     $this->pause(5000); // Pause for 5 seconds
@@ -218,15 +239,23 @@ $this->visit('https://pestphp.com');
 
 - [assertAttribute](#assertAttribute)
 - [assertAttributeContains](#assertAttributeContains)
+- [assertAttributeDoesntContain](#assertAttributeDoesntContain)
 - [assertAttributeMissing](#assertAttributeMissing)
 - [assertDontSee](#assertDontSee)
 - [assertQueryStringHas](#assertQueryStringHas)
 - [assertQueryStringMissing](#assertQueryStringMissing)
+- [assertPathBeginsWith](#assertpathbeginswith)
+- [assertPathEndsWith](#assertpathendswith)
+- [assertPathContains](#assertpathcontains)
+- [assertPathIs](#assertpathis)
+- [assertPathIsNot](#assertpathisnot)
 - [assertPresent](#assertpresent)
 - [assertNotPresent](#assertnotpresent)
 - [assertScript](#assertscript)
 - [assertVisible](#assertvisible)
 - [assertMissing](#assertmissing)
+- [assertChecked](#assertchecked)
+- [assertNotChecked](#assertnotchecked)
 
 ### assertAttribute
 
@@ -244,6 +273,15 @@ Assert that the specified element has the expected attribute and the value conta
 ```php
 $this->visit($url)
     ->assertAttributeContains('html', 'data-theme', 'ight');
+```
+
+#### assertAttributeDoesntContain
+
+Assert that the specified element has the expected attribute, but the value does not contain a specific value:
+
+```php
+    $this->visit($url)
+        ->assertAttributeDoesntContain('html', 'data-theme', 'not here');
 ```
 
 ### assertAttributeMissing
@@ -270,8 +308,6 @@ Assert that an element with the given selector is visible:
 
 ```php
 test('assert visible', function () {
-    $url = 'https://laravel.com';
-
     $this->visit($url)
         ->assertVisible('h1:visible');
 });
@@ -283,8 +319,6 @@ Assert that an element with the given selector is hidden:
 
 ```php
 test('assert missing', function () {
-    $url = 'https://laravel.com';
-
     $this->visit($url)
         ->assertMissing('a.hidden');
 ```
@@ -305,6 +339,56 @@ Assert that the given query string is not present in the url:
 ```php
 $this->visit($url)
     ->assertQueryStringMissing('q', 'test-1');
+```
+
+### assertPathBeginsWith
+
+Assert that the current URL path begins with the given path:
+
+```php
+$this->visit($url)
+    ->assertPathBeginsWith('/test');
+```
+
+### assertPathEndsWith
+
+Assert that the current URL path ends with the given path:
+
+```php
+$this->visit($url)
+    ->assertPathEndsWith('/test');
+```
+
+### assertPathContains
+
+Assert that the current URL path contains the given path:
+
+```php
+$this->visit($url)
+    ->assertPathContains('/test');
+```
+
+### assertPathIs
+
+Assert that the current URL path matches the given path:
+
+```php
+$this->visit($url)
+    ->assertPathIs('/test');
+
+// Asterisk (*) can be used as a wildcard
+
+$this->visit($url)
+    ->assertPathIs('/test/*');
+```
+
+### assertPathIsNot
+
+Assert that the current URL path does not match the given path:
+
+```php
+$this->visit($url)
+    ->assertPathIsNot('/test');
 ```
 
 ### assertScript
@@ -332,4 +416,22 @@ Assert that the element with a given selector is not present on the page:
 ```php
 $this->visit($url)
     ->assertNotPresent('a.non-existing-class');
+```
+
+#### assertChecked
+
+Assert that the element with a given selector is checked:
+
+```php
+$this->visit($url)
+    ->assertChecked('input[type="checkbox"].checked');
+```
+
+#### assertNotChecked
+
+Assert that the element with a given selector is not checked:
+
+```php
+$this->visit($url)
+    ->assertNotChecked('input[type="checkbox"].checked');
 ```

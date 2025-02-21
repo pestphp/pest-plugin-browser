@@ -24,5 +24,4 @@ it('can click multiple times', function (): void {
         ->click('button[data-testId="default-click"]')
         ->click('button[data-testId="default-click"]')
         ->assertSee('Single clicked! (3)');
-
 });

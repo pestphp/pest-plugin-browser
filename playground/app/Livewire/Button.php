@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire;
 
+use AllowDynamicProperties;
 use Illuminate\Support\Arr;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -12,6 +13,7 @@ use Livewire\Component;
  * @property string[] $events
  * @property string $label
  */
+#[AllowDynamicProperties]
 final class Button extends Component
 {
     public $counter = 0;
@@ -37,6 +39,7 @@ final class Button extends Component
             'control' => 'ctrl|cmd + click me',
             'double' => 'Double click me',
             'hold' => 'Click and hold me',
+            'point' => 'Absolutely click me',
             'right' => 'Right click me',
             default => 'Click me',
         };
@@ -50,6 +53,7 @@ final class Button extends Component
             'control' => 'ctrl|cmd clicked!',
             'double' => 'Double clicked!',
             'hold' => 'Free hug!',
+            'point' => 'Absolutely clicked!',
             'right' => 'Right clicked!',
             default => 'Single clicked!',
         };

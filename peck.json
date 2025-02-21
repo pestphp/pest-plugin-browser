@@ -5,9 +5,10 @@
             "php",
             "autoload",
             "str",
-            "dont"
+            "dont",
+            "doesnt",
+            "uncheck"
         ],
         "paths": []
     }
 }
-
