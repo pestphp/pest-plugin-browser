@@ -39,6 +39,7 @@ final class Button extends Component
             'control' => 'ctrl|cmd + click me',
             'double' => 'Double click me',
             'hold' => 'Click and hold me',
+            'point' => 'Absolutely click me',
             'right' => 'Right click me',
             default => 'Click me',
         };
@@ -52,6 +53,7 @@ final class Button extends Component
             'control' => 'ctrl|cmd clicked!',
             'double' => 'Double clicked!',
             'hold' => 'Free hug!',
+            'point' => 'Absolutely clicked!',
             'right' => 'Right clicked!',
             default => 'Single clicked!',
         };
