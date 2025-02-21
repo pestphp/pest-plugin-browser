@@ -119,6 +119,16 @@ final class PendingTest
     }
 
     /**
+     * Checks if a selector has a particular attribute that doesn't contain a specific value.
+     */
+    public function assertAttributeDoesntContain(string $selector, string $attribute, string $value): self
+    {
+        $this->operations[] = new Operations\AssertAttributeDoesntContain($selector, $attribute, $value);
+
+        return $this;
+    }
+
+    /**
      * Checks if the page has a title that contains the given text.
      */
     public function assertTitleContains(string $text): self
@@ -234,6 +244,57 @@ final class PendingTest
     public function assertHostIsNot(string $host): self
     {
         $this->operations[] = new Operations\AssertHostIsNot($host);
+
+        return $this;
+    }
+
+    /**
+     * Checks if the page URL begins with the given path.
+     */
+    public function assertPathBeginsWith(string $path): self
+    {
+        $this->operations[] = new Operations\AssertPathBeginsWith($path);
+
+        return $this;
+    }
+
+    /**
+     * Checks if the page URL ends with the given path.
+     */
+    public function assertPathEndsWith(string $path): self
+    {
+        $this->operations[] = new Operations\AssertPathEndsWith($path);
+
+        return $this;
+    }
+
+    /**
+     * Checks if the page URL contains the given path.
+     */
+    public function assertPathContains(string $path): self
+    {
+        $this->operations[] = new Operations\AssertPathContains($path);
+
+        return $this;
+    }
+
+    /**
+     * Checks if the page URL path matches the given path.
+     * The asterisk (*) character can be used as a wildcard.
+     */
+    public function assertPathIs(string $path): self
+    {
+        $this->operations[] = new Operations\AssertPathIs($path);
+
+        return $this;
+    }
+
+    /**
+     * Checks if the page URL path does not match the given path.
+     */
+    public function assertPathIsNot(string $path): self
+    {
+        $this->operations[] = new Operations\AssertPathIsNot($path);
 
         return $this;
     }

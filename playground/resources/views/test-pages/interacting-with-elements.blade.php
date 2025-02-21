@@ -5,6 +5,9 @@
         <h2 class="md:text-4xl text-3xl font-bold mt-14 mb-5">Interacting With Elements</h2>
         <h3 class="md:text-3xl text-2xl font-bold text-center mt-10 mb-4">Using the Mouse</h3>
 
+        {{-- Absolutely positioned --}}
+        <livewire:button flavor="point" />
+
         <div class="my-10 grid grid-cols-3 gap-4">
             <a
                 href="https://pestphp.com/docs/installation" class="focus:outline-none w-full px-12 py-4 text-lg font-bold text-gray-900 bg-white border border-white rounded-lg flex items-center justify-center"

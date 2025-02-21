@@ -6,6 +6,7 @@
             "autoload",
             "str",
             "dont",
+            "doesnt",
             "uncheck"
         ],
         "paths": []
