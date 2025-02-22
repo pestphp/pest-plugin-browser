@@ -14,6 +14,9 @@ final readonly class AssertHasClass implements Operation
 {
     /**
      * Creates an operation instance.
+     *
+     * @param  string  $locator  The locator string.
+     * @param  string|string[]  $class  The class name or an array of class names.
      */
     public function __construct(
         private string $locator,
@@ -46,10 +49,12 @@ final readonly class AssertHasClass implements Operation
 
     /**
      * Format an array of class names for JavaScript assertion.
+     *
+     * @param  array<string>  $classes
      */
     private function formatClassArray(array $classes): string
     {
-        array_walk($classes, fn (&$class) => $class = $this->formatClass($class));
+        array_walk($classes, fn (string &$class) => $class = $this->formatClass($class));
 
         return '['.implode(', ', $classes).']';
     }

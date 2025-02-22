@@ -30,6 +30,8 @@ final class PendingTest
 
     /**
      * Assert the element has one or many classes.
+     *
+     * @param  string|string[]  $cssClass
      */
     public function assertHasClass(string $locator, string|array $cssClass): self
     {
