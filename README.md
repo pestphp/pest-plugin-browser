@@ -98,6 +98,7 @@ TBD
 - [doubleClick](#doubleClick)
 - [forward](#forward)
 - [pause](#pause)
+- [setTimeout](#setTimeout)
 - [refresh](#refresh)
 - [rightClick](#rightClick)
 - [screenshot](#screenshot)
@@ -201,6 +202,15 @@ Pauses the execution for a specified number of milliseconds.
 
 ```php
     $this->pause(5000); // Pause for 5 seconds
+```
+
+### setTimeout
+
+Changes the timeout for the currently running test to the given value in milliseconds.
+This feature works well in combination with [pause](#pause) when necessary or in other relevant scenarios.
+
+```php
+    $this->setTimeout(10000); // set timeout for test execution to 10 seconds
 ```
 
 ### refresh
