@@ -378,6 +378,22 @@ final class PendingTest
     }
 
     /**
+     * Sets the timeout for the test.
+     *
+     * @param  int  $milliseconds  The number of milliseconds to wait before timing out. Default is 30000.
+     */
+    public function setTimeout(int $milliseconds = 30000): self
+    {
+        if ($milliseconds <= 0) {
+            throw new InvalidArgumentException('The number of milliseconds must be greater than 0.');
+        }
+
+        array_unshift($this->operations, new Operations\SetTimeout($milliseconds));
+
+        return $this;
+    }
+
+    /**
      * Checks if the given element is visible.
      */
     public function assertVisible(string $selector): self
