@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Pest\Browser;
 
 use Closure;
-use Pest\Browser\Contracts\Condition;
 use InvalidArgumentException;
+use Pest\Browser\Contracts\Condition;
 use Pest\Browser\Contracts\Operation;
 use Pest\Browser\ValueObjects\TestResult;
 
