@@ -207,6 +207,7 @@ Pauses the execution for a specified number of milliseconds.
 ### setTimeout
 
 Changes the timeout for the currently running test to the given value in milliseconds.
+This feature works well in combination with [pause](#pause) when necessary or in other relevant scenarios.
 
 ```php
     $this->setTimeout(10000); // set timeout for test execution to 10 seconds
