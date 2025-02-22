@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Operations;
 
-use Pest\Browser\Contracts\Operation;
+use Pest\Browser\Operation;
 
-final readonly class AssertQueryStringMissing implements Operation
+final readonly class AssertQueryStringMissing extends Operation
 {
     /**
      * Creates an operation instance.
@@ -14,7 +14,9 @@ final readonly class AssertQueryStringMissing implements Operation
     public function __construct(
         private string $name,
         private ?string $value = null,
-    ) {}
+    ) {
+        parent::__construct();
+    }
 
     /**
      * Compile the operation.

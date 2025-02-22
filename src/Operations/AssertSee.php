@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Operations;
 
-use Pest\Browser\Contracts\Operation;
+use Pest\Browser\Operation;
 
-final readonly class AssertSee implements Operation
+final readonly class AssertSee extends Operation
 {
     /**
      * Creates an operation instance.
@@ -15,7 +15,7 @@ final readonly class AssertSee implements Operation
         private string $text,
         private bool $ignoreCase = false,
     ) {
-        //
+        parent::__construct();
     }
 
     /**

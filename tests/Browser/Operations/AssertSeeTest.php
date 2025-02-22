@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Pest\Browser\Exceptions\BrowserOperationException;
+
 it('sees', function () {
     $this->visit(playgroundUrl('/'))
         ->assertSee('Pest Plugin Browser');
@@ -20,4 +22,4 @@ it('sees with special characters', function () {
 it('sees without supporting regex', function () {
     $this->visit(playgroundUrl('/test/interactive-elements'))
         ->assertSee('text(.*)formatted');
-})->throws(Exception::class);
+})->throws(BrowserOperationException::class);

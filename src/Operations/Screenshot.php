@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Operations;
 
-use Pest\Browser\Contracts\Operation;
+use Pest\Browser\Operation;
 use Pest\TestSuite;
 
 /**
  * @internal
  */
-final readonly class Screenshot implements Operation
+final readonly class Screenshot extends Operation
 {
     /**
      * The path to save the screenshot.
@@ -23,6 +23,8 @@ final readonly class Screenshot implements Operation
     public function __construct(
         ?string $path = null,
     ) {
+        parent::__construct();
+
         $basePath = TestSuite::getInstance()->testPath.'/Browser/screenshots';
 
         $path ??= $this->generateFilename();

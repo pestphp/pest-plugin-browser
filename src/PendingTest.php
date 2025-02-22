@@ -7,6 +7,7 @@ namespace Pest\Browser;
 use InvalidArgumentException;
 use Pest\Browser\Contracts\Operation;
 use Pest\Browser\ValueObjects\TestResult;
+use PHPUnit\Framework\ExpectationFailedException;
 
 /**
  * @internal
@@ -480,7 +481,22 @@ final class PendingTest
 
         $result = $worker->run();
 
-        expect($result->ok())->toBeTrue();
+        try {
+            expect($result->isPassed)->toBeTrue();
+        } catch (ExpectationFailedException $e) {
+            $failedOperations = array_filter(
+                $this->operations,
+                fn (Operation $operation): bool => $operation->compile() === $result->errorLine
+            );
+
+            $failedOperation = reset($failedOperations);
+
+            if ($failedOperation !== false) {
+                $failedOperation->fail($result);
+            } else {
+                throw $e;
+            }
+        }
 
         return $result;
     }

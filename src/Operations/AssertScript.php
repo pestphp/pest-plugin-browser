@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Operations;
 
-use Pest\Browser\Contracts\Operation;
+use Pest\Browser\Operation;
 
 /**
  * @internal
  */
-final readonly class AssertScript implements Operation
+final readonly class AssertScript extends Operation
 {
     /**
      * Creates an operation instance.
@@ -20,7 +20,7 @@ final readonly class AssertScript implements Operation
         private string $expression,
         private string|bool|int|float|array|null $expected = true,
     ) {
-        //
+        parent::__construct();
     }
 
     /**

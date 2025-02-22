@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Symfony\Component\Process\Exception\ProcessFailedException;
+use Pest\Browser\Exceptions\BrowserOperationException;
 
 describe('assert visible', function () {
     it('passes when the given element is visible', function () {
@@ -13,5 +13,5 @@ describe('assert visible', function () {
     it('fails when the given element is not visible', function () {
         $this->visit('/test/interactive-elements')
             ->assertVisible('#invisible-element');
-    })->throws(ProcessFailedException::class);
+    })->throws(BrowserOperationException::class);
 });

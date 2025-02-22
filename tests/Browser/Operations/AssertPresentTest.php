@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Symfony\Component\Process\Exception\ProcessFailedException;
+use Pest\Browser\Exceptions\BrowserOperationException;
 
 describe('assert present', function () {
     it('passes when the given element is present', function () {
@@ -18,5 +18,5 @@ describe('assert present', function () {
     it('fails when the given element is not present', function () {
         $this->visit('/test/interactive-elements')
             ->assertPresent('#unexistent-element-for-sure-not-to-be-present');
-    })->throws(ProcessFailedException::class);
+    })->throws(BrowserOperationException::class);
 });
