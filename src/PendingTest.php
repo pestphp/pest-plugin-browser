@@ -14,6 +14,16 @@ use Pest\Browser\ValueObjects\TestResult;
 final class PendingTest
 {
     /**
+     * The list of supported browsers.
+     */
+    private const SUPPORTED_BROWSERS = ['chrome', 'firefox', 'safari'];
+
+    /**
+     * The list of browsers for the test.
+     */
+    private array $browsers = ['chrome'];
+
+    /**
      * The pending operations.
      *
      * @var array<int, Operation>
@@ -26,6 +36,27 @@ final class PendingTest
     public function __destruct()
     {
         $this->compile();
+    }
+
+    /**
+     * Sets the browsers for the test.
+     */
+    public function withBrowser(array ...$browsers): self
+    {
+        $browsers = array_filter(
+            $browsers,
+            fn ($browser) => in_array($browser, self::SUPPORTED_BROWSERS)
+        );
+
+        if (! $browsers) {
+            throw new InvalidArgumentException(
+                'At least one supported browser (chrome, firefox, safari) must be provided.'
+            );
+        }
+
+        $this->browsers = $browsers;
+
+        return $this;
     }
 
     /**
@@ -476,7 +507,7 @@ final class PendingTest
 
         $compiler->compile();
 
-        $worker = new Worker;
+        $worker = new Worker($this->browsers);
 
         $result = $worker->run();
 
