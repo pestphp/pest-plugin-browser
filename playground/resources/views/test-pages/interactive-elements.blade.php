@@ -27,5 +27,17 @@
             Some (text) wi/th [some] "formatted" ch@racters.
         </div>
 
+        <section>
+            <div id="div-1" class="class-1"></div>
+            <div id="div-2" class="class-1 class-2"></div>
+            <div id="div-3" class="class-1 selected class-3"></div>
+            <ul>
+                <li class="component"></li>
+                <li class="component selected"></li>
+                <li class="component"></li>
+            </ul>
+        </section>
+
+
     </section>
 @endsection
