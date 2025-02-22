@@ -242,6 +242,7 @@ $this->visit('https://pestphp.com');
 - [assertAttributeDoesntContain](#assertAttributeDoesntContain)
 - [assertAttributeMissing](#assertAttributeMissing)
 - [assertDontSee](#assertDontSee)
+- [assertHasClass](#assertHasClass)
 - [assertQueryStringHas](#assertQueryStringHas)
 - [assertQueryStringMissing](#assertQueryStringMissing)
 - [assertPathBeginsWith](#assertpathbeginswith)
@@ -302,7 +303,40 @@ $this->visit($url)
     ->assertDontSee('we are a streaming service');
 ```
 
-### assertVisible
+#### assertHasClass
+
+Assert that the element has css classes bases upon string, array, regex
+
+Given the html
+
+```html
+<section>
+    <div id="div-1" class="class-1"></div>
+    <div id="div-2" class="class-1 class-2"></div>
+    <div id="div-3" class="class-1 selected class-3"></div>
+    <ul>
+        <li class="component"></li>
+        <li class="component selected"></li>
+        <li class="component"></li>
+    </ul>
+</section>
+```
+
+```php
+$this->visit('/test/interactive-elements')
+    ->assertHasClass('#div-1', 'class-1');
+
+$this->visit('/test/interactive-elements')
+    ->assertHasClass('#div-3', 'class-1 selected class-3');
+
+$this->visit('/test/interactive-elements')
+    ->assertHasClass('#div-3', '/(^|\s)selected(\s|$)/');
+
+$this->visit('/test/interactive-elements')
+    ->assertHasClass('ul > .component', ['component', 'component selected', 'component']);
+```
+
+#### assertVisible
 
 Assert that an element with the given selector is visible:
 
