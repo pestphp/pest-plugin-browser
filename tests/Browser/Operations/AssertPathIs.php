@@ -3,15 +3,11 @@
 declare(strict_types=1);
 
 test('assert path is', function () {
-    $url = 'https://laravel.com/docs/11.x';
-
-    $this->visit($url)
-        ->assertPathIs('/docs/11.x');
+    $this->visit(playground()->url('/test/form-inputs'))
+        ->assertPathIs('/test/form-inputs');
 });
 
 test('assert path is with wildcard', function () {
-    $url = 'https://laravel.com/docs/11.x';
-
-    $this->visit($url)
-        ->assertPathIs('/docs/*.x');
+    $this->visit(playground()->url('/test/form-inputs'))
+        ->assertPathIs('/test/*inputs');
 });
