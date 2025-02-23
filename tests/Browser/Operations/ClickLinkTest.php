@@ -3,13 +3,13 @@
 declare(strict_types=1);
 
 it('clicks a link', function (): void {
-    $this->visit('/test/interacting-with-elements')
+    $this->visit(playground()->url('/test/interacting-with-elements'))
         ->clickLink('Home')
-        ->assertUrlIs(playgroundUrl());
+        ->assertUrlIs(playground()->url());
 });
 
 it('is case insensitive', function (): void {
-    $this->visit('/test/interacting-with-elements')
+    $this->visit(playground()->url('/test/interacting-with-elements'))
         ->clickLink('home')
-        ->assertUrlIs(playgroundUrl());
+        ->assertUrlIs(playground()->url());
 });

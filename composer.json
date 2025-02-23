@@ -29,7 +29,9 @@
         "laravel/pint": "^1.20",
         "peckphp/peck": "^0.1.2",
         "pestphp/pest-dev-tools": "^3.4.0",
-        "pestphp/pest-plugin-type-coverage": "^3.3"
+        "pestphp/pest-plugin-type-coverage": "^3.3",
+        "ext-pcntl": "*",
+        "ext-posix": "*"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,

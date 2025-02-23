@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Pest\Browser\Playground;
 use Pest\TestSuite;
 
 pest()
@@ -21,7 +22,7 @@ function cleanupScreenshots(): void
     file_exists($basePath) && rmdir($basePath);
 }
 
-function playgroundUrl($uri = null): string
+function playground(): Playground
 {
-    return 'http://localhost:9357'.$uri;
+    return Playground::start();
 }

@@ -3,6 +3,6 @@
 declare(strict_types=1);
 
 test('assert attribute', function () {
-    $this->visit('/test/interactive-elements')
+    $this->visit(playground()->url('/test/interactive-elements'))
         ->assertAttribute('#i-have-data-testid', 'data-testid', 'i-exist-to-be-seen');
 });

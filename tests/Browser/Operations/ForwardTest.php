@@ -3,11 +3,11 @@
 declare(strict_types=1);
 
 test('navigates forward', function (): void {
-    $this->visit('/')
+    $this->visit(playground()->url())
         ->clickLink('Interacting with Elements')
-        ->assertUrlIs(playgroundUrl('/test/interacting-with-elements'))
+        ->assertUrlIs(playground()->url('/test/interacting-with-elements'))
         ->back()
-        ->assertUrlIs(playgroundUrl())
+        ->assertUrlIs(playground()->url())
         ->forward()
-        ->assertUrlIs(playgroundUrl('/test/interacting-with-elements'));
+        ->assertUrlIs(playground()->url('/test/interacting-with-elements'));
 });

@@ -3,6 +3,6 @@
 declare(strict_types=1);
 
 test('assert scheme', function () {
-    $this->visit('/')
+    $this->visit(playground()->url())
         ->assertSchemeIs('http');
 });

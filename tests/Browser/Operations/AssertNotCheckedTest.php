@@ -3,6 +3,6 @@
 declare(strict_types=1);
 
 test('assert checkbox is not checked', function () {
-    $this->visit('/test/form-inputs')
+    $this->visit(playground()->url('/test/form-inputs'))
         ->assertNotChecked('input[name="default-checkbox"]');
 });

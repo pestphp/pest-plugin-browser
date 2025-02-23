@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 describe('assert script', function () {
     it('passes', function ($expression, $expected) {
-        $this->visit('/')
+        $this->visit(playground()->url())
             ->assertScript($expression, $expected);
     })->with([
         ['document.querySelector("title").textContent.includes("Pest")', true],
