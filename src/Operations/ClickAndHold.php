@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Operations;
 
-use Pest\Browser\Contracts\Operation;
+use Pest\Browser\Operation;
 
 /**
  * @internal
  */
-final readonly class ClickAndHold implements Operation
+final readonly class ClickAndHold extends Operation
 {
     /**
      * Creates an operation instance.
@@ -18,7 +18,7 @@ final readonly class ClickAndHold implements Operation
         private string $selector,
         private int $duration = 1000,
     ) {
-        //
+        parent::__construct();
     }
 
     /**

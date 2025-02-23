@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Operations;
 
-use Pest\Browser\Contracts\Operation;
+use Pest\Browser\Operation;
 
 /**
  * @internal
  */
-final readonly class Forward implements Operation
+final readonly class Forward extends Operation
 {
     /**
      * Compile the operation.

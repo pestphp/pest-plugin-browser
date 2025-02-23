@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Operations;
 
-use Pest\Browser\Contracts\Operation;
+use Pest\Browser\Operation;
 
-final readonly class AssertAttributeDoesntContain implements Operation
+final readonly class AssertAttributeDoesntContain extends Operation
 {
     /**
      * Creates an operation instance.
@@ -16,7 +16,7 @@ final readonly class AssertAttributeDoesntContain implements Operation
         private string $attribute,
         private string $value
     ) {
-        //
+        parent::__construct();
     }
 
     /**

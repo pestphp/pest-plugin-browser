@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Operations;
 
-use Pest\Browser\Contracts\Operation;
+use Pest\Browser\Operation;
 
 /**
  * @internal
  */
-final readonly class ClickLink implements Operation
+final readonly class ClickLink extends Operation
 {
     /**
      * Creates an operation instance.
@@ -18,7 +18,7 @@ final readonly class ClickLink implements Operation
         private string $text,
         private string $element = 'a',
     ) {
-        //
+        parent::__construct();
     }
 
     /**
