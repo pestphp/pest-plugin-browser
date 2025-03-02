@@ -2,10 +2,16 @@
 
 declare(strict_types=1);
 
-test('assert host is', function () {
-    $this
-        ->visit('/')
-        ->assertHostIs(
-            str_replace('http://', '', playgroundUrl())
-        );
+use PHPUnit\Framework\ExpectationFailedException;
+
+describe('assertHostIs', function () {
+    it('passes when host matches', function () {
+        $this->visit(playgroundUrl())
+            ->assertHostIs('localhost');
+    });
+
+    it('fails when host doesn\'t match', function () {
+        $this->visit(playgroundUrl())
+            ->assertHostIs('laravel.com');
+    })->throws(ExpectationFailedException::class);
 });

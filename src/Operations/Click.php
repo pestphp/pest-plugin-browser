@@ -4,29 +4,22 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Operations;
 
-use Pest\Browser\Contracts\Operation;
+use Pest\Browser\Playwright\Page;
 
-/**
- * @internal
- */
-final readonly class Click implements Operation
+trait Click
 {
     /**
-     * Creates an operation instance.
+     * Page.
      */
-    public function __construct(
-        private string $selector,
-    ) {
-        //
-    }
+    private Page $page;
 
     /**
-     * Compile the operation.
+     * Clicks an element by its selector.
      */
-    public function compile(): string
+    public function click(string $selector): self
     {
-        $selector = json_encode($this->selector);
+        $this->page->click($selector);
 
-        return "await page.locator({$selector}).click();";
+        return $this;
     }
 }

@@ -4,31 +4,29 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Operations;
 
-use Pest\Browser\Contracts\Operation;
+use Pest\Browser\Playwright\Page;
 
-final readonly class AssertQueryStringMissing implements Operation
+trait AssertQueryStringMissing
 {
     /**
-     * Creates an operation instance.
+     * Page.
      */
-    public function __construct(
-        private string $name,
-        private ?string $value = null,
-    ) {}
+    private Page $page;
 
     /**
-     * Compile the operation.
+     * Asserts that the query string does not contain the specified parameter.
      */
-    public function compile(): string
+    public function assertQueryStringMissing(string $expectedParam, ?string $expectedValue = null): self
     {
-        if ((bool) $this->value) {
-            return sprintf(
-                "await expect(new URL(await page.url()).searchParams.get('%s')).not.toBe('%s')",
-                $this->name,
-                $this->value
-            );
+        $url = $this->page->url();
+        parse_str(parse_url((string) $url, PHP_URL_QUERY), $query);
+
+        if ($expectedValue) {
+            expect($query[$expectedParam] ?? null)->not()->toBe($expectedValue);
+        } else {
+            expect($query)->not()->toHaveKey($expectedParam);
         }
 
-        return sprintf("await expect(new URL(await page.url()).searchParams.has('%s')).toBeFalsy()", $this->name);
+        return $this;
     }
 }

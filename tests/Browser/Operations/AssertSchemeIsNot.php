@@ -2,7 +2,16 @@
 
 declare(strict_types=1);
 
-test('assert scheme is not', function () {
-    $this->visit('')
-        ->assertSchemeIsNot('https');
+use PHPUnit\Framework\ExpectationFailedException;
+
+describe('assertSchemeIsNot', function () {
+    it('passes when the scheme doesn\'t match', function () {
+        $this->visit(playgroundUrl())
+            ->assertSchemeIsNot('https');
+    });
+
+    it('fails when the scheme matches', function () {
+        $this->visit(playgroundUrl())
+            ->assertSchemeIsNot('http');
+    })->throws(ExpectationFailedException::class);
 });

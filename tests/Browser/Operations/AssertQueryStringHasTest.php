@@ -2,12 +2,22 @@
 
 declare(strict_types=1);
 
-test('assert query string has a giving query param with value', function () {
-    $this->visit('/?q=test')
-        ->assertQueryStringHas('q', 'test');
-});
+use PHPUnit\Framework\ExpectationFailedException;
 
-test('assert query string has a giving only the query param', function () {
-    $this->visit('/?q')
-        ->assertQueryStringHas('q');
+describe('assertQueryStringHas', function () {
+    it(
+        'passes when the query string contains the given query param',
+        function (string $path, string $expectedParam, ?string $expectedValue = null) {
+            $this->visit(playgroundUrl($path))
+                ->assertQueryStringHas($expectedParam, $expectedValue);
+        }
+    )->with([
+        ['/?q=test', 'q', 'test'],
+        ['/?q', 'q', null],
+    ]);
+
+    it('fails when the query string does\'t contain the given query param', function () {
+        $this->visit(playgroundUrl('/?q=test'))
+            ->assertQueryStringHas('s');
+    })->throws(ExpectationFailedException::class);
 });

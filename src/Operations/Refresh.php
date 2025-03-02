@@ -4,18 +4,22 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Operations;
 
-use Pest\Browser\Contracts\Operation;
+use Pest\Browser\Playwright\Page;
 
-/**
- * @internal
- */
-final readonly class Refresh implements Operation
+trait Refresh
 {
     /**
-     * Compile the operation.
+     * Page.
      */
-    public function compile(): string
+    private Page $page;
+
+    /**
+     * Refresh the page.
+     */
+    public function refresh(): self
     {
-        return 'await page.reload();';
+        $this->page->reload();
+
+        return $this;
     }
 }

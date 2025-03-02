@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
-test('visit', function (): void {
-    $this->visit('/')
-        ->assertUrlIs(playgroundUrl());
+describe('visit', function () {
+    it('visits the given URL', function () {
+        $this->visit(playgroundUrl())
+            ->assertUrlIs(playgroundUrl());
+    });
 });

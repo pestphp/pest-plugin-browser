@@ -4,28 +4,33 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Operations;
 
-use Pest\Browser\Contracts\Operation;
+use Pest\Browser\Playwright\Element;
+use Pest\Browser\Playwright\Page;
 
-final readonly class AssertDontSee implements Operation
+trait AssertDontSee
 {
     /**
-     * Creates an operation instance.
+     * Page.
      */
-    public function __construct(
-        private string $text,
-        private bool $ignoreCase = false,
-    ) {
-        //
-    }
+    private Page $page;
 
     /**
-     * Compile the operation.
+     * Assert that the page does not contain the given text.
      */
-    public function compile(): string
+    public function assertDontSee(string $expected): self
     {
-        $text = json_encode($this->text);
-        $ignoreCase = json_encode($this->ignoreCase);
+        $escaped = str_replace('"', '\"', $expected);
 
-        return "await expect(page.locator('body')).not.toContainText({$text}, { ignoreCase: $ignoreCase });";
+        $element = $this->page->querySelector("internal:text=\"{$escaped}\"i");
+
+        if ($element instanceof Element) {
+            $isVisible = $element->isVisible();
+
+            expect($isVisible)->toBeFalse();
+        } else {
+            expect($element)->toBeNull();
+        }
+
+        return $this;
     }
 }

@@ -21,7 +21,7 @@ function cleanupScreenshots(): void
     file_exists($basePath) && rmdir($basePath);
 }
 
-function playgroundUrl($uri = null): string
+function playgroundUrl(string $uri = '/'): string
 {
-    return 'http://localhost:9357'.$uri;
+    return 'http://localhost:9357/'.ltrim($uri, '/');
 }

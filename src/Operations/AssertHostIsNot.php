@@ -4,24 +4,25 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Operations;
 
-use Pest\Browser\Contracts\Operation;
+use Pest\Browser\Playwright\Page;
 
-final readonly class AssertHostIsNot implements Operation
+trait AssertHostIsNot
 {
     /**
-     * Creates an operation instance.
+     * Page.
      */
-    public function __construct(
-        private string $host,
-    ) {
-        //
-    }
+    private Page $page;
 
     /**
-     * Compile the operation.
+     * Asserts that the host of the current page is not equal to the given expected host.
      */
-    public function compile(): string
+    public function assertHostIsNot(string $expected): self
     {
-        return sprintf("await expect(new URL(await page.url()).host).not.toBe('%s');", $this->host);
+        $url = $this->page->url();
+        $host = parse_url((string) $url, PHP_URL_HOST);
+
+        expect($host)->not()->toBe($expected);
+
+        return $this;
     }
 }

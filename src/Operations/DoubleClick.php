@@ -4,29 +4,22 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Operations;
 
-use Pest\Browser\Contracts\Operation;
+use Pest\Browser\Playwright\Page;
 
-/**
- * @internal
- */
-final readonly class DoubleClick implements Operation
+trait DoubleClick
 {
     /**
-     * Creates an operation instance.
+     * Page.
      */
-    public function __construct(
-        private string $selector,
-    ) {
-        //
-    }
+    private Page $page;
 
     /**
-     * Compile the operation.
+     * Double-clicks an element matching the specified selector.
      */
-    public function compile(): string
+    public function doubleClick(string $selector): self
     {
-        $selector = json_encode($this->selector);
+        $this->page->doubleClick($selector);
 
-        return "await page.locator({$selector}).dblclick();";
+        return $this;
     }
 }
