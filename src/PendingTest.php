@@ -23,6 +23,7 @@ use Pest\Browser\Operations\AssertUrlIs;
 use Pest\Browser\Operations\Click;
 use Pest\Browser\Operations\DoubleClick;
 use Pest\Browser\Operations\Refresh;
+use Pest\Browser\Operations\Screenshot;
 use Pest\Browser\Operations\Visit;
 
 /**
@@ -49,5 +50,6 @@ final class PendingTest
         Click,
         DoubleClick,
         Refresh,
+        Screenshot,
         Visit;
 }

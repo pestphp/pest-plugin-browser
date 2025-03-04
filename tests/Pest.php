@@ -10,9 +10,9 @@ pest()
 
 function cleanupScreenshots(): void
 {
-    $basePath = TestSuite::getInstance()->testPath.'/Browser/screenshots';
+    $basePath = mb_rtrim((string) $_ENV['PEST_BROWSER_PLUGIN_SCREENSHOT_DIR'], '/');
 
-    foreach (glob("$basePath/*") as $file) {
+    foreach (glob("{$basePath}/*") as $file) {
         if (is_file($file)) {
             unlink($file);
         }

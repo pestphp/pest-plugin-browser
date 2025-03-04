@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Playwright;
 
+use SplFileObject;
+
 /**
  * @internal
  */
@@ -39,7 +41,7 @@ final class Page
         $response = Client::getInstance()->execute(
             $this->frame->guid,
             'goto',
-            ['url' => $url, 'waitUntil' => 'domcontentloaded']
+            ['url' => $url, 'waitUntil' => 'load']
         );
 
         foreach ($response as $message) {
@@ -148,5 +150,39 @@ final class Page
         }
 
         return '';
+    }
+
+    /**
+     * Make screenshot of the page.
+     */
+    public function screenshot(?string $filename = null): void
+    {
+        $screenshotDir = mb_rtrim((string) $_ENV['PEST_BROWSER_PLUGIN_SCREENSHOT_DIR'], '/');
+
+        if (! $screenshotDir) {
+            return;
+        }
+
+        if (is_dir($screenshotDir) === false) {
+            mkdir($screenshotDir, 0775, true);
+        }
+
+        if (! $filename) {
+            $filename = str_replace('__pest_evaluable__', '', test()->name());
+        }
+
+        $response = Client::getInstance()->execute(
+            $this->guid,
+            'screenshot',
+            ['type' => 'png', 'fullPage' => true, 'hideCaret' => true]
+        );
+
+        foreach ($response as $message) {
+            if (isset($message['result']['binary'])) {
+                $decodedBinary = base64_decode($message['result']['binary']);
+                $file = new SplFileObject("{$screenshotDir}/{$filename}.png", 'wb');
+                $file->fwrite($decodedBinary);
+            }
+        }
     }
 }

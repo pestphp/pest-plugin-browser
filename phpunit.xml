@@ -31,4 +31,7 @@
             <directory suffix=".php">./src</directory>
         </include>
     </source>
+    <php>
+        <env name="PEST_BROWSER_PLUGIN_SCREENSHOT_DIR" value="./tests/Browser/screenshots"/>
+    </php>
 </phpunit>
