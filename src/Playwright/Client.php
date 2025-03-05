@@ -24,16 +24,6 @@ final class Client
     private ?WebSocketClient $websocketClient = null;
 
     /**
-     * Connects to the Playwright server.
-     */
-    public function connectTo(string $url): void
-    {
-        if (!$this->websocketClient) {
-            $this->websocketClient = new WebSocketClient($url);
-        }
-    }
-
-    /**
      * Returns the current client instance.
      */
     public static function instance(): self
@@ -43,6 +33,16 @@ final class Client
         }
 
         return self::$instance;
+    }
+
+    /**
+     * Connects to the Playwright server.
+     */
+    public function connectTo(string $url): void
+    {
+        if (! $this->websocketClient) {
+            $this->websocketClient = new WebSocketClient($url);
+        }
     }
 
     /**

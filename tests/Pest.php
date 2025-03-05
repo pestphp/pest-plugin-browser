@@ -2,20 +2,9 @@
 
 declare(strict_types=1);
 
-pest()->afterEach(fn () => cleanupScreenshots());
+use Pest\Browser\Support\Screenshot;
 
-function cleanupScreenshots(): void
-{
-    $basePath = mb_rtrim((string) $_ENV['PEST_BROWSER_PLUGIN_SCREENSHOT_DIR'], '/');
-
-    foreach (glob("{$basePath}/*") as $file) {
-        if (is_file($file)) {
-            unlink($file);
-        }
-    }
-
-    file_exists($basePath) && rmdir($basePath);
-}
+pest()->afterEach(fn () => Screenshot::cleanup());
 
 function playgroundUrl(string $uri = '/'): string
 {

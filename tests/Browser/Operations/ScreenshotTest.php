@@ -2,9 +2,11 @@
 
 declare(strict_types=1);
 
+use Pest\Browser\Support\Screenshot;
+
 describe('screenshot', function () {
     it('takes a screenshot', function ($filename, $expectedFilename) {
-        $basePath = mb_rtrim((string) $_ENV['PEST_BROWSER_PLUGIN_SCREENSHOT_DIR'], '/');
+        $basePath = Screenshot::dir();
 
         $this->visit(playgroundUrl())
             ->screenshot($filename);

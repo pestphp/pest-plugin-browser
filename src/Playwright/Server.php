@@ -107,8 +107,8 @@ final class Server
     /**
      * Returns the URL of the Playwright server.
      */
-    public function url(): string
+    public function url(string $query = ''): string
     {
-        return sprintf('ws://%s:%s/?browser=chromium', self::DEFAULT_HOST, self::DEFAULT_PORT);
+        return sprintf('ws://%s:%s/%s', self::DEFAULT_HOST, self::DEFAULT_PORT, $query);
     }
 }
