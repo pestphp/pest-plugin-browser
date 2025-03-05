@@ -34,21 +34,7 @@ final class Page
      */
     public function goto(string $url): self
     {
-        if ($this->frame->url === $url) {
-            return $this;
-        }
-
-        $response = Client::instance()->execute(
-            $this->frame->guid,
-            'goto',
-            ['url' => $url, 'waitUntil' => 'load']
-        );
-
-        foreach ($response as $message) {
-            if (isset($message['method']) && $message['method'] === 'navigated') {
-                $this->frame->url = $message['params']['url'] ?? '';
-            }
-        }
+        $this->frame->goto($url);
 
         return $this;
     }
@@ -78,17 +64,7 @@ final class Page
      */
     public function click(string $selector): self
     {
-        $response = Client::instance()->execute(
-            $this->frame->guid,
-            'click',
-            ['selector' => $selector]
-        );
-
-        foreach ($response as $message) {
-            if (isset($message['method']) && $message['method'] === 'navigated') {
-                $this->frame->url = $message['params']['url'] ?? '';
-            }
-        }
+        $this->frame->click($selector);
 
         return $this;
     }
@@ -98,17 +74,7 @@ final class Page
      */
     public function doubleClick(string $selector): self
     {
-        $response = Client::instance()->execute(
-            $this->frame->guid,
-            'dblclick',
-            ['selector' => $selector]
-        );
-
-        foreach ($response as $message) {
-            if (isset($message['method']) && $message['method'] === 'navigated') {
-                $this->frame->url = $message['params']['url'] ?? '';
-            }
-        }
+        $this->frame->doubleClick($selector);
 
         return $this;
     }
@@ -118,22 +84,7 @@ final class Page
      */
     public function querySelector(string $selector): ?Element
     {
-        $response = Client::instance()->execute(
-            $this->frame->guid,
-            'querySelector',
-            ['selector' => $selector, 'strict' => true]
-        );
-
-        foreach ($response as $message) {
-            if (
-                isset($message['method']) && $message['method'] === '__create__'
-                && isset($message['params']['type']) && $message['params']['type'] === 'ElementHandle'
-            ) {
-                return new Element($message['params']['guid']);
-            }
-        }
-
-        return null;
+        return $this->frame->querySelector($selector);
     }
 
     /**
@@ -141,15 +92,7 @@ final class Page
      */
     public function title(): string
     {
-        $response = Client::instance()->execute($this->frame->guid, 'title');
-
-        foreach ($response as $message) {
-            if (isset($message['result']['value'])) {
-                return $message['result']['value'];
-            }
-        }
-
-        return '';
+        return $this->frame->title();
     }
 
     /**
