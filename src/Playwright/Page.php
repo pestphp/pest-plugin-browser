@@ -40,6 +40,44 @@ final class Page
     }
 
     /**
+     * Navigates to the next page in the history.
+     */
+    public function forward(): self
+    {
+        $response = Client::instance()->execute(
+            $this->guid,
+            'goForward',
+        );
+
+        foreach ($response as $message) {
+            if (isset($message['method']) && $message['method'] === 'navigated') {
+                $this->frame->url = $message['params']['url'] ?? '';
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * Navigates to the previous page in the history.
+     */
+    public function back(): self
+    {
+        $response = Client::instance()->execute(
+            $this->guid,
+            'goBack',
+        );
+
+        foreach ($response as $message) {
+            if (isset($message['method']) && $message['method'] === 'navigated') {
+                $this->frame->url = $message['params']['url'] ?? '';
+            }
+        }
+
+        return $this;
+    }
+
+    /**
      * Reloads the current page.
      */
     public function reload(): self

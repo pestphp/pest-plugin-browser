@@ -30,9 +30,11 @@ use Pest\Browser\Operations\AssertTitle;
 use Pest\Browser\Operations\AssertTitleContains;
 use Pest\Browser\Operations\AssertUrlIs;
 use Pest\Browser\Operations\AssertVisible;
+use Pest\Browser\Operations\Back;
 use Pest\Browser\Operations\Click;
 use Pest\Browser\Operations\ClickLink;
 use Pest\Browser\Operations\DoubleClick;
+use Pest\Browser\Operations\Forward;
 use Pest\Browser\Operations\Refresh;
 use Pest\Browser\Operations\Screenshot;
 use Pest\Browser\Operations\Visit;
@@ -68,9 +70,11 @@ final class PendingTest
         AssertTitleContains,
         AssertUrlIs,
         AssertVisible,
+        Back,
         Click,
         ClickLink,
         DoubleClick,
+        Forward,
         Refresh,
         Screenshot,
         Visit;
