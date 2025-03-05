@@ -7,11 +7,13 @@ namespace Pest\Browser;
 use Pest\Browser\Operations\AssertDontSee;
 use Pest\Browser\Operations\AssertHostIs;
 use Pest\Browser\Operations\AssertHostIsNot;
+use Pest\Browser\Operations\AssertNotPresent;
 use Pest\Browser\Operations\AssertPathBeginsWith;
 use Pest\Browser\Operations\AssertPathContains;
 use Pest\Browser\Operations\AssertPathEndsWith;
 use Pest\Browser\Operations\AssertPathIs;
 use Pest\Browser\Operations\AssertPathIsNot;
+use Pest\Browser\Operations\AssertPresent;
 use Pest\Browser\Operations\AssertQueryStringHas;
 use Pest\Browser\Operations\AssertQueryStringMissing;
 use Pest\Browser\Operations\AssertSchemeIs;
@@ -47,6 +49,8 @@ final class PendingTest
         AssertTitle,
         AssertTitleContains,
         AssertUrlIs,
+        AssertPresent,
+        AssertNotPresent,
         Click,
         DoubleClick,
         Refresh,
