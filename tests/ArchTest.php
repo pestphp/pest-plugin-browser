@@ -13,9 +13,5 @@ arch()
     ->toOnlyBeUsedIn('Pest\Browser\PendingTest');
 
 arch()->preset()->php();
-arch()->preset()->strict();
-arch()->preset()->security()->ignoring([
-    'assert',
-    'uniqid',
-    'parse_str',
-]);
+arch()->preset()->strict()->ignoring(['usleep']);
+arch()->preset()->security()->ignoring(['assert', 'uniqid', 'parse_str']);

@@ -23,11 +23,8 @@ trait AssertSee
 
         $element = $this->page->querySelector("internal:text=\"{$escaped}\"i");
 
-        expect($element)->toBeInstanceOf(Element::class);
-
-        $isVisible = $element->isVisible();
-
-        expect($isVisible)->toBeTrue();
+        expect($element)->toBeInstanceOf(Element::class)
+            ->and($element->isVisible())->toBeTrue();
 
         return $this;
     }

@@ -36,6 +36,7 @@ use Pest\Browser\Operations\Click;
 use Pest\Browser\Operations\ClickLink;
 use Pest\Browser\Operations\DoubleClick;
 use Pest\Browser\Operations\Forward;
+use Pest\Browser\Operations\Pause;
 use Pest\Browser\Operations\Refresh;
 use Pest\Browser\Operations\Screenshot;
 use Pest\Browser\Operations\Uncheck;
@@ -78,6 +79,7 @@ final class PendingTest
         ClickLink,
         DoubleClick,
         Forward,
+        Pause,
         Refresh,
         Screenshot,
         Uncheck,

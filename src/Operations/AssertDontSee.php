@@ -24,9 +24,7 @@ trait AssertDontSee
         $element = $this->page->querySelector("internal:text=\"{$escaped}\"i");
 
         if ($element instanceof Element) {
-            $isVisible = $element->isVisible();
-
-            expect($isVisible)->toBeFalse();
+            expect($element->isVisible())->toBeFalse();
         } else {
             expect($element)->toBeNull();
         }
