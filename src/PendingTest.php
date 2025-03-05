@@ -7,6 +7,7 @@ namespace Pest\Browser;
 use Pest\Browser\Operations\AssertAttribute;
 use Pest\Browser\Operations\AssertAttributeContains;
 use Pest\Browser\Operations\AssertAttributeDoesntContain;
+use Pest\Browser\Operations\AssertAttributeMissing;
 use Pest\Browser\Operations\AssertChecked;
 use Pest\Browser\Operations\AssertDontSee;
 use Pest\Browser\Operations\AssertHostIs;
@@ -43,6 +44,7 @@ final class PendingTest
     use AssertAttribute,
         AssertAttributeContains,
         AssertAttributeDoesntContain,
+        AssertAttributeMissing,
         AssertChecked,
         AssertDontSee,
         AssertHostIs,
