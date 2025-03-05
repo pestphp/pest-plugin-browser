@@ -49,4 +49,28 @@ final class Element
 
         return false;
     }
+
+    /**
+     * Check element.
+     */
+    public function check(): void
+    {
+        $response = Client::instance()->execute($this->guid, 'check');
+
+        foreach ($response as $message) {
+            // read all messages to clear the response
+        }
+    }
+
+    /**
+     * Uncheck element.
+     */
+    public function uncheck(): void
+    {
+        $response = Client::instance()->execute($this->guid, 'uncheck');
+
+        foreach ($response as $message) {
+            // read all messages to clear the response
+        }
+    }
 }
