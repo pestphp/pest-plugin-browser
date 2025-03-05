@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use PHPUnit\Framework\ExpectationFailedException;
 
-describe('assert present', function () {
+describe('assertPresent', function () {
     it('passes when the given element is present', function ($selector) {
         $this->visit(playgroundUrl('/test/interactive-elements'))
             ->assertPresent($selector);

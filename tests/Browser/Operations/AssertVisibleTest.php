@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-use Symfony\Component\Process\Exception\ProcessFailedException;
+use PHPUnit\Framework\ExpectationFailedException;
 
-describe('assert visible', function () {
+describe('assertVisible', function () {
     it('passes when the given element is visible', function () {
-        $this->visit('/test/interactive-elements')
+        $this->visit(playgroundUrl('/test/interactive-elements'))
             ->assertVisible('#i-have-data-testid');
     });
 
     it('fails when the given element is not visible', function () {
-        $this->visit('/test/interactive-elements')
+        $this->visit(playgroundUrl('/test/interactive-elements'))
             ->assertVisible('#invisible-element');
-    })->throws(ProcessFailedException::class);
+    })->throws(ExpectationFailedException::class);
 });
