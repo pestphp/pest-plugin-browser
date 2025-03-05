@@ -36,7 +36,7 @@ final class Browser
      */
     public function newContext(): BrowserContext
     {
-        $response = Client::getInstance()->execute($this->guid, 'newContext');
+        $response = Client::instance()->execute($this->guid, 'newContext');
 
         foreach ($response as $message) {
             if (isset($message['result']['context']['guid'])) {

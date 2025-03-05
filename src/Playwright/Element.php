@@ -23,7 +23,7 @@ final class Element
      */
     public function isVisible(): bool
     {
-        $response = Client::getInstance()->execute($this->guid, 'isVisible');
+        $response = Client::instance()->execute($this->guid, 'isVisible');
 
         foreach ($response as $message) {
             if (isset($message['result']['value'])) {

@@ -33,7 +33,7 @@ final class BrowserContext
      */
     public function newPage(): Page
     {
-        $response = Client::getInstance()->execute($this->guid, 'newPage');
+        $response = Client::instance()->execute($this->guid, 'newPage');
 
         foreach ($response as $message) {
             if (isset($message['method']) && $message['method'] === '__create__' && (isset($message['params']['type']) && $message['params']['type'] === 'Frame')) {

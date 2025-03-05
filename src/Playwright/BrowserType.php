@@ -33,7 +33,7 @@ final class BrowserType
             return $this->browser;
         }
 
-        $response = Client::getInstance()->execute(
+        $response = Client::instance()->execute(
             $this->guid,
             'launch',
             ['browserType' => $this->name]

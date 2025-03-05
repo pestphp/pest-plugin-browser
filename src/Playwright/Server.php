@@ -18,7 +18,7 @@ final class Server
     /**
      * Playwright server process.
      */
-    private readonly Process $process;
+    private Process $process;
 
     /**
      * Server instance.
@@ -26,12 +26,39 @@ final class Server
     private static ?Server $instance = null;
 
     /**
-     * Starts the Playwright server.
+     * Constructs new server instance.
      */
     public function __construct(
         private readonly string $host,
         private readonly int $port
     ) {
+        //
+    }
+
+    /**
+     * Returns the server instance.
+     */
+    public static function instance(): self
+    {
+        if (! self::$instance instanceof self) {
+            self::$instance = new self(
+                $_ENV['PEST_BROWSER_PLUGIN_PLAYWRIGHT_HOST'] ?? self::DEFAULT_HOST,
+                $_ENV['PEST_BROWSER_PLUGIN_PLAYWRIGHT_PORT'] ?? self::DEFAULT_PORT,
+            );
+        }
+
+        return self::$instance;
+    }
+
+    /**
+     * Starts the Playwright server.
+     */
+    public function start(): void
+    {
+        if ($this->isRunning()) {
+            return;
+        }
+
         $this->process = new Process([
             'npx',
             'playwright',
@@ -50,26 +77,18 @@ final class Server
     }
 
     /**
-     * Destructs the server and stops the Playwright server.
+     * Checks if the specified port is free for use.
      */
-    public function __destruct()
+    public function isRunning(): bool
     {
-        $this->stop();
-    }
+        $process = Process::fromShellCommandline("lsof -t -i :{$this->port} 2>/dev/null");
 
-    /**
-     * Creates new server instance and starts the Playwright server.
-     */
-    public static function start(): self
-    {
-        if (! self::$instance instanceof self) {
-            self::$instance = new self(
-                $_ENV['PEST_BROWSER_PLUGIN_PLAYWRIGHT_HOST'] ?? self::DEFAULT_HOST,
-                $_ENV['PEST_BROWSER_PLUGIN_PLAYWRIGHT_PORT'] ?? self::DEFAULT_PORT,
-            );
-        }
+        $process->run();
+        $output = $process->getOutput();
 
-        return self::$instance;
+        $pids = array_filter(explode("\n", trim($output)));
+
+        return count($pids) > 0;
     }
 
     /**
@@ -77,9 +96,12 @@ final class Server
      */
     public function stop(): void
     {
-        // Stop this way because initial process changes PID for some reason
-        $command = "kill -15 $(lsof -t -i :{$this->port}) 2>/dev/null";
-        Process::fromShellCommandline($command)->run();
+        if ($this->isRunning()) {
+            // Stop this way because initial process changes PID for some reason
+            $command = Process::fromShellCommandline("kill -9 $(lsof -t -i :{$this->port}) > 2>/dev/null");
+            $command->disableOutput();
+            $command->run();
+        }
     }
 
     /**
@@ -87,6 +109,6 @@ final class Server
      */
     public function url(): string
     {
-        return sprintf('ws://%s:%s/', self::DEFAULT_HOST, self::DEFAULT_PORT);
+        return sprintf('ws://%s:%s/?browser=chromium', self::DEFAULT_HOST, self::DEFAULT_PORT);
     }
 }

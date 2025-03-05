@@ -10,8 +10,12 @@ describe('screenshot', function () {
             ->screenshot($filename);
 
         expect(file_exists("{$basePath}/{$expectedFilename}"))->toBeTrue();
-    })->with([
-        ['homepage', 'homepage.png'],
-        [null, 'screenshot__→_it_takes_a_screenshot.png'],
-    ]);
+    })->with(function () {
+        $uniqueFileName = uniqid('screenshot_');
+
+        return [
+            [$uniqueFileName, "{$uniqueFileName}.png"],
+            [null, 'screenshot__→_it_takes_a_screenshot.png'],
+        ];
+    });
 });

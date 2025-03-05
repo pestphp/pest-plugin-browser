@@ -2,11 +2,7 @@
 
 declare(strict_types=1);
 
-use Pest\TestSuite;
-
-pest()
-    ->beforeEach(fn () => cleanupScreenshots())
-    ->afterEach(fn () => cleanupScreenshots());
+pest()->afterEach(fn () => cleanupScreenshots());
 
 function cleanupScreenshots(): void
 {

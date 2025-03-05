@@ -17,16 +17,6 @@ final class Playwright
     private static array $browserTypes = [];
 
     /**
-     * Playwright server
-     */
-    private static ?Server $server = null;
-
-    /**
-     * Playwright client
-     */
-    private static ?Client $client = null;
-
-    /**
      * Get chromium browser type
      */
     public static function chromium(): BrowserType
@@ -55,10 +45,11 @@ final class Playwright
      */
     private static function initialize(string $browser): BrowserType
     {
-        self::$server = Server::start();
-        self::$client = Client::listen(self::$server->url()."?browser={$browser}");
-
-        $response = self::$client->execute('', 'initialize', ['sdkLanguage' => 'javascript']);
+        $response = Client::instance()->execute(
+            '',
+            'initialize',
+            ['sdkLanguage' => 'javascript']
+        );
 
         foreach ($response as $message) {
             if (

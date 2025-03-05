@@ -21,41 +21,27 @@ final class Client
     /**
      * WebSocket client.
      */
-    private readonly WebSocketClient $websocketClient;
+    private ?WebSocketClient $websocketClient = null;
 
     /**
-     * Constructs new client.
+     * Connects to the Playwright server.
      */
-    public function __construct(string $url)
+    public function connectTo(string $url): void
     {
-        $this->websocketClient = new WebSocketClient($url);
-    }
-
-    /**
-     * Destructs the client and stops the WebSocket connection.
-     */
-    public function __destruct()
-    {
-        $this->stop();
-    }
-
-    /**
-     * Creates a new client instance.
-     */
-    public static function listen(string $url): self
-    {
-        if (! self::$instance instanceof self) {
-            self::$instance = new self($url);
+        if (!$this->websocketClient) {
+            $this->websocketClient = new WebSocketClient($url);
         }
-
-        return self::$instance;
     }
 
     /**
      * Returns the current client instance.
      */
-    public static function getInstance(): self
+    public static function instance(): self
     {
+        if (! self::$instance instanceof self) {
+            self::$instance = new self();
+        }
+
         return self::$instance;
     }
 
@@ -76,7 +62,7 @@ final class Client
             'metadata' => $meta,
         ]);
 
-        // file_put_contents('log.log', $requestJson.PHP_EOL, FILE_APPEND);
+        //file_put_contents('log.log', $requestJson.PHP_EOL, FILE_APPEND);
 
         $this->websocketClient->text($requestJson);
 
@@ -88,7 +74,7 @@ final class Client
                 throw new RuntimeException($response['error']['error']['message']);
             }
 
-            // file_put_contents('log.log', $responseJson.PHP_EOL, FILE_APPEND);
+            //file_put_contents('log.log', $responseJson.PHP_EOL, FILE_APPEND);
 
             yield $response;
 
@@ -99,13 +85,5 @@ final class Client
                 break;
             }
         }
-    }
-
-    /**
-     * Closes the WebSocket connection.
-     */
-    public function stop(): void
-    {
-        $this->websocketClient->close();
     }
 }

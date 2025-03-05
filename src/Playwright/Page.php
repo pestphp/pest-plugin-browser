@@ -38,7 +38,7 @@ final class Page
             return $this;
         }
 
-        $response = Client::getInstance()->execute(
+        $response = Client::instance()->execute(
             $this->frame->guid,
             'goto',
             ['url' => $url, 'waitUntil' => 'load']
@@ -58,7 +58,7 @@ final class Page
      */
     public function reload(): self
     {
-        $response = Client::getInstance()->execute(
+        $response = Client::instance()->execute(
             $this->guid,
             'reload',
             ['waitUntil' => 'domcontentloaded']
@@ -78,7 +78,7 @@ final class Page
      */
     public function click(string $selector): self
     {
-        $response = Client::getInstance()->execute(
+        $response = Client::instance()->execute(
             $this->frame->guid,
             'click',
             ['selector' => $selector]
@@ -98,7 +98,7 @@ final class Page
      */
     public function doubleClick(string $selector): self
     {
-        $response = Client::getInstance()->execute(
+        $response = Client::instance()->execute(
             $this->frame->guid,
             'dblclick',
             ['selector' => $selector]
@@ -118,7 +118,7 @@ final class Page
      */
     public function querySelector(string $selector): ?Element
     {
-        $response = Client::getInstance()->execute(
+        $response = Client::instance()->execute(
             $this->frame->guid,
             'querySelector',
             ['selector' => $selector, 'strict' => true]
@@ -141,7 +141,7 @@ final class Page
      */
     public function title(): string
     {
-        $response = Client::getInstance()->execute($this->frame->guid, 'title');
+        $response = Client::instance()->execute($this->frame->guid, 'title');
 
         foreach ($response as $message) {
             if (isset($message['result']['value'])) {
@@ -163,15 +163,11 @@ final class Page
             return;
         }
 
-        if (is_dir($screenshotDir) === false) {
-            mkdir($screenshotDir, 0775, true);
-        }
-
         if (! $filename) {
             $filename = str_replace('__pest_evaluable__', '', test()->name());
         }
 
-        $response = Client::getInstance()->execute(
+        $response = Client::instance()->execute(
             $this->guid,
             'screenshot',
             ['type' => 'png', 'fullPage' => true, 'hideCaret' => true]
@@ -180,6 +176,11 @@ final class Page
         foreach ($response as $message) {
             if (isset($message['result']['binary'])) {
                 $decodedBinary = base64_decode($message['result']['binary']);
+
+                if (is_dir($screenshotDir) === false) {
+                    mkdir($screenshotDir, 0775, true);
+                }
+
                 $file = new SplFileObject("{$screenshotDir}/{$filename}.png", 'wb');
                 $file->fwrite($decodedBinary);
             }
