@@ -47,7 +47,7 @@ final class Page
         $response = Client::instance()->execute(
             $this->guid,
             'reload',
-            ['waitUntil' => 'domcontentloaded']
+            ['waitUntil' => 'load']
         );
 
         foreach ($response as $message) {
