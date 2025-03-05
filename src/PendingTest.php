@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Pest\Browser;
 
+use Pest\Browser\Operations\AssertChecked;
 use Pest\Browser\Operations\AssertDontSee;
 use Pest\Browser\Operations\AssertHostIs;
 use Pest\Browser\Operations\AssertHostIsNot;
 use Pest\Browser\Operations\AssertMissing;
+use Pest\Browser\Operations\AssertNotChecked;
 use Pest\Browser\Operations\AssertNotPresent;
 use Pest\Browser\Operations\AssertPathBeginsWith;
 use Pest\Browser\Operations\AssertPathContains;
@@ -35,10 +37,12 @@ use Pest\Browser\Operations\Visit;
  */
 final class PendingTest
 {
-    use AssertDontSee,
+    use AssertChecked,
+        AssertDontSee,
         AssertHostIs,
         AssertHostIsNot,
         AssertMissing,
+        AssertNotChecked,
         AssertNotPresent,
         AssertPathBeginsWith,
         AssertPathContains,

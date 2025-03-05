@@ -33,4 +33,20 @@ final class Element
 
         return false;
     }
+
+    /**
+     * Check if element is checked.
+     */
+    public function isChecked(): bool
+    {
+        $response = Client::instance()->execute($this->guid, 'isChecked');
+
+        foreach ($response as $message) {
+            if (isset($message['result']['value'])) {
+                return (bool) $message['result']['value'];
+            }
+        }
+
+        return false;
+    }
 }
