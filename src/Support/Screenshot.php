@@ -18,7 +18,7 @@ final class Screenshot
      */
     public static function dir(): string
     {
-        return rtrim((string) $_ENV['PEST_BROWSER_SCREENSHOT_DIR'] ?? self::DEFAULT_DIR, '/') ;
+        return rtrim((string) $_ENV['PEST_BROWSER_SCREENSHOT_DIR'] ?? self::DEFAULT_DIR, '/');
     }
 
     /**

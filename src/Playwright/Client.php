@@ -62,7 +62,7 @@ final class Client
             'metadata' => $meta,
         ]);
 
-        //file_put_contents('log.log', $requestJson.PHP_EOL, FILE_APPEND);
+        // file_put_contents('log.log', $requestJson.PHP_EOL, FILE_APPEND);
 
         $this->websocketClient->text($requestJson);
 
@@ -74,7 +74,7 @@ final class Client
                 throw new RuntimeException($response['error']['error']['message']);
             }
 
-            //file_put_contents('log.log', $responseJson.PHP_EOL, FILE_APPEND);
+            // file_put_contents('log.log', $responseJson.PHP_EOL, FILE_APPEND);
 
             yield $response;
 

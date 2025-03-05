@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use PHPUnit\Framework\ExpectationFailedException;
-use Symfony\Component\Process\Exception\ProcessFailedException;
 
 describe('assert present', function () {
     it('passes when the given element is present', function ($selector) {
