@@ -42,8 +42,8 @@ final class Server
     {
         if (! self::$instance instanceof self) {
             self::$instance = new self(
-                $_ENV['PEST_BROWSER_PLUGIN_PLAYWRIGHT_HOST'] ?? self::DEFAULT_HOST,
-                $_ENV['PEST_BROWSER_PLUGIN_PLAYWRIGHT_PORT'] ?? self::DEFAULT_PORT,
+                (string) ($_ENV['PEST_BROWSER_PLAYWRIGHT_HOST'] ?? self::DEFAULT_HOST),
+                (int) ($_ENV['PEST_BROWSER_PLAYWRIGHT_PORT'] ?? self::DEFAULT_PORT),
             );
         }
 
