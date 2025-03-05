@@ -169,4 +169,12 @@ final class Page
             }
         }
     }
+
+    /**
+     * Returns the value of the specified attribute of the element matching the specified selector.
+     */
+    public function getAttribute(string $selector, string $name): ?string
+    {
+        return $this->frame->getAttribute($selector, $name);
+    }
 }
