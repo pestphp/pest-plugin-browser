@@ -2,21 +2,19 @@
 
 declare(strict_types=1);
 
-use Symfony\Component\Process\Exception\ProcessFailedException;
+use PHPUnit\Framework\ExpectationFailedException;
 
-describe('assert not present', function () {
+describe('assertNotPresent', function () {
     it('passes when the given element is not present', function () {
-        $this->visit('/test/interactive-elements')
+        $this->visit(playgroundUrl('/test/interactive-elements'))
             ->assertNotPresent('#unexistent-element-for-sure-not-to-be-present');
     });
 
-    it('fails when the given element is present', function () {
-        $this->visit('/test/interactive-elements')
-            ->assertNotPresent('#i-have-data-testid');
-    })->throws(ProcessFailedException::class);
-
-    it('fails when the given element is present, even when invisible', function () {
-        $this->visit('/test/interactive-elements')
-            ->assertNotPresent('#invisible-element'); // invisible, but present!
-    })->throws(ProcessFailedException::class);
+    it('fails when the given element is present', function ($selector) {
+        $this->visit(playgroundUrl('/test/interactive-elements'))
+            ->assertNotPresent($selector);
+    })->with([
+        ['#i-have-data-testid'],
+        ['#invisible-element'],
+    ])->throws(ExpectationFailedException::class);
 });

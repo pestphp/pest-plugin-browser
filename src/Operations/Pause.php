@@ -4,27 +4,23 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Operations;
 
-use Pest\Browser\Contracts\Operation;
+use InvalidArgumentException;
 
-/**
- * @internal
- */
-final readonly class Pause implements Operation
+trait Pause
 {
     /**
-     * Creates an operation instance.
+     * Sleep for the specified duration.
      */
-    public function __construct(
-        private int $milliseconds
-    ) {
-        //
-    }
-
-    /**
-     * Compile the operation.
-     */
-    public function compile(): string
+    public function pause(int $milliseconds): self
     {
-        return sprintf('await page.waitForTimeout(%d);', $this->milliseconds);
+        if ($milliseconds < 0) {
+            throw new InvalidArgumentException('Pause duration must be a non-negative value.');
+        }
+
+        if ($milliseconds > 0) {
+            usleep($milliseconds * 1000);
+        }
+
+        return $this;
     }
 }

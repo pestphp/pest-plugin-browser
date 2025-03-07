@@ -4,29 +4,24 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Operations;
 
-use Pest\Browser\Contracts\Operation;
+use Pest\Browser\Playwright\Page;
 
-final readonly class AssertAttributeMissing implements Operation
+trait AssertAttributeMissing
 {
     /**
-     * Creates an operation instance.
+     * @var Page.
      */
-    public function __construct(
-        private string $selector,
-        private string $attribute
-    ) {
-        //
-    }
+    private Page $page;
 
     /**
-     * Compile the operation.
+     * Assert that the specified attribute is missing from the element matching the given selector.
      */
-    public function compile(): string
+    public function assertAttributeMissing(string $selector, string $attribute): self
     {
-        return sprintf(
-            'const attributeValue = await page.locator("%s").getAttribute("%s"); await expect(attributeValue).toBeNull();',
-            $this->selector,
-            $this->attribute
-        );
+        $value = $this->page->getAttribute($selector, $attribute);
+
+        expect($value)->toBeNull();
+
+        return $this;
     }
 }

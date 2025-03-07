@@ -4,26 +4,30 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Operations;
 
-use Pest\Browser\Contracts\Operation;
+use Pest\Browser\Playwright\Page;
+use Pest\Browser\Support\Str;
 
-final readonly class AssertPathIs implements Operation
+trait AssertPathIs
 {
     /**
-     * Creates an operation instance.
+     * Page.
      */
-    public function __construct(
-        private string $path,
-    ) {
-        //
-    }
+    private Page $page;
 
     /**
-     * Compile the operation.
+     * Asserts that the current page path matches the given expected path.'
      */
-    public function compile(): string
+    public function assertPathIs(string $expected): self
     {
-        $pattern = str_replace('\*', '.*', preg_quote($this->path, '/'));
+        $url = $this->page->url();
+        $path = parse_url((string) $url, PHP_URL_PATH);
 
-        return "await expect(new URL(await page.url()).pathname).toMatch(/^$pattern$/u)";
+        if (Str::isRegex($expected)) {
+            expect((bool) preg_match($expected, $path))->toBeTrue();
+        } else {
+            expect($path)->toBe($expected);
+        }
+
+        return $this;
     }
 }

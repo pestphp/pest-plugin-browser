@@ -4,25 +4,22 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Operations;
 
-use Pest\Browser\Contracts\Operation;
+use Pest\Browser\Playwright\Page;
 
-/**
- * @internal
- */
-final readonly class Check implements Operation
+trait Check
 {
     /**
-     * Creates an operation instance.
+     * Page.
      */
-    public function __construct(
-        private string $element,
-    ) {}
+    private Page $page;
 
     /**
-     * Compile the operation.
+     * Check the checkbox with the given selector.
      */
-    public function compile(): string
+    public function check(string $selector): self
     {
-        return "await page.locator('{$this->element}').setChecked(true);";
+        $this->page->querySelector($selector)->check();
+
+        return $this;
     }
 }

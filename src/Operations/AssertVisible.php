@@ -4,26 +4,26 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Operations;
 
-use Pest\Browser\Contracts\Operation;
+use Pest\Browser\Playwright\Element;
+use Pest\Browser\Playwright\Page;
 
-final readonly class AssertVisible implements Operation
+trait AssertVisible
 {
     /**
-     * Creates an operation instance.
+     * @var Page.
      */
-    public function __construct(
-        private string $selector,
-    ) {
-        //
-    }
+    private Page $page;
 
     /**
-     * Compile the operation.
+     * Assert that an element is visible on the page.
      */
-    public function compile(): string
+    public function assertVisible(string $selector): self
     {
-        $escapedSelector = str_replace("'", "\'", $this->selector);
+        $element = $this->page->querySelector($selector);
 
-        return "await expect(page.locator('{$escapedSelector}')).toBeVisible();";
+        expect($element)->toBeInstanceOf(Element::class)
+            ->and($element->isVisible())->toBeTrue();
+
+        return $this;
     }
 }

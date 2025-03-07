@@ -4,24 +4,25 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Operations;
 
-use Pest\Browser\Contracts\Operation;
+use Pest\Browser\Playwright\Page;
 
-final readonly class AssertPathIsNot implements Operation
+trait AssertPathIsNot
 {
     /**
-     * Creates an operation instance.
+     * Page.
      */
-    public function __construct(
-        private string $path,
-    ) {
-        //
-    }
+    private Page $page;
 
     /**
-     * Compile the operation.
+     * Asserts that the current page path does not match the given path.
      */
-    public function compile(): string
+    public function assertPathIsNot(string $expected): self
     {
-        return "await expect(new URL(await page.url()).pathname).not.toEqual('{$this->path}')";
+        $url = $this->page->url();
+        $path = parse_url((string) $url, PHP_URL_PATH);
+
+        expect($path)->not()->toBe($expected);
+
+        return $this;
     }
 }

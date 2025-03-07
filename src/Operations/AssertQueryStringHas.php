@@ -4,32 +4,29 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Operations;
 
-use Pest\Browser\Contracts\Operation;
+use Pest\Browser\Playwright\Page;
 
-final readonly class AssertQueryStringHas implements Operation
+trait AssertQueryStringHas
 {
     /**
-     * Creates an operation instance.
+     * Page.
      */
-    public function __construct(
-        private string $name,
-        private ?string $value = null,
-    ) {}
+    private Page $page;
 
     /**
-     * Compile the operation.
+     * Asserts that the query string contains the specified parameter with the expected value.
      */
-    public function compile(): string
+    public function assertQueryStringHas(string $expectedParam, ?string $expectedValue = null): self
     {
-        if ((bool) $this->value) {
-            return sprintf(
-                "await expect(new URL(await page.url()).searchParams.get('%s')).toBe('%s')",
-                $this->name,
-                $this->value
-            );
+        $url = $this->page->url();
+        parse_str(parse_url((string) $url, PHP_URL_QUERY), $query);
+
+        expect($query)->toHaveKey($expectedParam);
+
+        if ($expectedValue) {
+            expect($query[$expectedParam])->toBe($expectedValue);
         }
 
-        return sprintf("await expect(new URL(await page.url()).searchParams.has('%s')).toBeTruthy()", $this->name);
-
+        return $this;
     }
 }

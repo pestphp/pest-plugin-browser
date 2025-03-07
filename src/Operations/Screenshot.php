@@ -4,50 +4,22 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Operations;
 
-use Pest\Browser\Contracts\Operation;
-use Pest\TestSuite;
+use Pest\Browser\Playwright\Page;
 
-/**
- * @internal
- */
-final readonly class Screenshot implements Operation
+trait Screenshot
 {
     /**
-     * The path to save the screenshot.
+     * Page.
      */
-    private string $path;
+    private Page $page;
 
     /**
-     * Creates an operation instance.
+     * Make screenshot of the page.
      */
-    public function __construct(
-        ?string $path = null,
-    ) {
-        $basePath = TestSuite::getInstance()->testPath.'/Browser/screenshots';
-
-        $path ??= $this->generateFilename();
-
-        $this->path = $basePath.'/'.$path;
-    }
-
-    /**
-     * Compile the operation.
-     */
-    public function compile(): string
+    public function screenshot(?string $filename = null): self
     {
-        return sprintf("await page.screenshot({ path: '%s', fullPage: true });", $this->path);
-    }
+        $this->page->screenshot($filename);
 
-    /**
-     * Generates a filename for the screenshot.
-     */
-    private function generateFilename(): string
-    {
-        $name = test()->name(); // @phpstan-ignore-line
-        assert(is_string($name));
-
-        return mb_ltrim($name, '__pest_evaluable_')
-            .'_'
-            .date('Y_m_d_H_i_s').'.png';
+        return $this;
     }
 }

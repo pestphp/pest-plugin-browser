@@ -2,26 +2,11 @@
 
 declare(strict_types=1);
 
-use Pest\TestSuite;
+use Pest\Browser\Support\Screenshot;
 
-pest()
-    ->beforeEach(fn () => cleanupScreenshots())
-    ->afterEach(fn () => cleanupScreenshots());
+pest()->afterEach(fn () => Screenshot::cleanup());
 
-function cleanupScreenshots(): void
+function playgroundUrl(string $uri = '/'): string
 {
-    $basePath = TestSuite::getInstance()->testPath.'/Browser/screenshots';
-
-    foreach (glob("$basePath/*") as $file) {
-        if (is_file($file)) {
-            unlink($file);
-        }
-    }
-
-    file_exists($basePath) && rmdir($basePath);
-}
-
-function playgroundUrl($uri = null): string
-{
-    return 'http://localhost:9357'.$uri;
+    return 'http://localhost:9357/'.ltrim($uri, '/');
 }

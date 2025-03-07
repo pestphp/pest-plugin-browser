@@ -4,24 +4,25 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Operations;
 
-use Pest\Browser\Contracts\Operation;
+use Pest\Browser\Playwright\Page;
 
-final readonly class AssertSchemeIsNot implements Operation
+trait AssertSchemeIsNot
 {
     /**
-     * Creates an operation instance.
+     * Page.
      */
-    public function __construct(
-        private string $scheme
-    ) {
-        //
-    }
+    private Page $page;
 
     /**
-     * Compile the operation.
+     * Asserts that the scheme of the current page URL is not the specified one.
      */
-    public function compile(): string
+    public function assertSchemeIsNot(string $expected): self
     {
-        return sprintf("await expect(new URL(await page.url()).protocol).not.toBe('%s:');", $this->scheme);
+        $url = $this->page->url();
+        $scheme = parse_url((string) $url, PHP_URL_SCHEME);
+
+        expect($scheme)->not()->toBe($expected);
+
+        return $this;
     }
 }

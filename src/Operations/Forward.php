@@ -4,18 +4,22 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Operations;
 
-use Pest\Browser\Contracts\Operation;
+use Pest\Browser\Playwright\Page;
 
-/**
- * @internal
- */
-final readonly class Forward implements Operation
+trait Forward
 {
     /**
-     * Compile the operation.
+     * Page.
      */
-    public function compile(): string
+    private Page $page;
+
+    /**
+     * Navigates to the next page in the history.
+     */
+    public function forward(): self
     {
-        return 'await page.goForward();';
+        $this->page->forward();
+
+        return $this;
     }
 }

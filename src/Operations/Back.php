@@ -4,18 +4,22 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Operations;
 
-use Pest\Browser\Contracts\Operation;
+use Pest\Browser\Playwright\Page;
 
-/**
- * @internal
- */
-final readonly class Back implements Operation
+trait Back
 {
     /**
-     * Compile the operation.
+     * Page.
      */
-    public function compile(): string
+    private Page $page;
+
+    /**
+     * Navigates to the previous page in the history.
+     */
+    public function back(): self
     {
-        return 'await page.goBack();';
+        $this->page->back();
+
+        return $this;
     }
 }

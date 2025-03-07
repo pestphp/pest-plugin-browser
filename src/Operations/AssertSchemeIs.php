@@ -4,24 +4,25 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Operations;
 
-use Pest\Browser\Contracts\Operation;
+use Pest\Browser\Playwright\Page;
 
-final readonly class AssertSchemeIs implements Operation
+trait AssertSchemeIs
 {
     /**
-     * Creates an operation instance.
+     * Page.
      */
-    public function __construct(
-        private string $scheme
-    ) {
-        //
-    }
+    private Page $page;
 
     /**
-     * Compile the operation.
+     * Asserts that the URL scheme is the expected one.
      */
-    public function compile(): string
+    public function assertSchemeIs(string $expected): self
     {
-        return sprintf("await expect(new URL(await page.url()).protocol).toBe('%s:');", $this->scheme);
+        $url = $this->page->url();
+        $scheme = parse_url((string) $url, PHP_URL_SCHEME);
+
+        expect($scheme)->toBe($expected);
+
+        return $this;
     }
 }

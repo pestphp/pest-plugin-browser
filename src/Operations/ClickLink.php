@@ -4,28 +4,22 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Operations;
 
-use Pest\Browser\Contracts\Operation;
+use Pest\Browser\Playwright\Page;
 
-/**
- * @internal
- */
-final readonly class ClickLink implements Operation
+trait ClickLink
 {
     /**
-     * Creates an operation instance.
+     * Page.
      */
-    public function __construct(
-        private string $text,
-        private string $element = 'a',
-    ) {
-        //
-    }
+    private Page $page;
 
     /**
-     * Compile the operation.
+     * Clicks a link by its text.
      */
-    public function compile(): string
+    public function clickLink(string $text): self
     {
-        return "await page.locator('{$this->element}').filter({ hasText: /{$this->text}/i }).click();";
+        $this->page->click("a>>internal:text=\"{$text}\"i");
+
+        return $this;
     }
 }

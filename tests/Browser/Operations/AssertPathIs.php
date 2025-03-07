@@ -2,16 +2,19 @@
 
 declare(strict_types=1);
 
-test('assert path is', function () {
-    $url = 'https://laravel.com/docs/11.x';
+use PHPUnit\Framework\ExpectationFailedException;
 
-    $this->visit($url)
-        ->assertPathIs('/docs/11.x');
-});
+describe('assertPathIs', function () {
+    it('passes when the path equals expected value', function (string $path, string $expected) {
+        $this->visit(playgroundUrl($path))
+            ->assertPathIs($expected);
+    })->with([
+        ['/test/form-inputs', '/test/form-inputs'],
+        ['/test/form-inputs', '/^.+form.+$/'],
+    ]);
 
-test('assert path is with wildcard', function () {
-    $url = 'https://laravel.com/docs/11.x';
-
-    $this->visit($url)
-        ->assertPathIs('/docs/*.x');
+    it('fails when the path does not equal expected value', function () {
+        $this->visit(playgroundUrl('/test/form-inputs'))
+            ->assertPathIs('/test/not-expected');
+    })->throws(ExpectationFailedException::class);
 });

@@ -4,30 +4,24 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Operations;
 
-use Pest\Browser\Contracts\Operation;
-use Pest\Browser\Support\Str;
+use Pest\Browser\Playwright\Page;
 
-/**
- * @internal
- */
-final readonly class AssertTitle implements Operation
+trait AssertTitle
 {
     /**
-     * Creates an operation instance.
+     * Page.
      */
-    public function __construct(
-        private string $title,
-    ) {
-        //
-    }
+    private Page $page;
 
     /**
-     * Compile the operation.
+     * Assert that the page title matches the expected value.
      */
-    public function compile(): string
+    public function assertTitle(string $expected): self
     {
-        $title = Str::isRegex($this->title) ? $this->title : json_encode($this->title);
+        $title = $this->page->title();
 
-        return sprintf('await expect(page).toHaveTitle(%s);', $title);
+        expect($title)->toBe($expected);
+
+        return $this;
     }
 }

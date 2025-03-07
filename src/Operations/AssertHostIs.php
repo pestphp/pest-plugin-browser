@@ -4,24 +4,25 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Operations;
 
-use Pest\Browser\Contracts\Operation;
+use Pest\Browser\Playwright\Page;
 
-final readonly class AssertHostIs implements Operation
+trait AssertHostIs
 {
     /**
-     * Creates an operation instance.
+     * @var Page.
      */
-    public function __construct(
-        private string $host,
-    ) {
-        //
-    }
+    private Page $page;
 
     /**
-     * Compile the operation.
+     * Asserts that the host of the current page matches the given expected host.
      */
-    public function compile(): string
+    public function assertHostIs(string $expected): self
     {
-        return sprintf("await expect(new URL(await page.url()).host).toBe('%s');", $this->host);
+        $url = $this->page->url();
+        $host = parse_url((string) $url, PHP_URL_HOST);
+
+        expect($host)->toBe($expected);
+
+        return $this;
     }
 }

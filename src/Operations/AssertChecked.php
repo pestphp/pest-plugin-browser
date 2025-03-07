@@ -4,24 +4,26 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Operations;
 
-use Pest\Browser\Contracts\Operation;
+use Pest\Browser\Playwright\Element;
+use Pest\Browser\Playwright\Page;
 
-final readonly class AssertChecked implements Operation
+trait AssertChecked
 {
     /**
-     * Creates an operation instance.
+     * @var Page.
      */
-    public function __construct(
-        private string $element,
-    ) {
-        //
-    }
+    private Page $page;
 
     /**
-     * Compile the operation.
+     * Assert that an element is checked.
      */
-    public function compile(): string
+    public function assertChecked(string $selector): self
     {
-        return sprintf('await expect(page.locator(\'%s\')).toBeChecked();', $this->element);
+        $element = $this->page->querySelector($selector);
+
+        expect($element)->toBeInstanceOf(Element::class)
+            ->and($element->isChecked())->toBeTrue();
+
+        return $this;
     }
 }

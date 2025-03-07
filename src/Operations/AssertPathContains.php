@@ -4,24 +4,25 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Operations;
 
-use Pest\Browser\Contracts\Operation;
+use Pest\Browser\Playwright\Page;
 
-final readonly class AssertPathContains implements Operation
+trait AssertPathContains
 {
     /**
-     * Creates an operation instance.
+     * Page.
      */
-    public function __construct(
-        private string $path,
-    ) {
-        //
-    }
+    private Page $page;
 
     /**
-     * Compile the operation.
+     * Asserts that the current page URL contains the given path segment.
      */
-    public function compile(): string
+    public function assertPathContains(string $expected): self
     {
-        return "await expect(new URL(await page.url()).pathname).toEqual(expect.stringContaining('$this->path'))";
+        $url = $this->page->url();
+        $path = parse_url((string) $url, PHP_URL_PATH);
+
+        expect($path)->toContain($expected);
+
+        return $this;
     }
 }

@@ -4,31 +4,24 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Operations;
 
-use Pest\Browser\Contracts\Operation;
+use Pest\Browser\Playwright\Page;
 
-final readonly class AssertAttribute implements Operation
+trait AssertAttribute
 {
     /**
-     * Creates an operation instance.
+     * @var Page.
      */
-    public function __construct(
-        private string $selector,
-        private string $attribute,
-        private string $value
-    ) {
-        //
-    }
+    private Page $page;
 
     /**
-     * Compile the operation.
+     * Assert that the attribute of an element matches the expected value.
      */
-    public function compile(): string
+    public function assertAttribute(string $selector, string $attribute, string $expectedValue): self
     {
-        return sprintf(
-            'await expect(page.locator("%s")).toHaveAttribute("%s", "%s");',
-            $this->selector,
-            $this->attribute,
-            $this->value
-        );
+        $value = $this->page->getAttribute($selector, $attribute);
+
+        expect($value)->toBe($expectedValue);
+
+        return $this;
     }
 }

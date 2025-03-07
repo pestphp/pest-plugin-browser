@@ -31,4 +31,9 @@
             <directory suffix=".php">./src</directory>
         </include>
     </source>
+    <php>
+        <env name="PEST_BROWSER_PLAYWRIGHT_HOST" value="localhost"/>
+        <env name="PEST_BROWSER_PLAYWRIGHT_PORT" value="9222"/>
+        <env name="PEST_BROWSER_SCREENSHOT_DIR" value="./tests/Browser/screenshots"/>
+    </php>
 </phpunit>

@@ -4,31 +4,25 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Operations;
 
-use Pest\Browser\Contracts\Operation;
+use Pest\Browser\Playwright\Page;
 
-final readonly class AssertAttributeDoesntContain implements Operation
+trait AssertAttributeDoesntContain
 {
     /**
-     * Creates an operation instance.
+     * @var Page.
      */
-    public function __construct(
-        private string $selector,
-        private string $attribute,
-        private string $value
-    ) {
-        //
-    }
+    private Page $page;
 
     /**
-     * Compile the operation.
+     * Assert that the attribute value does not contain the specified substring.
      */
-    public function compile(): string
+    public function assertAttributeDoesntContain(string $selector, string $attribute, string $substring): self
     {
-        return sprintf(
-            'const attributeValue = await page.locator("%s").getAttribute("%s"); expect(attributeValue.includes("%s")).toBe(false);',
-            $this->selector,
-            $this->attribute,
-            $this->value
-        );
+        $value = $this->page->getAttribute($selector, $attribute);
+
+        expect($value)->toBeString()
+            ->and($value)->not()->toContain($substring);
+
+        return $this;
     }
 }

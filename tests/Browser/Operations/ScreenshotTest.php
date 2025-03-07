@@ -2,26 +2,22 @@
 
 declare(strict_types=1);
 
-use Pest\TestSuite;
+use Pest\Browser\Support\Screenshot;
 
-it('takes a screenshot', function (): void {
-    $basePath = TestSuite::getInstance()->testPath.'/Browser/screenshots';
+describe('screenshot', function () {
+    it('takes a screenshot', function ($filename, $expectedFilename) {
+        $basePath = Screenshot::dir();
 
-    $this->visit('/')
-        ->screenshot('index.png');
+        $this->visit(playgroundUrl())
+            ->screenshot($filename);
 
-    expect(file_exists($basePath.'/index.png'))->toBeTrue();
-});
+        expect(file_exists("{$basePath}/{$expectedFilename}"))->toBeTrue();
+    })->with(function () {
+        $uniqueFileName = uniqid('screenshot_');
 
-it('takes a screenshot and generates a path', function (): void {
-    $basePath = TestSuite::getInstance()->testPath.'/Browser/screenshots';
-
-    $this->visit('/')
-        ->screenshot();
-
-    $testName = mb_ltrim(test()->name(), '__pest_evaluable_'); // @phpstan-ignore-line
-
-    $files = glob($basePath.DIRECTORY_SEPARATOR.'*'.$testName.'*');
-
-    expect(count($files))->toBe(1);
+        return [
+            [$uniqueFileName, "{$uniqueFileName}.png"],
+            [null, 'screenshot__→_it_takes_a_screenshot.png'],
+        ];
+    });
 });

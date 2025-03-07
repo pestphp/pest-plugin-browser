@@ -4,26 +4,25 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Operations;
 
-use Pest\Browser\Contracts\Operation;
+use Pest\Browser\Playwright\Element;
+use Pest\Browser\Playwright\Page;
 
-final readonly class AssertNotPresent implements Operation
+trait AssertNotPresent
 {
     /**
-     * Creates an operation instance.
+     * @var Page.
      */
-    public function __construct(
-        private string $selector
-    ) {
-        //
-    }
+    private Page $page;
 
     /**
-     * Compile the operation.
+     * Assert that an element is not present on the page.
      */
-    public function compile(): string
+    public function assertNotPresent(string $selector): self
     {
-        $escapedSelector = str_replace("'", "\'", $this->selector);
+        $element = $this->page->querySelector($selector);
 
-        return "await expect(await page.locator('{$escapedSelector}').count()).toBe(0);";
+        expect($element)->toBeNull();
+
+        return $this;
     }
 }

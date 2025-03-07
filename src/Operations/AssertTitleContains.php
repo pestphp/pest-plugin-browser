@@ -4,24 +4,24 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Operations;
 
-use Pest\Browser\Contracts\Operation;
+use Pest\Browser\Playwright\Page;
 
-final readonly class AssertTitleContains implements Operation
+trait AssertTitleContains
 {
     /**
-     * Creates an operation instance.
+     * Page.
      */
-    public function __construct(
-        private string $title,
-    ) {
-        //
-    }
+    private Page $page;
 
     /**
-     * Compile the operation.
+     * Asserts that the page title contains the given string.
      */
-    public function compile(): string
+    public function assertTitleContains(string $expected): self
     {
-        return sprintf('await expect(await page.title()).toMatch(/%s/);', $this->title);
+        $title = $this->page->title();
+
+        expect($title)->toContain($expected);
+
+        return $this;
     }
 }

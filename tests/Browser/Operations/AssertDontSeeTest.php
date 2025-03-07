@@ -2,25 +2,20 @@
 
 declare(strict_types=1);
 
-it('does not see', function () {
-    $this->visit(playgroundUrl('/'))
-        ->assertSee('Pest Plugin Browser')
-        ->assertDontSee('Fest Plugin Bowser');
-});
+use PHPUnit\Framework\ExpectationFailedException;
 
-it('does not see ignoring case', function () {
-    $this->visit(playgroundUrl('/'))
-        ->assertSee('Pest Plugin Browser')
-        ->assertDontSee('fest plugin bowser', true);
-});
+describe('assertDontSee', function () {
+    it('passes when given text is not visible', function (string $path, string $text) {
+        $this->visit(playgroundUrl($path))
+            ->assertDontSee($text);
+    })->with([
+        ['/', 'Fest Plugin Bowser'],
+        ['/', 'fest plugin bowser'],
+        ['/test/interactive-elements', 'Some (text) which "does" not exist.'],
+    ]);
 
-it('does not see with special characters', function () {
-    $this->visit(playgroundUrl('/test/interactive-elements'))
-        ->assertSee('Some (text) wi/th [some] "formatted" ch@racters.')
-        ->assertDontSee('Some (text) which "does" not exist.');
+    it('fails when given text is visible', function () {
+        $this->visit(playgroundUrl('/test/interactive-elements'))
+            ->assertSee('text(.*)formatted');
+    })->throws(ExpectationFailedException::class);
 });
-
-it('does not see while supporting regex', function () {
-    $this->visit(playgroundUrl('/test/interactive-elements'))
-        ->assertSee('text(.*)formatted');
-})->throws(Exception::class);

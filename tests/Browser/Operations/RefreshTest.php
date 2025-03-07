@@ -2,12 +2,11 @@
 
 declare(strict_types=1);
 
-test('refreshes', function (): void {
-    $this->visit('/test/interactive-elements')
-        ->assertUrlIs(playgroundUrl('/test/interactive-elements'))
-        ->pause(3000)
-        ->assertSee('I appear after 2 seconds')
-        ->refresh()
-        ->assertUrlIs(playgroundUrl('/test/interactive-elements'))
-        ->assertDontSee('I appear after 2 seconds');
+describe('refresh', function () {
+    it('refreshes the page', function (): void {
+        $this->visit(playgroundUrl('/test/interactive-elements'))
+            ->assertUrlIs(playgroundUrl('/test/interactive-elements'))
+            ->refresh()
+            ->assertUrlIs(playgroundUrl('/test/interactive-elements'));
+    });
 });

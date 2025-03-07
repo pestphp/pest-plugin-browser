@@ -4,28 +4,28 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Operations;
 
-use Pest\Browser\Contracts\Operation;
+use Pest\Browser\Playwright\Element;
+use Pest\Browser\Playwright\Page;
 
-final readonly class AssertSee implements Operation
+trait AssertSee
 {
     /**
-     * Creates an operation instance.
+     * Page.
      */
-    public function __construct(
-        private string $text,
-        private bool $ignoreCase = false,
-    ) {
-        //
-    }
+    private Page $page;
 
     /**
-     * Compile the operation.
+     * Asserts that the page contains the given text.
      */
-    public function compile(): string
+    public function assertSee(string $expected): self
     {
-        $text = json_encode($this->text);
-        $ignoreCase = json_encode($this->ignoreCase);
+        $escaped = str_replace('"', '\"', $expected);
 
-        return "await expect(page.locator('body')).toContainText({$text}, { ignoreCase: $ignoreCase });";
+        $element = $this->page->querySelector("internal:text=\"{$escaped}\"i");
+
+        expect($element)->toBeInstanceOf(Element::class)
+            ->and($element->isVisible())->toBeTrue();
+
+        return $this;
     }
 }
