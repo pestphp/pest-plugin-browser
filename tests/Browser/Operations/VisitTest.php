@@ -3,6 +3,6 @@
 declare(strict_types=1);
 
 test('visit', function (): void {
-    $this->visit('/')
+    $this->visit(playgroundUrl())
         ->assertUrlIs(playgroundUrl());
 });

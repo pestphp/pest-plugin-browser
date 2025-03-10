@@ -12,9 +12,4 @@ coverage.xml
 .phpunit.cache
 # Playwright
 node_modules/
-/test-results/
-/playwright-report/
-/blob-report/
-/playwright/.cache/
-.temp/e2e
 /tests/Browser/screenshots
