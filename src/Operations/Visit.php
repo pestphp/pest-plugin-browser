@@ -4,27 +4,28 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Operations;
 
-use Pest\Browser\Contracts\Operation;
+use Pest\Browser\Playwright\Page;
+use Pest\Browser\Playwright\Playwright;
 
 /**
  * @internal
  */
-final readonly class Visit implements Operation
+trait Visit
 {
     /**
-     * Creates an operation instance.
+     * Page
      */
-    public function __construct(
-        private string $url,
-    ) {
-        //
-    }
+    private Page $page;
 
     /**
-     * Compile the operation.
+     * Visits a given URL
      */
-    public function compile(): string
+    public function visit(string $url): self
     {
-        return sprintf("await page.goto('%s');", $this->url);
+        $browser = Playwright::chromium()->launch();
+        $this->page = $browser->newPage();
+        $this->page->goto($url);
+
+        return $this;
     }
 }
