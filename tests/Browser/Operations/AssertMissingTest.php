@@ -6,12 +6,12 @@ use Symfony\Component\Process\Exception\ProcessFailedException;
 
 describe('assert missing', function () {
     it('passes when the given element is not visible', function () {
-        $this->visit('/test/interactive-elements')
+        $this->visit(playground()->url('/test/interactive-elements'))
             ->assertMissing('#invisible-element');
     });
 
     it('fails when the given element is visible', function () {
-        $this->visit('/test/interactive-elements')
+        $this->visit(playground()->url('/test/interactive-elements'))
             ->assertMissing('#i-have-data-testid');
     })->throws(ProcessFailedException::class);
 });
