@@ -19,15 +19,15 @@ final class Screenshot
     public static function dir(): string
     {
         // @phpstan-ignore-next-line
-        return rtrim((string) $_ENV['PEST_BROWSER_SCREENSHOT_DIR'] ?? self::DEFAULT_DIR, '/');
+        return mb_rtrim((string) $_ENV['PEST_BROWSER_SCREENSHOT_DIR'] ?? self::DEFAULT_DIR, '/');
     }
 
     /**
-     * Return
+     * Return the full path for a screenshot file.
      */
     public static function path(string $filename): string
     {
-        return self::dir().'/'.ltrim($filename, '/').'.png';
+        return self::dir().'/'.mb_ltrim($filename, '/').'.png';
     }
 
     /**
@@ -39,7 +39,7 @@ final class Screenshot
 
         if ($filename === null) {
             // @phpstan-ignore-next-line
-            $filename = str_replace('__pest_evaluable__', '', test()->name());
+            $filename = mb_str_replace('__pest_evaluable__', '', test()->name());
         }
 
         if (is_dir(self::dir()) === false) {

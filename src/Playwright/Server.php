@@ -86,7 +86,7 @@ final class Server
         $process->run();
         $output = $process->getOutput();
 
-        $pids = array_filter(explode("\n", trim($output)), fn ($pid): bool => (int) $pid > 0);
+        $pids = array_filter(explode("\n", mb_trim($output)), fn ($pid): bool => (int) $pid > 0);
 
         return count($pids) > 0;
     }
