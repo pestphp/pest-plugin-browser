@@ -24,7 +24,7 @@ if (! function_exists('\Pest\Browser\visit')) {
     }
 }
 
-register_shutdown_function(function () {
+register_shutdown_function(function (): void {
     if (Parallel::isEnabled() || ! Parallel::isWorker()) {
         Server::instance()->stop();
     }
