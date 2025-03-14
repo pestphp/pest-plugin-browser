@@ -7,7 +7,7 @@
     "test": "tests"
   },
   "scripts": {
-      "playwright": "playwright"
+    "playwright": "playwright"
   },
   "repository": {
     "type": "git",
@@ -20,8 +20,7 @@
     "url": "https://github.com/pestphp/pest-plugin-browser/issues"
   },
   "homepage": "https://github.com/pestphp/pest-plugin-browser#readme",
-  "devDependencies": {
-    "@playwright/test": "^1.50.1",
-    "@types/node": "^22.13.1"
+  "dependencies": {
+    "playwright": "^1.51.0"
   }
 }

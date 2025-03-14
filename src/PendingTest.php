@@ -6,37 +6,22 @@ namespace Pest\Browser;
 
 use InvalidArgumentException;
 use Pest\Browser\Contracts\Operation;
-use Pest\Browser\ValueObjects\TestResult;
+use Pest\Browser\Operations\AssertUrlIs;
+use Pest\Browser\Operations\Visit;
 
 /**
  * @internal
  */
 final class PendingTest
 {
+    use AssertUrlIs, Visit;
+
     /**
      * The pending operations.
      *
      * @var array<int, Operation>
      */
-    private array $operations = [];
-
-    /**
-     * Ends the chain and builds the test result.
-     */
-    public function __destruct()
-    {
-        $this->compile();
-    }
-
-    /**
-     * Visits a URL.
-     */
-    public function visit(string $url): self
-    {
-        $this->operations[] = new Operations\Visit($url);
-
-        return $this;
-    }
+    private array $operations = []; // @phpstan-ignore-line
 
     /**
      * Goes back.
@@ -194,16 +179,6 @@ final class PendingTest
     public function assertQueryStringMissing(string $name, ?string $value = null): self
     {
         $this->operations[] = new Operations\AssertQueryStringMissing($name, $value);
-
-        return $this;
-    }
-
-    /**
-     * Checks if the page has a URL.
-     */
-    public function assertUrlIs(string $url): self
-    {
-        $this->operations[] = new Operations\AssertUrlIs($url);
 
         return $this;
     }
@@ -481,23 +456,5 @@ final class PendingTest
         $this->operations[] = new Operations\UnCheck($selector);
 
         return $this;
-    }
-
-    /**
-     * Compile the JavaScript test file.
-     */
-    public function compile(): TestResult
-    {
-        $compiler = new Compiler($this->operations);
-
-        $compiler->compile();
-
-        $worker = new Worker;
-
-        $result = $worker->run();
-
-        expect($result->ok())->toBeTrue();
-
-        return $result;
     }
 }
