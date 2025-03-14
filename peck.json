@@ -2,16 +2,17 @@
     "preset": "base",
     "ignore": {
         "words": [
-            "php",
             "autoload",
-            "str",
-            "dont",
             "doesnt",
-            "uncheck",
-            "webkit",
-            "guid",
+            "dont",
+            "filesystem",
             "goto",
-            "websocket"
+            "guid",
+            "php",
+            "str",
+            "uncheck",
+            "websocket",
+            "webkit"
         ],
         "paths": []
     }

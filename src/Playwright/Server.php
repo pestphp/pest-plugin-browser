@@ -11,9 +11,9 @@ use Symfony\Component\Process\Process;
  */
 final class Server
 {
-    private const DEFAULT_HOST = '127.0.0.1';
+    private const string DEFAULT_HOST = '127.0.0.1';
 
-    private const DEFAULT_PORT = 9222;
+    private const int DEFAULT_PORT = 9222;
 
     /**
      * Playwright server process.
