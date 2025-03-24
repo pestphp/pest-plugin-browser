@@ -2,15 +2,13 @@
 
 This repository contains the Pest Plugin Browser.
 
-> If you want to start testing your application with Pest, visit the main *
-*[Pest Repository](https://github.com/pestphp/pest)**.
+> If you want to start testing your application with Pest, visit the main **[Pest Repository](https://github.com/pestphp/pest)**.
 
 ## Community & Resources
 
 - Explore our docs at **[pestphp.com »](https://pestphp.com)**
 - Follow us on Twitter at **[@pestphp »](https://twitter.com/pestphp)**
-- Join us at **[discord.gg/kaHY6p54JH »](https://discord.gg/kaHY6p54JH)** or *
-  *[t.me/+kYH5G4d5MV83ODk0 »](https://t.me/+kYH5G4d5MV83ODk0)**
+- Join us at **[discord.gg/kaHY6p54JH »](https://discord.gg/kaHY6p54JH)** or **[t.me/+kYH5G4d5MV83ODk0 »](https://t.me/+kYH5G4d5MV83ODk0)**
 
 ## Installation (for development purposes)
 
