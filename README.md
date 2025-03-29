@@ -2,15 +2,16 @@
 
 This repository contains the Pest Plugin Browser.
 
-> If you want to start testing your application with Pest, visit the main *
-*[Pest Repository](https://github.com/pestphp/pest)**.
-
-## Community & Resources
+> If you want to start testing your application with Pest, visit the main **[Pest Repository](https://github.com/pestphp/pest)**.
 
 - Explore our docs at **[pestphp.com »](https://pestphp.com)**
-- Follow us on Twitter at **[@pestphp »](https://twitter.com/pestphp)**
-- Join us at **[discord.gg/kaHY6p54JH »](https://discord.gg/kaHY6p54JH)** or *
-  *[t.me/+kYH5G4d5MV83ODk0 »](https://t.me/+kYH5G4d5MV83ODk0)**
+- Follow the creator Nuno Maduro:
+    - YouTube: **[youtube.com/@nunomaduro](https://www.youtube.com/@nunomaduro)** — Videos every weekday
+    - Twitch: **[twitch.tv/enunomaduro](https://www.twitch.tv/enunomaduro)** — Streams (almost) every weekday
+    - Twitter / X: **[x.com/enunomaduro](https://x.com/enunomaduro)**
+    - LinkedIn: **[linkedin.com/in/nunomaduro](https://www.linkedin.com/in/nunomaduro)**
+    - Instagram: **[instagram.com/enunomaduro](https://www.instagram.com/enunomaduro)**
+    - Tiktok: **[tiktok.com/@enunomaduro](https://www.tiktok.com/@enunomaduro)**
 
 ## Installation (for development purposes)
 
