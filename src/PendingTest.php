@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Pest\Browser;
 
+use Closure;
 use InvalidArgumentException;
+use Pest\Browser\Contracts\Condition;
 use Pest\Browser\Contracts\Operation;
 use Pest\Browser\ValueObjects\TestResult;
 
@@ -18,13 +20,22 @@ final class PendingTest
      *
      * @var array<int, Operation>
      */
-    private array $operations = [];
+    public array $operations = [];
+
+    /**
+     * Creates a new pending test instance.
+     */
+    public function __construct(private readonly bool $compileTest = true) {}
 
     /**
      * Ends the chain and builds the test result.
      */
     public function __destruct()
     {
+        if (! $this->compileTest) {
+            return;
+        }
+
         $this->compile();
     }
 
@@ -74,6 +85,26 @@ final class PendingTest
     public function screenshot(?string $path = null): self
     {
         $this->operations[] = new Operations\Screenshot($path);
+
+        return $this;
+    }
+
+    /**
+     * Determines if the screenshot matches stored screenshot
+     */
+    public function assertMatchesScreenshot(string $filename): self
+    {
+        $this->operations[] = new Operations\AssertMatchesScreenshot($filename);
+
+        return $this;
+    }
+
+    /**
+     * Determines if the screenshot doesn't match stored screenshot
+     */
+    public function assertNotMatchesScreenshot(string $filename): self
+    {
+        $this->operations[] = new Operations\AssertNotMatchesScreenshot($filename);
 
         return $this;
     }
@@ -378,6 +409,22 @@ final class PendingTest
     }
 
     /**
+     * Sets the timeout for the test.
+     *
+     * @param  int  $milliseconds  The number of milliseconds to wait before timing out. Default is 30000.
+     */
+    public function setTimeout(int $milliseconds = 30000): self
+    {
+        if ($milliseconds <= 0) {
+            throw new InvalidArgumentException('The number of milliseconds must be greater than 0.');
+        }
+
+        array_unshift($this->operations, new Operations\SetTimeout($milliseconds));
+
+        return $this;
+    }
+
+    /**
      * Checks if the given element is visible.
      */
     public function assertVisible(string $selector): self
@@ -507,13 +554,32 @@ final class PendingTest
         return $this;
     }
 
+
+     * Adds a "when" condition to perform an action based on the condition evaluation.
+     *
+     * This method registers a condition to be checked. If the condition is met, the provided
+     * `$then` callback is executed. If the condition is not met, the optional `$else` callback
+     * can be executed (if provided).
+     *
+     * @param  Condition  $condition  The condition to evaluate.
+     * @param  Closure  $then  The callback to execute when the condition is true.
+     * @param  Closure|null  $else  The callback to execute when the condition is false. Default is null.
+     * @return self Returns the current instance to allow method chaining.
+     */
+    public function when(Condition $condition, Closure $then, ?Closure $else = null): self
+    {
+        $this->operations[] = new Operations\When($condition, $then, $else);
+
+        return $this;
+    }
+
     /**
      * Append text to the given input field.
      */
     public function append(string $selector, string $text): self
     {
         $this->operations[] = new Operations\Append($selector, $text);
-
+  
         return $this;
     }
 
