@@ -52,17 +52,13 @@ To run the test suite, execute:
 
 For each Operation/Assertion, we add a corresponding Test.
 
-We can make use of the `playgroundUrl()` helper, to get its URL during the test.
+We can make use of the `playground()->url()` helper, to get its URL during the test.
 
-We can provide a URI that will be appended, e.g: `playgroundUrl('/test/interactive-elements')`.
-
-Attention: we can use `->visit('/foo')`, using the base URL, without the helper.
-
-The helper exists for assertion scenarios, like:
+We can provide a URI that will be appended, e.g: `playground()->url('/test/interactive-elements')`.
 
 ```php
-$this->visit('/test/interactive-elements')
-    ->assertUrlIs(playgroundUrl('/test/interactive-elements'))
+$this->visit(playground()->url('/test/interactive-elements'))
+    ->assertUrlIs(playground()->url('/test/interactive-elements'))
 ```
 
 ### Routes and views for testing
@@ -72,7 +68,7 @@ Check the `playground/resources/views/test-pages` folder for existing views.
 They are accessible by the playground route `/test/{page}`.
 
 E.g.: The view `resources/views/test-pages/interactive-elements.blade.php` is visited
-on `playgroundUrl('/test/interactive-elements')`.
+on `playground()->url('/test/interactive-elements')`.
 
 The playground is standard Laravel App, where you may add a page with a feature for your test.
 

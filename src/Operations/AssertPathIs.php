@@ -22,7 +22,9 @@ final readonly class AssertPathIs implements Operation
      */
     public function compile(): string
     {
-        $pattern = str_replace('\*', '.*', preg_quote($this->path, '/'));
+        $pattern = preg_quote($this->path, '/');
+        $pattern = str_replace('\*', '.*', $pattern);
+        $pattern = str_replace('\-', '-', $pattern);
 
         return "await expect(new URL(await page.url()).pathname).toMatch(/^$pattern$/u)";
     }
