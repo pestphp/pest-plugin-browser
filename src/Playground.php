@@ -44,7 +44,7 @@ final class Playground
     }
 
     /**
-     * Destructor to stop Artisan serve process.
+     * Destruct to stop Artisan serve process.
      */
     public function __destruct()
     {
