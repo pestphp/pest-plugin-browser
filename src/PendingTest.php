@@ -515,6 +515,46 @@ final class PendingTest
     }
 
     /**
+     * Types some text into the input.
+     */
+    public function type(string $selector, string $text): self
+    {
+        $this->operations[] = new Operations\Type($selector, $text);
+
+        return $this;
+    }
+
+    /**
+     * Assert that the given input field has the given value.
+     */
+    public function assertInputValue(string $selector, string $value): self
+    {
+        $this->operations[] = new Operations\AssertInputValue($selector, $value);
+
+        return $this;
+    }
+
+    /**
+     * Assert that the given input field does not have the given value.
+     */
+    public function assertInputValueIsNot(string $selector, string $value): self
+    {
+        $this->operations[] = new Operations\AssertInputValueIsNot($selector, $value);
+
+        return $this;
+    }
+
+    /**
+     * Clear the given input field.
+     */
+    public function clear(string $selector): self
+    {
+        $this->operations[] = new Operations\Clear($selector);
+
+        return $this;
+    }
+
+
      * Adds a "when" condition to perform an action based on the condition evaluation.
      *
      * This method registers a condition to be checked. If the condition is met, the provided
@@ -530,6 +570,16 @@ final class PendingTest
     {
         $this->operations[] = new Operations\When($condition, $then, $else);
 
+        return $this;
+    }
+
+    /**
+     * Append text to the given input field.
+     */
+    public function append(string $selector, string $text): self
+    {
+        $this->operations[] = new Operations\Append($selector, $text);
+  
         return $this;
     }
 

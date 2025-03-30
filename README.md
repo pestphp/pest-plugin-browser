@@ -110,6 +110,11 @@ TBD
 - [when](#when)
 - [screenshot](#screenshot)
 - [visit](#visit)
+- [check](#check)
+- [uncheck](#uncheck)
+- [type](#type)
+- [append](#append)
+- [clear](#clear)
 
 ### Checkboxes
 
@@ -269,6 +274,30 @@ Visits the given URL, and starts a new browser test.
 $this->visit('https://pestphp.com');
 ```
 
+### type
+
+Types some text into the input.
+
+```php
+$this->type('#email', 'jane.doe@pestphp.com');
+```
+
+### append
+
+Appends some text to the input.
+
+```php
+$this->append('#email', '@pestphp.com');
+```
+
+### clear
+
+Clears the input.
+
+```php
+$this->clear('#email');
+```
+
 ## Available Assertions
 
 - [assertAttribute](#assertAttribute)
@@ -290,6 +319,8 @@ $this->visit('https://pestphp.com');
 - [assertMissing](#assertmissing)
 - [assertChecked](#assertchecked)
 - [assertNotChecked](#assertnotchecked)
+- [assertInputValue](#assertInputValue)
+- [assertInputValueIsNot](#assertInputValueIsNot)
 
 ### assertAttribute
 
@@ -468,4 +499,22 @@ Assert that the element with a given selector is not checked:
 ```php
 $this->visit($url)
     ->assertNotChecked('input[type="checkbox"].checked');
+```
+
+### assertInputValue
+
+Assert that the value of the input with the given selector is the expected value:
+
+```php
+$this->visit($url)
+    ->assertInputValue('#email', 'jane.doe@pestphp.com');
+```
+
+### assertInputValueIsNot
+
+Assert that the value of the input with the given selector is not the expected value:
+
+```php
+$this->visit($url)
+    ->assertInputValueIsNot('#email', 'jane.doe@pestphp.com');
 ```
