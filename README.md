@@ -107,6 +107,7 @@ TBD
 - [setTimeout](#setTimeout)
 - [refresh](#refresh)
 - [rightClick](#rightClick)
+- [when](#when)
 - [screenshot](#screenshot)
 - [visit](#visit)
 
@@ -241,6 +242,23 @@ Takes a full-page screenshot of the current page and saves it under `/Browser/sc
 
 ```php
 $this->screenshot('filename');
+```
+
+### when
+
+The when operation in Pest Browser allows you to execute different actions based on whether a specific condition is met when visiting a webpage. This feature provides dynamic test execution, enhancing the flexibility of browser tests.
+
+```php
+$this->when(
+        new Pest\Browser\Conditions\See('Laravel - The PHP Framework For Web Artisans'),
+        function (Pest\Browser\PendingTest $browser): void {
+            $browser->clickLink('Get Started')
+                ->assertSee('Installation');
+        },
+        function (Pest\Browser\PendingTest $browser): void {
+            $browser->assertSee('Laravel');
+        }
+    );
 ```
 
 ### visit

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Pest\Browser;
 
+use Closure;
 use InvalidArgumentException;
+use Pest\Browser\Contracts\Condition;
 use Pest\Browser\Contracts\Operation;
 use Pest\Browser\ValueObjects\TestResult;
 
@@ -18,13 +20,22 @@ final class PendingTest
      *
      * @var array<int, Operation>
      */
-    private array $operations = [];
+    public array $operations = [];
+
+    /**
+     * Creates a new pending test instance.
+     */
+    public function __construct(private readonly bool $compileTest = true) {}
 
     /**
      * Ends the chain and builds the test result.
      */
     public function __destruct()
     {
+        if (! $this->compileTest) {
+            return;
+        }
+
         $this->compile();
     }
 
@@ -499,6 +510,25 @@ final class PendingTest
     public function uncheck(string $selector): self
     {
         $this->operations[] = new Operations\UnCheck($selector);
+
+        return $this;
+    }
+
+    /**
+     * Adds a "when" condition to perform an action based on the condition evaluation.
+     *
+     * This method registers a condition to be checked. If the condition is met, the provided
+     * `$then` callback is executed. If the condition is not met, the optional `$else` callback
+     * can be executed (if provided).
+     *
+     * @param  Condition  $condition  The condition to evaluate.
+     * @param  Closure  $then  The callback to execute when the condition is true.
+     * @param  Closure|null  $else  The callback to execute when the condition is false. Default is null.
+     * @return self Returns the current instance to allow method chaining.
+     */
+    public function when(Condition $condition, Closure $then, ?Closure $else = null): self
+    {
+        $this->operations[] = new Operations\When($condition, $then, $else);
 
         return $this;
     }
