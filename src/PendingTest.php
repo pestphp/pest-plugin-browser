@@ -40,6 +40,18 @@ final class PendingTest
     }
 
     /**
+     * Assert the element has one or many classes.
+     *
+     * @param  string|string[]  $cssClass
+     */
+    public function assertHasClass(string $locator, string|array $cssClass): self
+    {
+        $this->operations[] = new Operations\AssertHasClass($locator, $cssClass);
+
+        return $this;
+    }
+
+    /**
      * Visits a URL.
      */
     public function visit(string $url): self
