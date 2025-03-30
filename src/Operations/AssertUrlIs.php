@@ -4,30 +4,30 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Operations;
 
-use Pest\Browser\Contracts\Operation;
+use Pest\Browser\Playwright\Page;
 use Pest\Browser\Support\Str;
 
 /**
  * @internal
  */
-final readonly class AssertUrlIs implements Operation
+trait AssertUrlIs
 {
     /**
-     * Creates an operation instance.
+     * Page.
      */
-    public function __construct(
-        private string $url,
-    ) {
-        //
-    }
+    private Page $page;
 
     /**
-     * Compile the operation.
+     * Asserts that the current page URL matches the given URL.
      */
-    public function compile(): string
+    public function assertUrlIs(string $expected): self
     {
-        $url = Str::isRegex($this->url) ? $this->url : json_encode($this->url);
+        if (Str::isRegex($expected)) {
+            expect((bool) preg_match($expected, $this->page->url()))->toBeTrue();
+        } else {
+            expect($this->page->url())->toBe($expected);
+        }
 
-        return sprintf('await expect(page).toHaveURL(%s);', $url);
+        return $this;
     }
 }

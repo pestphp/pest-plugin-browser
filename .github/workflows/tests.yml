@@ -54,4 +54,11 @@ jobs:
         npm run playwright -- install chromium
 
     - name: Tests
-      run: composer test
+      run: |
+        cd playground && php artisan serve --port 9357 &
+        SERVER_PID=$!
+        npx wait-on http://localhost:9357 -t 30000
+        composer test
+        # Clean up the server process
+        kill $SERVER_PID
+
