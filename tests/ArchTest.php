@@ -11,4 +11,5 @@ arch()->preset()->php();
 arch()->preset()->strict();
 arch()->preset()->security()->ignoring([
     'assert',
+    'uniqid',
 ]);
