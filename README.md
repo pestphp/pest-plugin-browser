@@ -4,11 +4,19 @@ This repository contains the Pest Plugin Browser.
 
 > If you want to start testing your application with Pest, visit the main **[Pest Repository](https://github.com/pestphp/pest)**.
 
+
 ## Community & Resources
 
 - Explore our docs at **[pestphp.com »](https://pestphp.com)**
 - Follow us on Twitter at **[@pestphp »](https://twitter.com/pestphp)**
 - Join us at **[discord.gg/kaHY6p54JH »](https://discord.gg/kaHY6p54JH)** or **[t.me/+kYH5G4d5MV83ODk0 »](https://t.me/+kYH5G4d5MV83ODk0)**
+- Follow the creator Nuno Maduro:
+    - YouTube: **[youtube.com/@nunomaduro](https://www.youtube.com/@nunomaduro)** — Videos every weekday
+    - Twitch: **[twitch.tv/enunomaduro](https://www.twitch.tv/enunomaduro)** — Streams (almost) every weekday
+    - Twitter / X: **[x.com/enunomaduro](https://x.com/enunomaduro)**
+    - LinkedIn: **[linkedin.com/in/nunomaduro](https://www.linkedin.com/in/nunomaduro)**
+    - Instagram: **[instagram.com/enunomaduro](https://www.instagram.com/enunomaduro)**
+    - Tiktok: **[tiktok.com/@enunomaduro](https://www.tiktok.com/@enunomaduro)**
 
 ## Installation (for development purposes)
 
@@ -199,7 +207,7 @@ Pauses the execution for a specified number of milliseconds.
 > element" or "wait for an event" approaches - you can wait for an event your app dispatches.
 
 ```php
-    $this->pause(5000); // Pause for 5 seconds
+$this->pause(5000); // Pause for 5 seconds
 ```
 
 ### setTimeout
@@ -208,7 +216,7 @@ Changes the timeout for the currently running test to the given value in millise
 This feature works well in combination with [pause](#pause) when necessary or in other relevant scenarios.
 
 ```php
-    $this->setTimeout(10000); // set timeout for test execution to 10 seconds
+$this->setTimeout(10000); // set timeout for test execution to 10 seconds
 ```
 
 ### refresh
@@ -288,8 +296,8 @@ $this->visit($url)
 Assert that the specified element has the expected attribute, but the value does not contain a specific value:
 
 ```php
-    $this->visit($url)
-        ->assertAttributeDoesntContain('html', 'data-theme', 'not here');
+$this->visit($url)
+    ->assertAttributeDoesntContain('html', 'data-theme', 'not here');
 ```
 
 ### assertAttributeMissing
