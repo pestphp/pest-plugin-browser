@@ -202,7 +202,7 @@ Pauses the execution for a specified number of milliseconds.
 > element" or "wait for an event" approaches - you can wait for an event your app dispatches.
 
 ```php
-    $this->pause(5000); // Pause for 5 seconds
+$this->pause(5000); // Pause for 5 seconds
 ```
 
 ### setTimeout
@@ -211,7 +211,7 @@ Changes the timeout for the currently running test to the given value in millise
 This feature works well in combination with [pause](#pause) when necessary or in other relevant scenarios.
 
 ```php
-    $this->setTimeout(10000); // set timeout for test execution to 10 seconds
+$this->setTimeout(10000); // set timeout for test execution to 10 seconds
 ```
 
 ### refresh
@@ -291,8 +291,8 @@ $this->visit($url)
 Assert that the specified element has the expected attribute, but the value does not contain a specific value:
 
 ```php
-    $this->visit($url)
-        ->assertAttributeDoesntContain('html', 'data-theme', 'not here');
+$this->visit($url)
+    ->assertAttributeDoesntContain('html', 'data-theme', 'not here');
 ```
 
 ### assertAttributeMissing
