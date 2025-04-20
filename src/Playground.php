@@ -77,7 +77,7 @@ final class Playground
             $this->scheme,
             $this->host,
             $this->port,
-            ltrim($path, '/')
+            mb_ltrim($path, '/')
         );
     }
 
@@ -104,7 +104,7 @@ final class Playground
         }
 
         $output = $process->getOutput();
-        $lines = explode("\n", trim($output));
+        $lines = explode("\n", mb_trim($output));
 
         foreach (array_slice($lines, 1) as $line) {
             $columns = preg_split('/\s+/', $line);

@@ -12,7 +12,11 @@
             "str",
             "uncheck",
             "websocket",
-            "webkit"
+            "webkit",
+            "nav",
+            "filesystems",
+            "favicon",
+            "js"
         ],
         "paths": []
     }
