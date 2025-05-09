@@ -52,7 +52,7 @@ final class PendingTest
      * @param  iterable  $response  The response (array or Generator)
      * @return mixed The extracted value
      */
-    private function extractResultValue(iterable $response)
+    private function extractResultValue(iterable $response): mixed
     {
         // Get all values from keys matching *.result.value
         $values = [];

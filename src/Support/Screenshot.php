@@ -11,7 +11,7 @@ use SplFileObject;
  */
 final class Screenshot
 {
-    private const DEFAULT_DIR = '/tmp/pest-browser-screenshots';
+    private const string DEFAULT_DIR = '/tmp/pest-browser-screenshots';
 
     /**
      * Return the path to the screenshots directory.

@@ -18,7 +18,9 @@ function cleanupScreenshots(): void
         }
     }
 
-    file_exists($basePath) && rmdir($basePath);
+    if (file_exists($basePath)) {
+        rmdir($basePath);
+    }
 }
 
 function playgroundUrl(string $path = '/'): string

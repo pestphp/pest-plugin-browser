@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Pest\Browser\Support\Str;
 
-test('one character non-regex string', function () {
+test('one character non-regex string', function (): void {
     $string = 'a';
 
     $result = Str::isRegex($string);
@@ -12,7 +12,7 @@ test('one character non-regex string', function () {
     expect($result)->toBeFalse();
 });
 
-it('detects regex expressions', function () {
+it('detects regex expressions', function (): void {
     $regex = '/^.*$/';
 
     $result = Str::isRegex($regex);
@@ -20,7 +20,7 @@ it('detects regex expressions', function () {
     expect($result)->toBeTrue();
 });
 
-it('detects non-regex expressions', function () {
+it('detects non-regex expressions', function (): void {
     $string = 'string';
 
     $result = Str::isRegex($string);

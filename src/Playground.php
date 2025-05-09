@@ -12,11 +12,11 @@ use Symfony\Component\Process\Process;
  */
 final class Playground
 {
-    private const DEFAULT_SCHEME = 'http';
+    private const string DEFAULT_SCHEME = 'http';
 
-    private const DEFAULT_HOST = 'localhost';
+    private const string DEFAULT_HOST = 'localhost';
 
-    private const DEFAULT_PORT = 9357;
+    private const int DEFAULT_PORT = 9357;
 
     /**
      * Playground instance.
@@ -26,15 +26,15 @@ final class Playground
     /**
      * Artisan serve process.
      */
-    private Process $process;
+    private readonly Process $process;
 
     /**
      * Constructs new instance and starts Artisan serve process.
      */
     private function __construct(
-        private string $scheme,
-        private string $host,
-        private int $port
+        private readonly string $scheme,
+        private readonly string $host,
+        private readonly int $port
     ) {
         $this->shutdownIdleProcesses();
 
@@ -56,7 +56,7 @@ final class Playground
      */
     public static function start(): self
     {
-        if (self::$instance === null) {
+        if (! self::$instance instanceof self) {
             self::$instance = new self(
                 Arr::get($_ENV, 'PEST_BROWSER_PLUGIN_PLAYGROUND_SCHEME', self::DEFAULT_SCHEME), // @phpstan-ignore-line
                 Arr::get($_ENV, 'PEST_BROWSER_PLUGIN_PLAYGROUND_HOST', self::DEFAULT_HOST), // @phpstan-ignore-line

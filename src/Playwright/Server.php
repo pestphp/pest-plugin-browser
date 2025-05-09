@@ -86,7 +86,7 @@ final class Server
         $process->run();
         $output = $process->getOutput();
 
-        $pids = array_filter(explode("\n", mb_trim($output)), fn ($pid): bool => (int) $pid > 0);
+        $pids = array_filter(explode("\n", mb_trim($output)), fn (string $pid): bool => (int) $pid > 0);
 
         return count($pids) > 0;
     }
@@ -97,7 +97,6 @@ final class Server
     public function stop(): void
     {
         if ($this->isRunning()) {
-            // Stop this way because initial process changes PID for some reason
             $command = Process::fromShellCommandline("kill -9 $(lsof -t -i :{$this->port})");
             $command->disableOutput();
             $command->run();
