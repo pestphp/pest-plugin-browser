@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Pest\Browser;
 
 use Pest\Browser\Contracts\Operation;
+use Pest\Browser\Operations\AssertChecked;
 use Pest\Browser\Operations\AssertUrlIs;
 use Pest\Browser\Operations\Visit;
 use Pest\Browser\Playwright\Client;
@@ -15,7 +16,7 @@ use RuntimeException;
  */
 final class PendingTest
 {
-    use AssertUrlIs, Visit;
+    use AssertUrlIs, Visit, AssertChecked;
 
     /**
      * The pending operations.
