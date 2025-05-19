@@ -27,3 +27,14 @@ function playgroundUrl(string $path = '/'): string
 {
     return 'http://localhost:9357/'.mb_ltrim($path, '/');
 }
+
+use Pest\Browser\Playwright\Element;
+use Pest\Expectation;
+
+expect()->extend('toBeChecked', function (): Expectation {
+
+    expect($this->value)->toBeInstanceOf(Element::class)
+        ->and($this->value->isChecked())->toBeTrue();
+
+    return $this;
+});
