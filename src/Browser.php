@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Pest\Browser;
 
+use Pest\Browser\Playwright\Page;
+
 /**
  * @internal
  */
@@ -15,5 +17,13 @@ trait Browser
     public function visit(string $url): PendingTest
     {
         return visit($url);
+    }
+
+    /**
+     * gets the page instance for given URL.
+     */
+    public function page(string $url): Page
+    {
+        return page($url);
     }
 }
