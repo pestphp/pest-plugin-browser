@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Pest\Browser\Playwright\Element;
+use Pest\Expectation;
 use Pest\TestSuite;
 
 pest()
@@ -28,9 +30,7 @@ function playgroundUrl(string $path = '/'): string
     return 'http://localhost:9357/'.mb_ltrim($path, '/');
 }
 
-use Pest\Browser\Playwright\Element;
-use Pest\Expectation;
-
+// todo: move this to Pest core
 expect()->extend('toBeChecked', function (): Expectation {
 
     expect($this->value)->toBeInstanceOf(Element::class)
