@@ -6,14 +6,12 @@ namespace Pest\Browser\Support;
 
 final class Selector
 {
-    public const string SELECTOR_PREFIX = 'internal:';
-
     /**
      * Get selector by attribute text.
      */
     public static function getByAttributeTextSelector(string $attrName, string $text, bool $exact = false): string
     {
-        return self::SELECTOR_PREFIX."attr=[{$attrName}=".self::escapeForAttributeSelectorOrRegex($text, $exact).']';
+        return 'internal:'."attr=[{$attrName}=".self::escapeForAttributeSelectorOrRegex($text, $exact).']';
     }
 
     /**
@@ -21,7 +19,7 @@ final class Selector
      */
     public static function getByTestIdSelector(string $testIdAttributeName, string $testId): string
     {
-        return self::SELECTOR_PREFIX."testid=[{$testIdAttributeName}=".self::escapeForAttributeSelectorOrRegex($testId, true).']';
+        return 'internal:'."testid=[{$testIdAttributeName}=".self::escapeForAttributeSelectorOrRegex($testId, true).']';
     }
 
     /**
@@ -29,7 +27,7 @@ final class Selector
      */
     public static function getByLabelSelector(string $text, bool $exact): string
     {
-        return self::SELECTOR_PREFIX.'label='.self::escapeForTextSelector($text, $exact);
+        return 'internal:'.'label='.self::escapeForTextSelector($text, $exact);
     }
 
     /**
@@ -61,7 +59,7 @@ final class Selector
      */
     public static function getByTextSelector(string $text, bool $exact): string
     {
-        return self::SELECTOR_PREFIX.'text='.self::escapeForTextSelector($text, $exact);
+        return 'internal:'.'text='.self::escapeForTextSelector($text, $exact);
     }
 
     /**
@@ -148,6 +146,6 @@ final class Selector
             $propsStr .= '['.$k.'='.$v.']';
         }
 
-        return self::SELECTOR_PREFIX."role={$role}{$propsStr}";
+        return 'internal:'."role={$role}{$propsStr}";
     }
 }
