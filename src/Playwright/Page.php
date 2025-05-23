@@ -129,6 +129,64 @@ final class Page
     }
 
     /**
+     * Finds an element by the specified role.
+     *
+     * @param  array<string, string|bool>  $params
+     */
+    public function getByRole(string $role, array $params): ?Element
+    {
+        return $this->frame->getByRole($role, $params);
+    }
+
+    /**
+     * Finds an element by test ID.
+     */
+    public function getByTestId(string $testId): ?Element
+    {
+        return $this->frame->getByTestId($testId);
+    }
+
+    /**
+     * Finds an element by alt text.
+     */
+    public function getByAltText(string $text, bool $exact = false): ?Element
+    {
+        return $this->frame->getByAltText($text, $exact);
+    }
+
+    /**
+     * Finds an element by label text.
+     */
+    public function getByLabel(string $text, bool $exact = false): ?Element
+    {
+        return $this->frame->getByLabel($text, $exact);
+    }
+
+    /**
+     * Finds an element by placeholder text.
+     */
+    public function getByPlaceholder(string $text, bool $exact = false): ?Element
+    {
+        return $this->frame->getByPlaceholder($text, $exact);
+    }
+
+    /**
+     * Finds an element by its text content.
+     */
+    public function getByText(string $text, bool $exact = false): ?Element
+    {
+        return $this->frame->getByText($text, $exact);
+    }
+
+    /**
+     * Finds an element by its title attribute.
+     */
+    public function getByTitle(string $text, bool $exact = false): ?Element
+    {
+        return $this->frame->getByTitle($text, $exact);
+    }
+
+    /**
      * Returns the page's title.
      */
     public function title(): string
