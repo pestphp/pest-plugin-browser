@@ -108,34 +108,39 @@ final class Selector
 
     }
 
+    /**
+     * Get selector by role.
+     *
+     * @param  array<string, string|bool>  $options
+     */
     public static function getByRoleSelector(string $role, array $options = []): string
     {
         $props = [];
 
         if (isset($options['checked'])) {
-            $props['checked'] = $options['checked'] ? 'true' : 'false';
+            $props['checked'] = (bool) $options['checked'] ? 'true' : 'false';
         }
         if (isset($options['disabled'])) {
-            $props['disabled'] = $options['disabled'] ? 'true' : 'false';
+            $props['disabled'] = (bool) $options['disabled'] ? 'true' : 'false';
         }
         if (isset($options['selected'])) {
-            $props['selected'] = $options['selected'] ? 'true' : 'false';
+            $props['selected'] = (bool) $options['selected'] ? 'true' : 'false';
         }
         if (isset($options['expanded'])) {
-            $props['expanded'] = $options['expanded'] ? 'true' : 'false';
+            $props['expanded'] = (bool) $options['expanded'] ? 'true' : 'false';
         }
         if (isset($options['includeHidden'])) {
-            $props['include-hidden'] = $options['includeHidden'] ? 'true' : 'false';
+            $props['include-hidden'] = (bool) $options['includeHidden'] ? 'true' : 'false';
         }
         if (isset($options['level'])) {
             $props['level'] = (string) $options['level'];
         }
         if (isset($options['name'])) {
             $exact = $options['exact'] ?? false;
-            $props['name'] = self::escapeForAttributeSelector($options['name'], $exact);
+            $props['name'] = self::escapeForAttributeSelector((string) $options['name'], (bool) $exact);
         }
         if (isset($options['pressed'])) {
-            $props['pressed'] = $options['pressed'] ? 'true' : 'false';
+            $props['pressed'] = (bool) $options['pressed'] ? 'true' : 'false';
         }
 
         $propsStr = '';
