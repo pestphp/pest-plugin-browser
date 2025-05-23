@@ -38,3 +38,43 @@ expect()->extend('toBeChecked', function (): Expectation {
 
     return $this;
 });
+
+expect()->extend('toBeVisible', function (): Expectation {
+
+    expect($this->value)->toBeInstanceOf(Element::class)
+        ->and($this->value->isVisible())->toBeTrue();
+
+    return $this;
+});
+
+expect()->extend('toBeEnabled', function (): Expectation {
+
+    expect($this->value)->toBeInstanceOf(Element::class)
+        ->and($this->value->isEnabled())->toBeTrue();
+
+    return $this;
+});
+
+expect()->extend('toBeDisabled', function (): Expectation {
+
+    expect($this->value)->toBeInstanceOf(Element::class)
+        ->and($this->value->isDisabled())->toBeTrue();
+
+    return $this;
+});
+
+expect()->extend('toBeEditable', function (): Expectation {
+
+    expect($this->value)->toBeInstanceOf(Element::class)
+        ->and($this->value->isEditable())->toBeTrue();
+
+    return $this;
+});
+
+expect()->extend('toBeHidden', function (): Expectation {
+
+    expect($this->value)->toBeInstanceOf(Element::class)
+        ->and($this->value->isHidden())->toBeTrue();
+
+    return $this;
+});
