@@ -11,6 +11,18 @@ describe('assertChecked', function () {
         expect($page->querySelector('input[name="checked-checkbox"]'))->toBeChecked();
     });
 
+    it('fails when checkbox is checked', function () {
+        $page = $this->page(playgroundUrl('/test/form-inputs'));
+
+        expect($page->querySelector('input[name="checked-checkbox"]'))->not->toBeChecked();
+    })->throws(ExpectationFailedException::class);
+
+    it('passes when checkbox is not checked', function () {
+        $page = $this->page(playgroundUrl('/test/form-inputs'));
+
+        expect($page->querySelector('input[name="unchecked-checkbox"]'))->not->toBeChecked();
+    });
+
     it('fails when checkbox is not checked', function () {
         $page = $this->page(playgroundUrl('/test/form-inputs'));
 
