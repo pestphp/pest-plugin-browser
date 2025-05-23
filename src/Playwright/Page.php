@@ -133,7 +133,7 @@ final class Page
      *
      * @param  array<string, string|bool>  $params
      */
-    public function getByRole(string $role, array $params): ?Element
+    public function getByRole(string $role, array $params = []): ?Element
     {
         return $this->frame->getByRole($role, $params);
     }

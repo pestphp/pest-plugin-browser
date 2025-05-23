@@ -116,7 +116,7 @@ final class Frame
      *
      * @param  array<string, string|bool>  $params
      */
-    public function getByRole(string $role, array $params): ?Element
+    public function getByRole(string $role, array $params = []): ?Element
     {
         return $this->querySelector(Selector::getByRoleSelector($role, $params));
     }
