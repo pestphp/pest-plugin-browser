@@ -75,4 +75,21 @@ final class Element
             // read all messages to clear the response
         }
     }
+
+    /**
+     * Get the Attribute of the element.
+     */
+    public function getAttribute(string $attribute): ?string
+    {
+        $response = Client::instance()->execute($this->guid, 'getAttribute', ['name' => $attribute]);
+
+        /** @var array{result: array{value: string|null}} $message */
+        foreach ($response as $message) {
+            if (isset($message['result']['value'])) {
+                return $message['result']['value'];
+            }
+        }
+
+        return null;
+    }
 }
