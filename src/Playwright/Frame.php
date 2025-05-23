@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Playwright;
 
+use Pest\Browser\Support\Selector;
+
 /**
  * @internal
  */
@@ -107,6 +109,66 @@ final class Frame
         }
 
         return null;
+    }
+
+    /**
+     * Finds an element by the specified role.
+     *
+     * @param  array<string, string|bool>  $params
+     */
+    public function getByRole(string $role, array $params): ?Element
+    {
+        return $this->querySelector(Selector::getByRoleSelector($role, $params));
+    }
+
+    /**
+     * Finds an element by test ID.
+     */
+    public function getByTestId(string $testId): ?Element
+    {
+        $testIdAttributeName = 'data-testid';
+
+        return $this->querySelector(Selector::getByTestIdSelector($testIdAttributeName, $testId));
+    }
+
+    /**
+     * Finds an element by alt text.
+     */
+    public function getByAltText(string $text, bool $exact = false): ?Element
+    {
+        return $this->querySelector(Selector::getByAltTextSelector($text, $exact));
+    }
+
+    /**
+     * Finds an element by label text.
+     */
+    public function getByLabel(string $text, bool $exact = false): ?Element
+    {
+        return $this->querySelector(Selector::getByLabelSelector($text, $exact));
+    }
+
+    /**
+     * Finds an element by placeholder text.
+     */
+    public function getByPlaceholder(string $text, bool $exact = false): ?Element
+    {
+        return $this->querySelector(Selector::getByPlaceholderSelector($text, $exact));
+    }
+
+    /**
+     * Finds an element by its text content.
+     */
+    public function getByText(string $text, bool $exact = false): ?Element
+    {
+        return $this->querySelector(Selector::getByTextSelector($text, $exact));
+    }
+
+    /**
+     * Finds an element by its title attribute.
+     */
+    public function getByTitle(string $text, bool $exact = false): ?Element
+    {
+        return $this->querySelector(Selector::getByTitleSelector($text, $exact));
     }
 
     /**
