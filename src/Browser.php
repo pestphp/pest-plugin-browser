@@ -22,7 +22,7 @@ trait Browser
     /**
      * gets the page instance for given URL.
      */
-    public function page(string $url): Page
+    public function page(?string $url = null): Page
     {
         return page($url);
     }

@@ -30,14 +30,17 @@ if (! function_exists('\Pest\Browser\page')) {
     /**
      * Visits the given URL, and starts a new browser test.
      */
-    function page(string $url = '/'): Page
+    function page(?string $url = null): Page
     {
         Server::instance()->start();
         Client::instance()->connectTo(Server::instance()->url('?browser=chromium'));
 
         $browser = Playwright::chromium()->launch();
         $page = $browser->newPage();
-        $page->goto($url);
+
+        if ($url !== null) {
+            $page->goto($url);
+        }
 
         return $page;
     }
