@@ -291,6 +291,7 @@ final class Page
     public function fill(string $selector, string $value): self
     {
         $this->frame->fill($selector, $value);
+
         return $this;
     }
 
@@ -300,6 +301,7 @@ final class Page
     public function check(string $selector): self
     {
         $this->frame->check($selector);
+
         return $this;
     }
 
@@ -309,10 +311,9 @@ final class Page
     public function uncheck(string $selector): self
     {
         $this->frame->uncheck($selector);
+
         return $this;
     }
-
-
 
     /**
      * Hovers over the element matching the specified selector.
@@ -320,6 +321,7 @@ final class Page
     public function hover(string $selector): self
     {
         $this->frame->hover($selector);
+
         return $this;
     }
 
@@ -329,6 +331,7 @@ final class Page
     public function focus(string $selector): self
     {
         $this->frame->focus($selector);
+
         return $this;
     }
 
@@ -338,6 +341,7 @@ final class Page
     public function press(string $selector, string $key): self
     {
         $this->frame->press($selector, $key);
+
         return $this;
     }
 
@@ -347,6 +351,7 @@ final class Page
     public function type(string $selector, string $text): self
     {
         $this->frame->type($selector, $text);
+
         return $this;
     }
 
@@ -356,6 +361,7 @@ final class Page
     public function dragAndDrop(string $source, string $target): self
     {
         $this->frame->dragAndDrop($source, $target);
+
         return $this;
     }
 
@@ -365,6 +371,7 @@ final class Page
     public function waitForLoadState(string $state = 'load'): self
     {
         $this->frame->waitForLoadState($state);
+
         return $this;
     }
 
@@ -374,14 +381,7 @@ final class Page
     public function waitForURL(string $url): self
     {
         $this->frame->waitForURL($url);
-        return $this;
-    }
 
-    /**
-     * Executes JavaScript in the frame context.
-     */
-    public function evaluate(string $expression, ?array $args = null): mixed
-    {
-        return $this->frame->evaluate($expression, $args);
+        return $this;
     }
 }

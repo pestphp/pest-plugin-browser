@@ -197,8 +197,6 @@ describe('Element', function (): void {
             });
         });
 
-
-
         describe('selectOption', function (): void {
             it('can select options from select elements', function (): void {
                 $element = $this->page->getByTestId('test-select');
@@ -216,7 +214,6 @@ describe('Element', function (): void {
                 expect($element)->toBeInstanceOf(Element::class);
             });
         });
-
 
     });
 
@@ -255,7 +252,7 @@ describe('Element', function (): void {
         describe('innerText', function (): void {
             it('can get inner text of elements', function (): void {
                 $element = $this->page->getByText('This is a simple paragraph', true);
-                expect(trim($element->innerText()))->toContain('This is a simple paragraph');
+                expect(trim((string) $element->innerText()))->toContain('This is a simple paragraph');
             });
         });
 
@@ -431,8 +428,6 @@ describe('Element', function (): void {
         });
     });
 
-
-
     describe('advanced methods', function (): void {
         describe('boundingBox', function (): void {
             it('can get bounding box of visible elements', function (): void {
@@ -474,10 +469,7 @@ describe('Element', function (): void {
             });
         });
 
-
     });
-
-
 
     describe('frame methods', function (): void {
         describe('contentFrame', function (): void {
@@ -507,8 +499,5 @@ describe('Element', function (): void {
             });
         });
     });
-
-
-
 
 });

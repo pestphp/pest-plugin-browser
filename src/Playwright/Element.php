@@ -97,6 +97,8 @@ final class Element
 
     /**
      * Click on the element.
+     *
+     * @param array<string, mixed>|null $options
      */
     public function click(?array $options = null): void
     {
@@ -110,6 +112,8 @@ final class Element
 
     /**
      * Double click on the element.
+     *
+     * @param array<string, mixed>|null $options
      */
     public function dblclick(?array $options = null): void
     {
@@ -123,6 +127,8 @@ final class Element
 
     /**
      * Fill the element with text.
+     *
+     * @param array<string, mixed>|null $options
      */
     public function fill(string $value, ?array $options = null): void
     {
@@ -136,6 +142,8 @@ final class Element
 
     /**
      * Type text into the element.
+     *
+     * @param array<string, mixed>|null $options
      */
     public function type(string $text, ?array $options = null): void
     {
@@ -149,6 +157,8 @@ final class Element
 
     /**
      * Press a key on the element.
+     *
+     * @param array<string, mixed>|null $options
      */
     public function press(string $key, ?array $options = null): void
     {
@@ -174,6 +184,8 @@ final class Element
 
     /**
      * Hover over the element.
+     *
+     * @param array<string, mixed>|null $options
      */
     public function hover(?array $options = null): void
     {
@@ -187,6 +199,8 @@ final class Element
 
     /**
      * Select text in the element.
+     *
+     * @param array<string, mixed>|null $options
      */
     public function selectText(?array $options = null): void
     {
@@ -200,8 +214,12 @@ final class Element
 
     /**
      * Select options in a select element.
+     *
+     * @param string|array<string>|array<int, string> $values
+     * @param array<string, mixed>|null $options
+     * @return array<string>
      */
-    public function selectOption($values, ?array $options = null): array
+    public function selectOption(array $values, ?array $options = null): array
     {
         $params = array_merge(['values' => $values], $options ?? []);
         $response = Client::instance()->execute($this->guid, 'selectOption', $params);
@@ -269,6 +287,8 @@ final class Element
 
     /**
      * Get the input value of the element.
+     *
+     * @param array<string, mixed>|null $options
      */
     public function inputValue(?array $options = null): string
     {
@@ -355,6 +375,8 @@ final class Element
 
     /**
      * Get the bounding box of the element.
+     *
+     * @return array{x: float, y: float, width: float, height: float}|null
      */
     public function boundingBox(): ?array
     {
@@ -372,6 +394,8 @@ final class Element
 
     /**
      * Take a screenshot of the element.
+     *
+     * @param array<string, mixed>|null $options
      */
     public function screenshot(?array $options = null): string
     {
@@ -390,6 +414,8 @@ final class Element
 
     /**
      * Scroll element into view if needed.
+     *
+     * @param array<string, mixed>|null $options
      */
     public function scrollIntoViewIfNeeded(?array $options = null): void
     {
@@ -403,6 +429,8 @@ final class Element
 
     /**
      * Wait for element to reach a specific state.
+     *
+     * @param array<string, mixed>|null $options
      */
     public function waitForElementState(string $state, ?array $options = null): void
     {
@@ -416,6 +444,8 @@ final class Element
 
     /**
      * Wait for a selector to appear relative to this element.
+     *
+     * @param array<string, mixed>|null $options
      */
     public function waitForSelector(string $selector, ?array $options = null): ?self
     {
@@ -454,6 +484,8 @@ final class Element
 
     /**
      * Query for multiple elements relative to this element.
+     *
+     * @return array<self>
      */
     public function querySelectorAll(string $selector): array
     {
@@ -510,6 +542,8 @@ final class Element
 
     /**
      * Get element by role relative to this element.
+     *
+     * @param array<string, string|bool> $options
      */
     public function getByRole(string $role, array $options = []): ?self
     {

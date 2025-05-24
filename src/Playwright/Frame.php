@@ -247,7 +247,7 @@ final class Frame
         /** @var array{result: array{value: bool|null}} $message */
         foreach ($response as $message) {
             if (isset($message['result']['value'])) {
-                return (bool) $message['result']['value'];
+                return $message['result']['value'];
             }
         }
 
@@ -268,7 +268,7 @@ final class Frame
         /** @var array{result: array{value: bool|null}} $message */
         foreach ($response as $message) {
             if (isset($message['result']['value'])) {
-                return (bool) $message['result']['value'];
+                return $message['result']['value'];
             }
         }
 
@@ -280,7 +280,7 @@ final class Frame
      */
     public function isHidden(string $selector): bool
     {
-        return !$this->isVisible($selector);
+        return ! $this->isVisible($selector);
     }
 
     /**
@@ -381,7 +381,7 @@ final class Frame
         /** @var array{result: array{value: bool|null}} $message */
         foreach ($response as $message) {
             if (isset($message['result']['value'])) {
-                return (bool) $message['result']['value'];
+                return $message['result']['value'];
             }
         }
 
@@ -429,8 +429,6 @@ final class Frame
 
         return $this;
     }
-
-
 
     /**
      * Hovers over the element matching the specified selector.
@@ -514,35 +512,6 @@ final class Frame
         );
 
         return $this;
-    }
-
-    /**
-     * Evaluates JavaScript in the frame context.
-     *
-     * @param  mixed  $arg
-     * @return mixed
-     */
-    public function evaluate(string $pageFunction, $arg = null)
-    {
-        $params = ['pageFunction' => $pageFunction];
-        if ($arg !== null) {
-            $params['arg'] = $arg;
-        }
-
-        $response = Client::instance()->execute(
-            $this->guid,
-            'evaluate',
-            $params
-        );
-
-        /** @var array{result: array{value: mixed}} $message */
-        foreach ($response as $message) {
-            if (isset($message['result']['value'])) {
-                return $message['result']['value'];
-            }
-        }
-
-        return null;
     }
 
     /**
