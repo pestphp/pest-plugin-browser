@@ -16,7 +16,12 @@
             "nav",
             "filesystems",
             "favicon",
-            "js"
+            "js",
+            "dblclick",
+            "doctype",
+            "checkboxes",
+            "unchecks",
+            "attr"
         ],
         "paths": []
     }
