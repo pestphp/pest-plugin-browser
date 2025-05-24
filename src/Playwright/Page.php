@@ -220,4 +220,168 @@ final class Page
     {
         return $this->frame->getAttribute($selector, $name);
     }
+
+    /**
+     * Gets the full HTML contents of the page, including the doctype.
+     */
+    public function content(): string
+    {
+        return $this->frame->content();
+    }
+
+    /**
+     * Returns element's inner text.
+     */
+    public function innerText(string $selector): string
+    {
+        return $this->frame->innerText($selector);
+    }
+
+    /**
+     * Returns element's text content.
+     */
+    public function textContent(string $selector): ?string
+    {
+        return $this->frame->textContent($selector);
+    }
+
+    /**
+     * Gets the input value of the element matching the specified selector.
+     */
+    public function inputValue(string $selector): string
+    {
+        return $this->frame->inputValue($selector);
+    }
+
+    /**
+     * Returns whether the element matching the specified selector is enabled.
+     */
+    public function isEnabled(string $selector): bool
+    {
+        return $this->frame->isEnabled($selector);
+    }
+
+    /**
+     * Returns whether the element matching the specified selector is visible.
+     */
+    public function isVisible(string $selector): bool
+    {
+        return $this->frame->isVisible($selector);
+    }
+
+    /**
+     * Returns whether the element matching the specified selector is hidden.
+     */
+    public function isHidden(string $selector): bool
+    {
+        return $this->frame->isHidden($selector);
+    }
+
+    /**
+     * Returns whether the element matching the specified selector is checked.
+     */
+    public function isChecked(string $selector): bool
+    {
+        return $this->frame->isChecked($selector);
+    }
+
+    /**
+     * Fills the element matching the specified selector with the given value.
+     */
+    public function fill(string $selector, string $value): self
+    {
+        $this->frame->fill($selector, $value);
+        return $this;
+    }
+
+    /**
+     * Checks the element matching the specified selector.
+     */
+    public function check(string $selector): self
+    {
+        $this->frame->check($selector);
+        return $this;
+    }
+
+    /**
+     * Unchecks the element matching the specified selector.
+     */
+    public function uncheck(string $selector): self
+    {
+        $this->frame->uncheck($selector);
+        return $this;
+    }
+
+
+
+    /**
+     * Hovers over the element matching the specified selector.
+     */
+    public function hover(string $selector): self
+    {
+        $this->frame->hover($selector);
+        return $this;
+    }
+
+    /**
+     * Focuses the element matching the specified selector.
+     */
+    public function focus(string $selector): self
+    {
+        $this->frame->focus($selector);
+        return $this;
+    }
+
+    /**
+     * Presses a key on the element matching the specified selector.
+     */
+    public function press(string $selector, string $key): self
+    {
+        $this->frame->press($selector, $key);
+        return $this;
+    }
+
+    /**
+     * Types text into the element matching the specified selector.
+     */
+    public function type(string $selector, string $text): self
+    {
+        $this->frame->type($selector, $text);
+        return $this;
+    }
+
+    /**
+     * Performs drag and drop operation.
+     */
+    public function dragAndDrop(string $source, string $target): self
+    {
+        $this->frame->dragAndDrop($source, $target);
+        return $this;
+    }
+
+    /**
+     * Waits for the specified load state.
+     */
+    public function waitForLoadState(string $state = 'load'): self
+    {
+        $this->frame->waitForLoadState($state);
+        return $this;
+    }
+
+    /**
+     * Waits for the frame to navigate to the given URL.
+     */
+    public function waitForURL(string $url): self
+    {
+        $this->frame->waitForURL($url);
+        return $this;
+    }
+
+    /**
+     * Executes JavaScript in the frame context.
+     */
+    public function evaluate(string $expression, ?array $args = null): mixed
+    {
+        return $this->frame->evaluate($expression, $args);
+    }
 }

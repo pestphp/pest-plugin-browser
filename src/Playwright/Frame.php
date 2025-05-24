@@ -212,4 +212,364 @@ final class Frame
 
         return $this;
     }
+
+    /**
+     * Gets the full HTML contents of the frame, including the doctype.
+     */
+    public function content(): string
+    {
+        $response = Client::instance()->execute(
+            $this->guid,
+            'content'
+        );
+
+        /** @var array{result: array{value: string|null}} $message */
+        foreach ($response as $message) {
+            if (isset($message['result']['value'])) {
+                return $message['result']['value'];
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * Returns whether the element is enabled.
+     */
+    public function isEnabled(string $selector): bool
+    {
+        $response = Client::instance()->execute(
+            $this->guid,
+            'isEnabled',
+            ['selector' => $selector]
+        );
+
+        /** @var array{result: array{value: bool|null}} $message */
+        foreach ($response as $message) {
+            if (isset($message['result']['value'])) {
+                return (bool) $message['result']['value'];
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Returns whether the element is visible.
+     */
+    public function isVisible(string $selector): bool
+    {
+        $response = Client::instance()->execute(
+            $this->guid,
+            'isVisible',
+            ['selector' => $selector]
+        );
+
+        /** @var array{result: array{value: bool|null}} $message */
+        foreach ($response as $message) {
+            if (isset($message['result']['value'])) {
+                return (bool) $message['result']['value'];
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Returns whether the element is hidden.
+     */
+    public function isHidden(string $selector): bool
+    {
+        return !$this->isVisible($selector);
+    }
+
+    /**
+     * Fills a form field with the given value.
+     */
+    public function fill(string $selector, string $value): self
+    {
+        $response = Client::instance()->execute(
+            $this->guid,
+            'fill',
+            ['selector' => $selector, 'value' => $value]
+        );
+
+        /** @var array{method: string|null, params: array{url: string|null}} $message */
+        foreach ($response as $message) {
+            if (isset($message['method']) && $message['method'] === 'navigated') {
+                $this->url = $message['params']['url'] ?? '';
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * Returns element's inner text.
+     */
+    public function innerText(string $selector): string
+    {
+        $response = Client::instance()->execute(
+            $this->guid,
+            'innerText',
+            ['selector' => $selector]
+        );
+
+        /** @var array{result: array{value: string|null}} $message */
+        foreach ($response as $message) {
+            if (isset($message['result']['value'])) {
+                return $message['result']['value'];
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * Returns element's text content.
+     */
+    public function textContent(string $selector): ?string
+    {
+        $response = Client::instance()->execute(
+            $this->guid,
+            'textContent',
+            ['selector' => $selector]
+        );
+
+        /** @var array{result: array{value: string|null}} $message */
+        foreach ($response as $message) {
+            if (isset($message['result']['value'])) {
+                return $message['result']['value'];
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns the input value for input elements.
+     */
+    public function inputValue(string $selector): string
+    {
+        $response = Client::instance()->execute(
+            $this->guid,
+            'inputValue',
+            ['selector' => $selector]
+        );
+
+        /** @var array{result: array{value: string|null}} $message */
+        foreach ($response as $message) {
+            if (isset($message['result']['value'])) {
+                return $message['result']['value'];
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * Checks whether the element is checked (for checkboxes and radio buttons).
+     */
+    public function isChecked(string $selector): bool
+    {
+        $response = Client::instance()->execute(
+            $this->guid,
+            'isChecked',
+            ['selector' => $selector]
+        );
+
+        /** @var array{result: array{value: bool|null}} $message */
+        foreach ($response as $message) {
+            if (isset($message['result']['value'])) {
+                return (bool) $message['result']['value'];
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Checks the element (for checkboxes and radio buttons).
+     */
+    public function check(string $selector): self
+    {
+        $response = Client::instance()->execute(
+            $this->guid,
+            'check',
+            ['selector' => $selector]
+        );
+
+        /** @var array{method: string|null, params: array{url: string|null}} $message */
+        foreach ($response as $message) {
+            if (isset($message['method']) && $message['method'] === 'navigated') {
+                $this->url = $message['params']['url'] ?? '';
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * Unchecks the element (for checkboxes and radio buttons).
+     */
+    public function uncheck(string $selector): self
+    {
+        $response = Client::instance()->execute(
+            $this->guid,
+            'uncheck',
+            ['selector' => $selector]
+        );
+
+        /** @var array{method: string|null, params: array{url: string|null}} $message */
+        foreach ($response as $message) {
+            if (isset($message['method']) && $message['method'] === 'navigated') {
+                $this->url = $message['params']['url'] ?? '';
+            }
+        }
+
+        return $this;
+    }
+
+
+
+    /**
+     * Hovers over the element matching the specified selector.
+     */
+    public function hover(string $selector): self
+    {
+        Client::instance()->execute(
+            $this->guid,
+            'hover',
+            ['selector' => $selector]
+        );
+
+        return $this;
+    }
+
+    /**
+     * Focuses the element matching the specified selector.
+     */
+    public function focus(string $selector): self
+    {
+        Client::instance()->execute(
+            $this->guid,
+            'focus',
+            ['selector' => $selector]
+        );
+
+        return $this;
+    }
+
+    /**
+     * Presses a key on the element matching the specified selector.
+     */
+    public function press(string $selector, string $key): self
+    {
+        Client::instance()->execute(
+            $this->guid,
+            'press',
+            ['selector' => $selector, 'key' => $key]
+        );
+
+        return $this;
+    }
+
+    /**
+     * Types text into the element matching the specified selector.
+     */
+    public function type(string $selector, string $text): self
+    {
+        Client::instance()->execute(
+            $this->guid,
+            'type',
+            ['selector' => $selector, 'text' => $text]
+        );
+
+        return $this;
+    }
+
+    /**
+     * Waits for the specified load state.
+     */
+    public function waitForLoadState(string $state = 'load'): self
+    {
+        Client::instance()->execute(
+            $this->guid,
+            'waitForLoadState',
+            ['state' => $state]
+        );
+
+        return $this;
+    }
+
+    /**
+     * Waits for navigation to the specified URL.
+     */
+    public function waitForURL(string $url): self
+    {
+        Client::instance()->execute(
+            $this->guid,
+            'waitForURL',
+            ['url' => $url]
+        );
+
+        return $this;
+    }
+
+    /**
+     * Evaluates JavaScript in the frame context.
+     *
+     * @param  mixed  $arg
+     * @return mixed
+     */
+    public function evaluate(string $pageFunction, $arg = null)
+    {
+        $params = ['pageFunction' => $pageFunction];
+        if ($arg !== null) {
+            $params['arg'] = $arg;
+        }
+
+        $response = Client::instance()->execute(
+            $this->guid,
+            'evaluate',
+            $params
+        );
+
+        /** @var array{result: array{value: mixed}} $message */
+        foreach ($response as $message) {
+            if (isset($message['result']['value'])) {
+                return $message['result']['value'];
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Performs drag and drop operation.
+     */
+    public function dragAndDrop(string $source, string $target): self
+    {
+        Client::instance()->execute(
+            $this->guid,
+            'dragAndDrop',
+            ['source' => $source, 'target' => $target]
+        );
+
+        return $this;
+    }
+
+    /**
+     * Sets the content of the frame.
+     */
+    public function setContent(string $html): self
+    {
+        Client::instance()->execute(
+            $this->guid,
+            'setContent',
+            ['html' => $html]
+        );
+
+        return $this;
+    }
 }
