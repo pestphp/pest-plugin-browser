@@ -219,7 +219,7 @@ final class Element
      * @param array<string, mixed>|null $options
      * @return array<string>
      */
-    public function selectOption(array $values, ?array $options = null): array
+    public function selectOption(string|array $values, ?array $options = null): array
     {
         $params = array_merge(['values' => $values], $options ?? []);
         $response = Client::instance()->execute($this->guid, 'selectOption', $params);
