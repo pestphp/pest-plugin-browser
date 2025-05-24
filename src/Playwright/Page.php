@@ -384,4 +384,14 @@ final class Page
     {
         return $this->frame->evaluate($expression, $args);
     }
+    /**
+     * Waits for the specified event to occur on the page.
+     *
+     * @param  string  $eventName  The name of the event to wait for.
+     * @return string|null  The data associated with the event, or null if the event did not occur.
+     */
+    public function waitForEvent(string $eventName): ?string
+    {
+        return $this->frame->waitForEvent($eventName);
+    }
 }

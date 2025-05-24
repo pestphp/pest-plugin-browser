@@ -572,4 +572,21 @@ final class Frame
 
         return $this;
     }
+    /**
+     * Waits for an event to be emitted by the frame.
+     *
+     * @param  string  $eventName  The name of the event to wait for.
+     */
+    public function waitForEvent(string $eventName): void
+    {
+        $response = Client::instance()->execute(
+            $this->guid,
+            'waitForEvent',
+            ['event' => $eventName]
+        );
+
+        foreach ($response as $message) {
+            // read all messages to clear the response
+        }
+    }
 }
