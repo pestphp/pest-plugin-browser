@@ -89,86 +89,80 @@ final class Frame
 
     /**
      * Finds an element matching the specified selector.
+     *
+     * @deprecated Use locator($selector)->elementHandle() instead for Element compatibility, or use locator($selector) for Locator-first approach
      */
     public function querySelector(string $selector): ?Element
     {
-        $response = Client::instance()->execute(
-            $this->guid,
-            'querySelector',
-            ['selector' => $selector, 'strict' => true]
-        );
-
-        /** @var array{method: string|null, params: array{type: string|null, guid: string}} $message */
-        foreach ($response as $message) {
-            if (
-                isset($message['method']) && $message['method'] === '__create__'
-                && isset($message['params']['type']) && $message['params']['type'] === 'ElementHandle'
-            ) {
-                return new Element($message['params']['guid']);
-            }
-        }
-
-        return null;
+        return $this->locator($selector)->elementHandle();
     }
 
     /**
-     * Finds an element by the specified role.
+     * Create a locator for the specified selector.
+     */
+    public function locator(string $selector): Locator
+    {
+        return new Locator($this->guid, $selector);
+    }
+
+    /**
+     * Create a locator that matches elements by role.
      *
      * @param  array<string, string|bool>  $params
      */
-    public function getByRole(string $role, array $params = []): ?Element
+    public function getByRole(string $role, array $params = []): Locator
     {
-        return $this->querySelector(Selector::getByRoleSelector($role, $params));
+        return new Locator($this->guid, Selector::getByRoleSelector($role, $params));
     }
 
     /**
-     * Finds an element by test ID.
+     * Create a locator that matches elements by test ID.
      */
-    public function getByTestId(string $testId): ?Element
+    public function getByTestId(string $testId): Locator
     {
         $testIdAttributeName = 'data-testid';
 
-        return $this->querySelector(Selector::getByTestIdSelector($testIdAttributeName, $testId));
+        return new Locator($this->guid, Selector::getByTestIdSelector($testIdAttributeName, $testId));
     }
 
     /**
-     * Finds an element by alt text.
+     * Create a locator that matches elements by alt text.
      */
-    public function getByAltText(string $text, bool $exact = false): ?Element
+    public function getByAltText(string $text, bool $exact = false): Locator
     {
-        return $this->querySelector(Selector::getByAltTextSelector($text, $exact));
+        return new Locator($this->guid, Selector::getByAltTextSelector($text, $exact));
     }
 
     /**
-     * Finds an element by label text.
+     * Create a locator that matches elements by label text.
      */
-    public function getByLabel(string $text, bool $exact = false): ?Element
+    public function getByLabel(string $text, bool $exact = false): Locator
     {
-        return $this->querySelector(Selector::getByLabelSelector($text, $exact));
+        return new Locator($this->guid, Selector::getByLabelSelector($text, $exact));
     }
 
     /**
-     * Finds an element by placeholder text.
+     * Create a locator that matches elements by placeholder text.
      */
-    public function getByPlaceholder(string $text, bool $exact = false): ?Element
+    public function getByPlaceholder(string $text, bool $exact = false): Locator
     {
-        return $this->querySelector(Selector::getByPlaceholderSelector($text, $exact));
+        return new Locator($this->guid, Selector::getByPlaceholderSelector($text, $exact));
     }
 
     /**
-     * Finds an element by its text content.
+     * Create a locator that matches elements by text content.
      */
-    public function getByText(string $text, bool $exact = false): ?Element
+    public function getByText(string $text, bool $exact = false): Locator
     {
-        return $this->querySelector(Selector::getByTextSelector($text, $exact));
+        return new Locator($this->guid, Selector::getByTextSelector($text, $exact));
     }
 
     /**
-     * Finds an element by its title attribute.
+     * Create a locator that matches elements by title attribute.
      */
-    public function getByTitle(string $text, bool $exact = false): ?Element
+    public function getByTitle(string $text, bool $exact = false): Locator
     {
-        return $this->querySelector(Selector::getByTitleSelector($text, $exact));
+        return new Locator($this->guid, Selector::getByTitleSelector($text, $exact));
     }
 
     /**

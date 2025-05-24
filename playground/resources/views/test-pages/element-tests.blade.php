@@ -98,6 +98,27 @@
             <input type="text" id="search" name="search" placeholder="Search..." />
         </div>
 
+        <!-- Test elements for Locator tests -->
+        <div class="form-group">
+            <button type="button" data-testid="enabled-button">Enabled Button</button>
+            <button type="button" data-testid="disabled-button" disabled>Disabled Button</button>
+        </div>
+
+        <div class="form-group">
+            <input type="checkbox" data-testid="checked-checkbox" checked> Checked Checkbox
+            <input type="checkbox" data-testid="unchecked-checkbox"> Unchecked Checkbox
+        </div>
+
+        <div class="form-group">
+            <button type="button" data-testid="click-button" onclick="incrementCounter()">Click Counter</button>
+            <span data-testid="click-counter">0</span>
+        </div>
+
+        <div class="form-group">
+            <input type="text" data-testid="text-input" placeholder="Text input">
+            <input type="text" data-testid="prefilled-input" value="Prefilled value">
+        </div>
+
         <div class="form-group">
             <label for="comments">Comments</label>
             <textarea id="comments" name="comments" placeholder="Enter your comments here"></textarea>
@@ -243,6 +264,14 @@
     </div>
 
     <script>
+        // Counter for click testing
+        let clickCounter = 0;
+
+        function incrementCounter() {
+            clickCounter++;
+            document.querySelector('[data-testid="click-counter"]').textContent = clickCounter;
+        }
+
         // Add some basic interactivity for testing
         document.addEventListener('DOMContentLoaded', function() {
             // Event button click handler

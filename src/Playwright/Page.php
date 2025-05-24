@@ -121,67 +121,67 @@ final class Page
     }
 
     /**
-     * Finds an element matching the specified selector.
+     * Create a locator for the specified selector.
      */
-    public function querySelector(string $selector): ?Element
+    public function locator(string $selector): Locator
     {
-        return $this->frame->querySelector($selector);
+        return $this->frame->locator($selector);
     }
 
     /**
-     * Finds an element by the specified role.
+     * Create a locator that matches elements by role.
      *
      * @param  array<string, string|bool>  $params
      */
-    public function getByRole(string $role, array $params = []): ?Element
+    public function getByRole(string $role, array $params = []): Locator
     {
         return $this->frame->getByRole($role, $params);
     }
 
     /**
-     * Finds an element by test ID.
+     * Create a locator that matches elements by test ID.
      */
-    public function getByTestId(string $testId): ?Element
+    public function getByTestId(string $testId): Locator
     {
         return $this->frame->getByTestId($testId);
     }
 
     /**
-     * Finds an element by alt text.
+     * Create a locator that matches elements by alt text.
      */
-    public function getByAltText(string $text, bool $exact = false): ?Element
+    public function getByAltText(string $text, bool $exact = false): Locator
     {
         return $this->frame->getByAltText($text, $exact);
     }
 
     /**
-     * Finds an element by label text.
+     * Create a locator that matches elements by label text.
      */
-    public function getByLabel(string $text, bool $exact = false): ?Element
+    public function getByLabel(string $text, bool $exact = false): Locator
     {
         return $this->frame->getByLabel($text, $exact);
     }
 
     /**
-     * Finds an element by placeholder text.
+     * Create a locator that matches elements by placeholder text.
      */
-    public function getByPlaceholder(string $text, bool $exact = false): ?Element
+    public function getByPlaceholder(string $text, bool $exact = false): Locator
     {
         return $this->frame->getByPlaceholder($text, $exact);
     }
 
     /**
-     * Finds an element by its text content.
+     * Create a locator that matches elements by text content.
      */
-    public function getByText(string $text, bool $exact = false): ?Element
+    public function getByText(string $text, bool $exact = false): Locator
     {
         return $this->frame->getByText($text, $exact);
     }
 
     /**
-     * Finds an element by its title attribute.
+     * Create a locator that matches elements by title attribute.
      */
-    public function getByTitle(string $text, bool $exact = false): ?Element
+    public function getByTitle(string $text, bool $exact = false): Locator
     {
         return $this->frame->getByTitle($text, $exact);
     }
