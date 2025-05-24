@@ -252,7 +252,7 @@ describe('Element', function (): void {
         describe('innerText', function (): void {
             it('can get inner text of elements', function (): void {
                 $element = $this->page->getByText('This is a simple paragraph', true);
-                expect(trim((string) $element->innerText()))->toContain('This is a simple paragraph');
+                expect(mb_trim((string) $element->innerText()))->toContain('This is a simple paragraph');
             });
         });
 
