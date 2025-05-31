@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Playwright;
 
+use Generator;
 use Pest\Browser\Support\Screenshot;
 
 /**
@@ -44,17 +45,8 @@ final class Page
      */
     public function forward(): self
     {
-        $response = Client::instance()->execute(
-            $this->guid,
-            'goForward',
-        );
-
-        /** @var array{method: string|null, params: array{url: string|null}} $message */
-        foreach ($response as $message) {
-            if (isset($message['method']) && $message['method'] === 'navigated') {
-                $this->frame->url = $message['params']['url'] ?? '';
-            }
-        }
+        $response = $this->sendMessage('goForward');
+        $this->processNavigationResponse($response);
 
         return $this;
     }
@@ -64,17 +56,8 @@ final class Page
      */
     public function back(): self
     {
-        $response = Client::instance()->execute(
-            $this->guid,
-            'goBack',
-        );
-
-        /** @var array{method: string|null, params: array{url: string|null}} $message */
-        foreach ($response as $message) {
-            if (isset($message['method']) && $message['method'] === 'navigated') {
-                $this->frame->url = $message['params']['url'] ?? '';
-            }
-        }
+        $response = $this->sendMessage('goBack');
+        $this->processNavigationResponse($response);
 
         return $this;
     }
@@ -84,18 +67,8 @@ final class Page
      */
     public function reload(): self
     {
-        $response = Client::instance()->execute(
-            $this->guid,
-            'reload',
-            ['waitUntil' => 'load']
-        );
-
-        /** @var array{method: string|null, params: array{url: string|null}} $message */
-        foreach ($response as $message) {
-            if (isset($message['method']) && $message['method'] === 'navigated') {
-                $this->frame->url = $message['params']['url'] ?? '';
-            }
-        }
+        $response = $this->sendMessage('reload', ['waitUntil' => 'load']);
+        $this->processNavigationResponse($response);
 
         return $this;
     }
@@ -121,67 +94,67 @@ final class Page
     }
 
     /**
-     * Finds an element matching the specified selector.
+     * Create a locator for the specified selector.
      */
-    public function querySelector(string $selector): ?Element
+    public function locator(string $selector): Locator
     {
-        return $this->frame->querySelector($selector);
+        return $this->frame->locator($selector);
     }
 
     /**
-     * Finds an element by the specified role.
+     * Create a locator that matches elements by role.
      *
      * @param  array<string, string|bool>  $params
      */
-    public function getByRole(string $role, array $params = []): ?Element
+    public function getByRole(string $role, array $params = []): Locator
     {
         return $this->frame->getByRole($role, $params);
     }
 
     /**
-     * Finds an element by test ID.
+     * Create a locator that matches elements by test ID.
      */
-    public function getByTestId(string $testId): ?Element
+    public function getByTestId(string $testId): Locator
     {
         return $this->frame->getByTestId($testId);
     }
 
     /**
-     * Finds an element by alt text.
+     * Create a locator that matches elements by alt text.
      */
-    public function getByAltText(string $text, bool $exact = false): ?Element
+    public function getByAltText(string $text, bool $exact = false): Locator
     {
         return $this->frame->getByAltText($text, $exact);
     }
 
     /**
-     * Finds an element by label text.
+     * Create a locator that matches elements by label text.
      */
-    public function getByLabel(string $text, bool $exact = false): ?Element
+    public function getByLabel(string $text, bool $exact = false): Locator
     {
         return $this->frame->getByLabel($text, $exact);
     }
 
     /**
-     * Finds an element by placeholder text.
+     * Create a locator that matches elements by placeholder text.
      */
-    public function getByPlaceholder(string $text, bool $exact = false): ?Element
+    public function getByPlaceholder(string $text, bool $exact = false): Locator
     {
         return $this->frame->getByPlaceholder($text, $exact);
     }
 
     /**
-     * Finds an element by its text content.
+     * Create a locator that matches elements by text content.
      */
-    public function getByText(string $text, bool $exact = false): ?Element
+    public function getByText(string $text, bool $exact = false): Locator
     {
         return $this->frame->getByText($text, $exact);
     }
 
     /**
-     * Finds an element by its title attribute.
+     * Create a locator that matches elements by title attribute.
      */
-    public function getByTitle(string $text, bool $exact = false): ?Element
+    public function getByTitle(string $text, bool $exact = false): Locator
     {
         return $this->frame->getByTitle($text, $exact);
     }
@@ -291,6 +264,7 @@ final class Page
     public function fill(string $selector, string $value): self
     {
         $this->frame->fill($selector, $value);
+
         return $this;
     }
 
@@ -300,6 +274,7 @@ final class Page
     public function check(string $selector): self
     {
         $this->frame->check($selector);
+
         return $this;
     }
 
@@ -309,17 +284,25 @@ final class Page
     public function uncheck(string $selector): self
     {
         $this->frame->uncheck($selector);
+
         return $this;
     }
-
-
 
     /**
      * Hovers over the element matching the specified selector.
      */
-    public function hover(string $selector): self
-    {
-        $this->frame->hover($selector);
+    public function hover(
+        string $selector,
+        ?bool $force = null,
+        ?array $modifiers = null,
+        ?bool $noWaitAfter = null,
+        ?array $position = null,
+        ?bool $strict = null,
+        ?int $timeout = null,
+        ?bool $trial = null
+    ): self {
+        $this->frame->hover($selector, $force, $modifiers, $noWaitAfter, $position, $strict, $timeout, $trial);
+
         return $this;
     }
 
@@ -329,6 +312,7 @@ final class Page
     public function focus(string $selector): self
     {
         $this->frame->focus($selector);
+
         return $this;
     }
 
@@ -338,6 +322,7 @@ final class Page
     public function press(string $selector, string $key): self
     {
         $this->frame->press($selector, $key);
+
         return $this;
     }
 
@@ -347,6 +332,7 @@ final class Page
     public function type(string $selector, string $text): self
     {
         $this->frame->type($selector, $text);
+
         return $this;
     }
 
@@ -356,6 +342,7 @@ final class Page
     public function dragAndDrop(string $source, string $target): self
     {
         $this->frame->dragAndDrop($source, $target);
+
         return $this;
     }
 
@@ -365,6 +352,7 @@ final class Page
     public function waitForLoadState(string $state = 'load'): self
     {
         $this->frame->waitForLoadState($state);
+
         return $this;
     }
 
@@ -374,24 +362,40 @@ final class Page
     public function waitForURL(string $url): self
     {
         $this->frame->waitForURL($url);
+
         return $this;
     }
 
     /**
-     * Executes JavaScript in the frame context.
-     */
-    public function evaluate(string $expression, ?array $args = null): mixed
-    {
-        return $this->frame->evaluate($expression, $args);
-    }
-    /**
-     * Waits for the specified event to occur on the page.
+     * Waits for the selector to satisfy state option.
      *
-     * @param  string  $eventName  The name of the event to wait for.
-     * @return string|null  The data associated with the event, or null if the event did not occur.
+     * @param  array<string, mixed>|null  $options  Additional options like state, strict, timeout
      */
-    public function waitForEvent(string $eventName): ?string
+    public function waitForSelector(string $selector, ?array $options = null): ?Element
     {
-        return $this->frame->waitForEvent($eventName);
+        return $this->frame->waitForSelector($selector, $options);
+    }
+
+    /**
+     * Send a message to the server via the channel
+     *
+     * @param  array<string, mixed>  $params
+     */
+    private function sendMessage(string $method, array $params = []): Generator
+    {
+        return Client::instance()->execute($this->guid, $method, $params);
+    }
+
+    /**
+     * Process navigation response messages
+     */
+    private function processNavigationResponse(Generator $response): void
+    {
+        /** @var array{method: string|null, params: array{url: string|null}} $message */
+        foreach ($response as $message) {
+            if (isset($message['method']) && $message['method'] === 'navigated') {
+                $this->frame->url = $message['params']['url'] ?? '';
+            }
+        }
     }
 }

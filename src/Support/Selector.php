@@ -27,7 +27,7 @@ final class Selector
      */
     public static function getByLabelSelector(string $text, bool $exact): string
     {
-        return 'internal:'.'label='.self::escapeForTextSelector($text, $exact);
+        return 'internal:label='.self::escapeForTextSelector($text, $exact);
     }
 
     /**
@@ -59,7 +59,7 @@ final class Selector
      */
     public static function getByTextSelector(string $text, bool $exact): string
     {
-        return 'internal:'.'text='.self::escapeForTextSelector($text, $exact);
+        return 'internal:text='.self::escapeForTextSelector($text, $exact);
     }
 
     /**

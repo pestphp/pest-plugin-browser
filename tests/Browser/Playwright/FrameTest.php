@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Pest\Browser\Playwright\Element;
+use Pest\Browser\Playwright\Locator;
 
 describe('Element Selectors', function (): void {
     beforeEach(function (): void {
@@ -13,21 +13,15 @@ describe('Element Selectors', function (): void {
         it('finds an element by test ID', function (): void {
             $element = $this->page->getByTestId('profile-section');
 
-            expect($element)->toBeInstanceOf(Element::class);
+            expect($element)->toBeInstanceOf(Locator::class);
             expect($element->isVisible())->toBeTrue();
         });
 
         it('finds a nested element by test ID', function (): void {
             $element = $this->page->getByTestId('user-email');
 
-            expect($element)->toBeInstanceOf(Element::class);
+            expect($element)->toBeInstanceOf(Locator::class);
             expect($element->isVisible())->toBeTrue();
-        });
-
-        it('returns null for non-existent test ID', function (): void {
-            $element = $this->page->getByTestId('non-existent-id');
-
-            expect($element)->toBeNull();
         });
     });
 
@@ -35,20 +29,14 @@ describe('Element Selectors', function (): void {
         it('finds an element by role with name option', function (): void {
             $element = $this->page->getByRole('button', ['name' => 'Save']);
 
-            expect($element)->toBeInstanceOf(Element::class);
+            expect($element)->toBeInstanceOf(Locator::class);
             expect($element->isVisible())->toBeTrue();
         });
 
         it('finds a checkbox by role with name option', function (): void {
             $element = $this->page->getByRole('checkbox', ['name' => 'Remember Me']);
 
-            expect($element)->toBeInstanceOf(Element::class);
-        });
-
-        it('returns null for non-existent role', function (): void {
-            $element = $this->page->getByRole('tab', ['name' => 'Non-existent']);
-
-            expect($element)->toBeNull();
+            expect($element)->toBeInstanceOf(Locator::class);
         });
     });
 
@@ -56,21 +44,15 @@ describe('Element Selectors', function (): void {
         it('finds an input element by its associated label', function (): void {
             $element = $this->page->getByLabel('Username');
 
-            expect($element)->toBeInstanceOf(Element::class);
+            expect($element)->toBeInstanceOf(Locator::class);
             expect($element->getAttribute('value'))->toBe('johndoe');
         });
 
         it('finds a password input by its label', function (): void {
             $element = $this->page->getByLabel('Password');
 
-            expect($element)->toBeInstanceOf(Element::class);
+            expect($element)->toBeInstanceOf(Locator::class);
             expect($element->getAttribute('type'))->toBe('password');
-        });
-
-        it('returns null for non-existent label', function (): void {
-            $element = $this->page->getByLabel('Non-existent Label');
-
-            expect($element)->toBeNull();
         });
     });
 
@@ -78,27 +60,21 @@ describe('Element Selectors', function (): void {
         it('finds an input element by placeholder text', function (): void {
             $element = $this->page->getByPlaceholder('Search...');
 
-            expect($element)->toBeInstanceOf(Element::class);
+            expect($element)->toBeInstanceOf(Locator::class);
             expect($element->getAttribute('type'))->toBe('text');
         });
 
         it('finds a textarea by placeholder text', function (): void {
             $element = $this->page->getByPlaceholder('Enter your comments here');
 
-            expect($element)->toBeInstanceOf(Element::class);
+            expect($element)->toBeInstanceOf(Locator::class);
             expect($element->isVisible())->toBeTrue();
-        });
-
-        it('returns null for non-existent placeholder', function (): void {
-            $element = $this->page->getByPlaceholder('Non-existent Placeholder');
-
-            expect($element)->toBeNull();
         });
 
         it('finds an element with exact matching', function (): void {
             $element = $this->page->getByPlaceholder('Search...', true);
 
-            expect($element)->toBeInstanceOf(Element::class);
+            expect($element)->toBeInstanceOf(Locator::class);
         });
     });
 
@@ -106,32 +82,26 @@ describe('Element Selectors', function (): void {
         it('finds an element by its text content', function (): void {
             $element = $this->page->getByText('This is a simple paragraph');
 
-            expect($element)->toBeInstanceOf(Element::class);
+            expect($element)->toBeInstanceOf(Locator::class);
             expect($element->isVisible())->toBeTrue();
         });
 
         it('finds a button by its text content', function (): void {
             $element = $this->page->getByText('Click Me Button');
 
-            expect($element)->toBeInstanceOf(Element::class);
-        });
-
-        it('returns null for non-existent text', function (): void {
-            $element = $this->page->getByText('Non-existent Text Content');
-
-            expect($element)->toBeNull();
+            expect($element)->toBeInstanceOf(Locator::class);
         });
 
         it('finds an element with exact matching', function (): void {
             $element = $this->page->getByText('This is a special span element', true);
 
-            expect($element)->toBeInstanceOf(Element::class);
+            expect($element)->toBeInstanceOf(Locator::class);
         });
 
         it('finds partial text without exact matching', function (): void {
             $element = $this->page->getByText('special span');
 
-            expect($element)->toBeInstanceOf(Element::class);
+            expect($element)->toBeInstanceOf(Locator::class);
         });
     });
 
@@ -139,26 +109,20 @@ describe('Element Selectors', function (): void {
         it('finds an image by its alt text', function (): void {
             $element = $this->page->getByAltText('Pest Logo');
 
-            expect($element)->toBeInstanceOf(Element::class);
+            expect($element)->toBeInstanceOf(Locator::class);
             expect($element->isVisible())->toBeTrue();
         });
 
         it('finds another image by its alt text', function (): void {
             $element = $this->page->getByAltText('Another Image');
 
-            expect($element)->toBeInstanceOf(Element::class);
-        });
-
-        it('returns null for non-existent alt text', function (): void {
-            $element = $this->page->getByAltText('Non-existent Alt Text');
-
-            expect($element)->toBeNull();
+            expect($element)->toBeInstanceOf(Locator::class);
         });
 
         it('finds an element with exact matching', function (): void {
             $element = $this->page->getByAltText('Profile Picture', true);
 
-            expect($element)->toBeInstanceOf(Element::class);
+            expect($element)->toBeInstanceOf(Locator::class);
         });
     });
 
@@ -166,26 +130,20 @@ describe('Element Selectors', function (): void {
         it('finds an element by its title attribute', function (): void {
             $element = $this->page->getByTitle('Info Button');
 
-            expect($element)->toBeInstanceOf(Element::class);
+            expect($element)->toBeInstanceOf(Locator::class);
             expect($element->isVisible())->toBeTrue();
         });
 
         it('finds a link by its title attribute', function (): void {
             $element = $this->page->getByTitle('Help Link');
 
-            expect($element)->toBeInstanceOf(Element::class);
-        });
-
-        it('returns null for non-existent title', function (): void {
-            $element = $this->page->getByTitle('Non-existent Title');
-
-            expect($element)->toBeNull();
+            expect($element)->toBeInstanceOf(Locator::class);
         });
 
         it('finds an element with exact matching', function (): void {
             $element = $this->page->getByTitle('User\'s Name', true);
 
-            expect($element)->toBeInstanceOf(Element::class);
+            expect($element)->toBeInstanceOf(Locator::class);
         });
     });
 
@@ -193,11 +151,11 @@ describe('Element Selectors', function (): void {
         it('can find elements using multiple methods in sequence', function (): void {
             // First get the profile section by testId
             $profileSection = $this->page->getByTestId('user-profile');
-            expect($profileSection)->toBeInstanceOf(Element::class);
+            expect($profileSection)->toBeInstanceOf(Locator::class);
 
             // Then find a button element with role and aria-label within it
             $button = $this->page->getByRole('button', ['name' => 'Edit Profile']);
-            expect($button)->toBeInstanceOf(Element::class);
+            expect($button)->toBeInstanceOf(Locator::class);
 
             // Verify it has the right content
             expect($button->isVisible())->toBeTrue();
@@ -562,6 +520,162 @@ describe('Integration Tests', function (): void {
             $this->page->waitForLoadState();
 
             expect(true)->toBeTrue();
+        });
+    });
+});
+
+describe('Hover Functionality', function (): void {
+    beforeEach(function (): void {
+        $this->page = $this->page(playgroundUrl('/test/frame-tests'));
+    });
+
+    describe('Basic hover interactions', function (): void {
+        it('hovers over elements and triggers hover state changes', function (): void {
+            // Wait for page to load completely
+            $this->page->waitForSelector('#hover-target');
+
+            // Verify initial state before hover
+            expect($this->page->textContent('#hover-display'))->toBe('No element hovered yet');
+
+            // Perform hover action
+            $this->page->hover('#hover-target');
+
+            // Verify hover state changed
+            expect($this->page->textContent('#hover-display'))->toBe('Last hovered: hover-target');
+
+            // Verify the element is still visible after hover
+            expect($this->page->isVisible('#hover-target'))->toBeTrue();
+        });
+
+        it('hovers over basic elements', function (): void {
+            $this->page->waitForSelector('#hover-target');
+
+            // Perform hover action on the actual hover-target element
+            $this->page->hover('#hover-target');
+
+            // Verify element is still visible after hover
+            expect($this->page->isVisible('#hover-target'))->toBeTrue();
+        });
+
+        it('hovers over disabled elements with force parameter', function (): void {
+            $this->page->waitForSelector('#disabled-button');
+
+            // Hover with force on disabled element
+            $this->page->hover('#disabled-button', force: true);
+
+            // Verify element is still disabled after hover
+            expect($this->page->isEnabled('#disabled-button'))->toBeFalse();
+        });
+
+        it('hovers over simple elements', function (): void {
+            $this->page->waitForSelector('#enabled-button');
+
+            // Hover over enabled button
+            $this->page->hover('#enabled-button');
+
+            // Verify button is still enabled after hover
+            expect($this->page->isEnabled('#enabled-button'))->toBeTrue();
+        });
+
+        it('hovers over form elements', function (): void {
+            $this->page->waitForSelector('#test-input');
+
+            // Hover over input element
+            $this->page->hover('#test-input');
+
+            // Verify input is still enabled after hover
+            expect($this->page->isEnabled('#test-input'))->toBeTrue();
+        });
+
+        it('hovers with modifier keys on basic elements', function (): void {
+            $this->page->waitForSelector('#enabled-button');
+
+            // Hover with shift modifier
+            $this->page->hover('#enabled-button', modifiers: ['Shift']);
+
+            // Verify element is still functional after hover with modifiers
+            expect($this->page->isEnabled('#enabled-button'))->toBeTrue();
+        });
+
+        it('hovers with timeout parameter on form elements', function (): void {
+            $this->page->waitForSelector('#test-input');
+
+            // Hover with timeout on a form element
+            $this->page->hover('#test-input', timeout: 5000);
+
+            // Verify element is still functional after hover with timeout
+            expect($this->page->isEnabled('#test-input'))->toBeTrue();
+        });
+
+        it('verifies elements remain interactive after hover', function (): void {
+            $this->page->waitForSelector('#test-content');
+
+            // Check if element exists and is visible
+            expect($this->page->isVisible('#test-content'))->toBeTrue();
+
+            // Hover over element
+            $this->page->hover('#test-content');
+
+            // Verify the element is still visible and interactive after hover
+            expect($this->page->isVisible('#test-content'))->toBeTrue();
+        });
+
+        it('hovers over buttons and verifies they remain functional', function (): void {
+            $this->page->waitForSelector('#enabled-button');
+
+            // Verify button is enabled before hover
+            expect($this->page->isEnabled('#enabled-button'))->toBeTrue();
+
+            // Hover over button
+            $this->page->hover('#enabled-button');
+
+            // Verify button is still enabled after hover
+            expect($this->page->isEnabled('#enabled-button'))->toBeTrue();
+
+            // Verify button can still be clicked after hover
+            $this->page->click('#enabled-button');
+        });
+    });
+
+    describe('Advanced hover functionality', function (): void {
+        it('hovers with position parameter', function (): void {
+            $this->page->waitForSelector('#hover-target');
+
+            // Hover at specific position
+            $this->page->hover('#hover-target', position: ['x' => 10, 'y' => 10]);
+
+            // Verify hover worked
+            expect($this->page->textContent('#hover-display'))->toBe('Last hovered: hover-target');
+        });
+
+        it('hovers with strict parameter', function (): void {
+            $this->page->waitForSelector('#hover-target');
+
+            // Hover with strict mode
+            $this->page->hover('#hover-target', strict: true);
+
+            // Verify hover worked
+            expect($this->page->isVisible('#hover-target'))->toBeTrue();
+        });
+
+        it('hovers with trial parameter', function (): void {
+            $this->page->waitForSelector('#hover-target');
+
+            // Hover with trial mode (performs action without side effects)
+            $this->page->hover('#hover-target', trial: true);
+
+            // In trial mode, the action is performed but without side effects
+            expect($this->page->isVisible('#hover-target'))->toBeTrue();
+        });
+
+        it('hovers with noWaitAfter parameter', function (): void {
+            $this->page->waitForSelector('#hover-target');
+
+            // Hover without waiting after the action
+            $this->page->hover('#hover-target', noWaitAfter: true);
+
+            // Verify element is still functional
+            expect($this->page->isVisible('#hover-target'))->toBeTrue();
         });
     });
 });

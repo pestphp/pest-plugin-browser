@@ -9,37 +9,44 @@ describe('getByAttributeTextSelector', function (): void {
         $selector = Selector::getByAttributeTextSelector('data-test', 'example', false);
 
         expect($selector)->toBe('internal:attr=[data-test="example"i]');
-    });    it('returns correct selector with exact match', function (): void {
+    });
+    it('returns correct selector with exact match', function (): void {
         $selector = Selector::getByAttributeTextSelector('data-test', 'example', true);
 
         expect($selector)->toBe('internal:attr=[data-test="example"]');
-    });    it('escapes special characters in attribute values', function (): void {
+    });
+    it('escapes special characters in attribute values', function (): void {
         $selector = Selector::getByAttributeTextSelector('data-test', 'example "quoted" text', false);
 
         expect($selector)->toBe('internal:attr=[data-test="example \"quoted\" text"i]');
-    });    it('escapes backslashes in attribute values', function (): void {
+    });
+    it('escapes backslashes in attribute values', function (): void {
         $selector = Selector::getByAttributeTextSelector('data-test', 'example\\path', false);
 
         expect($selector)->toBe('internal:attr=[data-test="example\\\\path"i]');
     });
 });
 
-describe('getByTestIdSelector', function (): void {    it('returns correct selector for test ID', function (): void {
+describe('getByTestIdSelector', function (): void {
+    it('returns correct selector for test ID', function (): void {
         $selector = Selector::getByTestIdSelector('data-testid', 'login-button');
 
         expect($selector)->toBe('internal:testid=[data-testid="login-button"]');
-    });    it('escapes special characters in test ID', function (): void {
+    });
+    it('escapes special characters in test ID', function (): void {
         $selector = Selector::getByTestIdSelector('data-testid', 'button"with"quotes');
 
         expect($selector)->toBe('internal:testid=[data-testid="button\"with\"quotes"]');
     });
 });
 
-describe('getByLabelSelector', function (): void {    it('returns correct selector without exact match', function (): void {
+describe('getByLabelSelector', function (): void {
+    it('returns correct selector without exact match', function (): void {
         $selector = Selector::getByLabelSelector('Email address', false);
 
         expect($selector)->toBe('internal:label="Email address"i');
-    });    it('returns correct selector with exact match', function (): void {
+    });
+    it('returns correct selector with exact match', function (): void {
         $selector = Selector::getByLabelSelector('Email address', true);
 
         expect($selector)->toBe('internal:label="Email address"s');
@@ -176,7 +183,8 @@ describe('getByRoleSelector', function (): void {
         ]);
 
         expect($selector)->toBe('internal:role=checkbox[checked=true][disabled=false]');
-    });    it('handles name option without exact flag', function (): void {
+    });
+    it('handles name option without exact flag', function (): void {
         $selector = Selector::getByRoleSelector('button', [
             'name' => 'Submit form',
         ]);
@@ -191,7 +199,8 @@ describe('getByRoleSelector', function (): void {
         ]);
 
         expect($selector)->toBe('internal:role=button[name="Submit form"]');
-    });    it('handles all possible options', function (): void {
+    });
+    it('handles all possible options', function (): void {
         $selector = Selector::getByRoleSelector('combobox', [
             'checked' => true,
             'disabled' => false,
@@ -204,7 +213,8 @@ describe('getByRoleSelector', function (): void {
         ]);
 
         expect($selector)->toBe('internal:role=combobox[checked=true][disabled=false][selected=true][expanded=true][include-hidden=false][level=2][name="Country selector"i][pressed=false]');
-    });    it('escapes special characters in name option', function (): void {
+    });
+    it('escapes special characters in name option', function (): void {
         $selector = Selector::getByRoleSelector('button', [
             'name' => 'Button "with" quotes\\backslashes',
         ]);
