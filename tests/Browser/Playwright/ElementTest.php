@@ -211,12 +211,25 @@ describe('Element', function (): void {
 
         describe('hover', function (): void {
             it('can hover over elements', function (): void {
-                $page = $this->page()->goto(playgroundUrl('/test/element-tests'));
-                $locator = $page->getByRole('button', ['name' => 'Save']);
-                $element = $locator->elementHandle();
+                // $page = $this->page()->goto(playgroundUrl('/test/element-tests'));
+                // $locator = $page->getByRole('button', ['name' => 'Save']);
+                // $element = $locator->elementHandle();
 
+                // $element->hover();
+                // expect($element->isVisible())->toBeTrue();
+
+                $locator = $this->page->getByRole('button', ['name' => 'Save']);
+                $element = $locator->elementHandle();
                 $element->hover();
-                expect($element->isVisible())->toBeTrue();
+
+                // Get the background color after hover using JavaScript
+                $bgColor = $this->page->evaluate('element => {
+                    const style = window.getComputedStyle(element);
+                    return style.backgroundColor;
+                }', $element);
+
+                // Assert the background color is the hover color
+                expect($bgColor)->toBe('rgb(39, 189, 84)');
             });
         });
     });
@@ -260,7 +273,6 @@ describe('Element', function (): void {
                 expect($element)->toBeInstanceOf(Element::class);
             });
         });
-
     });
 
     describe('property getter methods', function (): void {
@@ -591,7 +603,6 @@ describe('Element', function (): void {
                 expect($element->isVisible())->toBeTrue();
             });
         });
-
     });
 
     describe('frame methods', function (): void {
@@ -631,5 +642,4 @@ describe('Element', function (): void {
             });
         });
     });
-
 });
