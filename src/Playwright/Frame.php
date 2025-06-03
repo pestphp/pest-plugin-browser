@@ -29,7 +29,7 @@ final class Frame
     public function goto(string $url): self
     {
         $url = mb_ltrim($url, '/');
-        $url = ServerManager::instance()->http()->url().'/'.$url;
+        $url = ServerManager::instance()->http()->url() . '/' . $url;
 
         if ($this->url === $url) {
             return $this;
