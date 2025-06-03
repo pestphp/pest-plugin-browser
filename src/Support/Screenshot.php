@@ -39,7 +39,7 @@ final class Screenshot
 
         if ($filename === null) {
             // @phpstan-ignore-next-line
-            $filename = mb_str_replace('__pest_evaluable__', '', test()->name());
+            $filename = str_replace('__pest_evaluable__', '', test()->name());
         }
 
         if (is_dir(self::dir()) === false) {

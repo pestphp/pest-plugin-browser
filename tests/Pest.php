@@ -26,11 +26,6 @@ function cleanupScreenshots(): void
     }
 }
 
-function playgroundUrl(string $path = '/'): string
-{
-    return 'http://localhost:9357/'.mb_ltrim($path, '/');
-}
-
 // todo: move this to Pest core
 expect()->extend('toBeChecked', function (): Expectation {
 

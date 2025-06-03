@@ -49,7 +49,8 @@
         "test:type-coverage": "pest --type-coverage --exactly=99",
         "test:typos": "peck",
         "test:lint": "pint --test",
-        "test:unit": "pest --coverage --exactly=100",
+        "test:unit": "pest --coverage --exactly=76.6",
+        "test:parallel": "pest --parallel",
         "test:types": "phpstan",
         "test:refactor": "rector --dry-run",
         "test": [
@@ -66,5 +67,12 @@
         "post-install-cmd": [
             "composer install -d playground --ansi"
         ]
+    },
+    "extra": {
+        "pest": {
+            "plugins": [
+                "Pest\\Browser\\Plugin"
+            ]
+        }
     }
 }

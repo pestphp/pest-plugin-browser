@@ -135,6 +135,7 @@
         <div class="form-group">
             <input type="checkbox" data-testid="checked-checkbox" checked> Checked Checkbox
             <input type="checkbox" data-testid="unchecked-checkbox"> Unchecked Checkbox
+            <input type="checkbox" data-testid="checkbox-input"> Test Checkbox
         </div>
 
         <div class="form-group">

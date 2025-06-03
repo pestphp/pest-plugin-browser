@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Pest\Browser\Playwright;
 
 use Generator;
+use Pest\Browser\ServerManager;
 use Pest\Browser\Support\Selector;
 
 /**
@@ -27,6 +28,9 @@ final class Frame
      */
     public function goto(string $url): self
     {
+        $url = mb_ltrim($url, '/');
+        $url = ServerManager::instance()->http()->url().'/'.$url;
+
         if ($this->url === $url) {
             return $this;
         }

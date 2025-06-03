@@ -6,6 +6,7 @@ namespace Pest\Browser\Playwright;
 
 use Generator;
 use Pest\Browser\Support\Selector;
+use RuntimeException;
 
 /**
  * @internal
@@ -363,9 +364,58 @@ final class Locator
     }
 
     /**
-     * Filter this locator to only match elements that also match the given locator or predicate.
+     * Filter this locator to only match elements that also match the given criteria.
+     *
+     * @param  string|array<string, mixed>  $options  Selector string or filter options array
      */
-    public function filter(string $selector): self
+    public function filter(string|array $options = []): self
+    {
+        // Handle backward compatibility - if string is passed, treat as selector
+        if (is_string($options)) {
+            return new self($this->frameGuid, $this->selector.' >> '.$options);
+        }
+
+        // Handle array options for enhanced filtering
+        $filters = [];
+
+        if (isset($options['hasText'])) {
+            $text = $options['hasText'];
+            if (is_string($text)) {
+                $filters[] = ":has-text(\"$text\")";
+            }
+        }
+
+        if (isset($options['hasNotText'])) {
+            $text = $options['hasNotText'];
+            if (is_string($text)) {
+                $filters[] = ":not(:has-text(\"$text\"))";
+            }
+        }
+
+        if (isset($options['has'])) {
+            $locator = $options['has'];
+            if ($locator instanceof self) {
+                $filters[] = ":has({$locator->selector})";
+            }
+        }
+
+        if (isset($options['hasNot'])) {
+            $locator = $options['hasNot'];
+            if ($locator instanceof self) {
+                $filters[] = ":not(:has({$locator->selector}))";
+            }
+        }
+
+        $filterString = implode('', $filters);
+
+        return new self($this->frameGuid, $this->selector.$filterString);
+    }
+
+    /**
+     * Filter this locator to only match elements that also match the given selector.
+     * Legacy method for backward compatibility.
+     */
+    public function filterBySelector(string $selector): self
     {
         return new self($this->frameGuid, $this->selector.':has('.$selector.')');
     }
@@ -421,6 +471,220 @@ final class Locator
         $response = $this->sendMessage('querySelector');
 
         return $this->processElementResponse($response);
+    }
+
+    /**
+     * Returns an array of all locators matching this locator.
+     */
+    public function all(): array
+    {
+        $locators = [];
+        $count = $this->count();
+
+        for ($i = 0; $i < $count; $i++) {
+            $locators[] = $this->nth($i);
+        }
+
+        return $locators;
+    }
+
+    /**
+     * Returns an array of all inner texts for elements matching this locator.
+     */
+    public function allInnerTexts(): array
+    {
+        // Alternative implementation using existing methods
+        $texts = [];
+        $count = $this->count();
+
+        for ($i = 0; $i < $count; $i++) {
+            $element = $this->nth($i)->elementHandle();
+            if ($element !== null) {
+                $texts[] = $element->innerText();
+            }
+        }
+
+        return $texts;
+    }
+
+    /**
+     * Returns an array of all text contents for elements matching this locator.
+     */
+    public function allTextContents(): array
+    {
+        // Alternative implementation using existing methods
+        $texts = [];
+        $count = $this->count();
+
+        for ($i = 0; $i < $count; $i++) {
+            $element = $this->nth($i)->elementHandle();
+            if ($element !== null) {
+                $textContent = $element->textContent();
+                $texts[] = $textContent ?? '';
+            }
+        }
+
+        return $texts;
+    }
+
+    /**
+     * Creates a locator matching both this locator and the argument locator.
+     */
+    public function and(self $locator): self
+    {
+        // This would require combining selectors in a way that both match
+        return new self($this->frameGuid, $this->selector.':is('.$locator->selector.')');
+    }
+
+    /**
+     * Creates a locator matching either this locator or the argument locator.
+     */
+    public function or(self $locator): self
+    {
+        // This would require combining selectors with OR logic
+        return new self($this->frameGuid, $this->selector.', '.$locator->selector);
+    }
+
+    /**
+     * Calls blur() on the element.
+     */
+    public function blur(): void
+    {
+        $response = $this->sendMessage('blur');
+        $this->processVoidResponse($response);
+    }
+
+    /**
+     * Returns the bounding box of the element, or null if not visible.
+     */
+    public function boundingBox(): ?array
+    {
+        $element = $this->elementHandle();
+        if ($element === null) {
+            return null;
+        }
+
+        return $element->boundingBox();
+    }
+
+    /**
+     * Select all text in the element.
+     */
+    public function selectText(): void
+    {
+        $element = $this->elementHandle();
+        if ($element === null) {
+            throw new RuntimeException('Element not found');
+        }
+        $element->selectText();
+    }
+
+    /**
+     * Set the checked state of a checkbox or radio.
+     */
+    public function setChecked(bool $checked): void
+    {
+        $element = $this->elementHandle();
+        if ($element === null) {
+            throw new RuntimeException('Element not found');
+        }
+
+        if ($checked) {
+            $element->check();
+        } else {
+            $element->uncheck();
+        }
+    }
+
+    /**
+     * Take a screenshot of the element.
+     *
+     * @param  array<string, mixed>|null  $options
+     */
+    public function screenshot(?array $options = null): string
+    {
+        $element = $this->elementHandle();
+        if ($element === null) {
+            throw new RuntimeException('Element not found');
+        }
+
+        return $element->screenshot($options);
+    }
+
+    /**
+     * Scroll element into view if needed.
+     */
+    public function scrollIntoViewIfNeeded(): void
+    {
+        $element = $this->elementHandle();
+        if ($element === null) {
+            throw new RuntimeException('Element not found');
+        }
+        $element->scrollIntoViewIfNeeded();
+    }
+
+    /**
+     * Highlight the element (useful for debugging).
+     */
+    public function highlight(): void
+    {
+        $response = $this->sendMessage('highlight');
+        $this->processVoidResponse($response);
+    }
+
+    /**
+     * Create a frame locator for iframe elements.
+     */
+    public function frameLocator(string $selector): self
+    {
+        // This would typically return a FrameLocator, but for simplicity
+        // we'll return a regular locator pointing to the frame content
+        return new self($this->frameGuid, $this->selector.' >> '.$selector);
+    }
+
+    /**
+     * Get the page this locator belongs to.
+     * For now, this returns the frame GUID as a simple identifier.
+     */
+    public function page(): string
+    {
+        return $this->frameGuid;
+    }
+
+    /**
+     * Wait for the locator to match a specific state.
+     *
+     * @param  array<string, mixed>|null  $options
+     */
+    public function waitForState(string $state = 'visible', ?array $options = null): void
+    {
+        $element = $this->elementHandle();
+        if ($element === null) {
+            throw new RuntimeException('Element not found');
+        }
+        $element->waitForElementState($state, $options);
+    }
+
+    /**
+     * Get all Element handles for this locator.
+     *
+     * @deprecated Use all() method instead for better type safety
+     *
+     * @return Element[]
+     */
+    public function elementHandles(): array
+    {
+        $elements = [];
+        $count = $this->count();
+
+        for ($i = 0; $i < $count; $i++) {
+            $element = $this->nth($i)->elementHandle();
+            if ($element !== null) {
+                $elements[] = $element;
+            }
+        }
+
+        return $elements;
     }
 
     /**

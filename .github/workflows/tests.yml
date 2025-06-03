@@ -8,7 +8,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        node: ['20.x', '22.x']
+        node: ['22.x']
         php: ['8.3', '8.4']
         dependency-version: [prefer-stable]
         parallel: ['']
@@ -55,10 +55,12 @@ jobs:
 
     - name: Tests
       run: |
-        cd playground && php artisan serve --port 9357 &
-        SERVER_PID=$!
-        npx wait-on http://localhost:9357 -t 30000
         composer test
-        # Clean up the server process
-        kill $SERVER_PID
 
+    - name: Non-parallel Tests
+      run: |
+        ./vendor/bin/pest
+
+    - name: Parallel Tests
+      run: |
+        ./vendor/bin/pest --parallel
