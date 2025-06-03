@@ -29,7 +29,7 @@ final class Frame
     public function goto(string $url): self
     {
         $url = mb_ltrim($url, '/');
-        $url = ServerManager::instance()->http()->url() . '/' . $url;
+        $url = ServerManager::instance()->http()->url().'/'.$url;
 
         if ($this->url === $url) {
             return $this;
@@ -412,6 +412,53 @@ final class Frame
     }
 
     /**
+     * Evaluates JavaScript in the frame context.
+     *
+     * @param  mixed  $arg
+     * @return mixed
+     */
+    public function evaluate(string $pageFunction, $arg = null)
+    {
+        $params = ['pageFunction' => $pageFunction];
+        if ($arg !== null) {
+            $params['arg'] = $arg;
+        }
+
+        $response = Client::instance()->execute(
+            $this->guid,
+            'evaluate',
+            $params
+        );
+
+        /** @var array{result: array{value: mixed}} $message */
+        foreach ($response as $message) {
+            if (isset($message['result']['value'])) {
+                return $message['result']['value'];
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Waits for an event to be emitted by the frame.
+     *
+     * @param  string  $eventName  The name of the event to wait for.
+     */
+    public function waitForEvent(string $eventName): void
+    {
+        $response = Client::instance()->execute(
+            $this->guid,
+            'waitForEvent',
+            ['event' => $eventName]
+        );
+
+        foreach ($response as $message) {
+            // read all messages to clear the response
+        }
+    }
+
+    /**
      * Send a message to the server via the channel
      *
      * @param  array<string, mixed>  $params
@@ -521,51 +568,5 @@ final class Frame
         }
 
         return null;
-    }
-
-    /**
-     * Evaluates JavaScript in the frame context.
-     *
-     * @param  mixed  $arg
-     * @return mixed
-     */
-    public function evaluate(string $pageFunction, $arg = null)
-    {
-        $params = ['pageFunction' => $pageFunction];
-        if ($arg !== null) {
-            $params['arg'] = $arg;
-        }
-
-        $response = Client::instance()->execute(
-            $this->guid,
-            'evaluate',
-            $params
-        );
-
-        /** @var array{result: array{value: mixed}} $message */
-        foreach ($response as $message) {
-            if (isset($message['result']['value'])) {
-                return $message['result']['value'];
-            }
-        }
-
-        return null;
-    }
-    /**
-     * Waits for an event to be emitted by the frame.
-     *
-     * @param  string  $eventName  The name of the event to wait for.
-     */
-    public function waitForEvent(string $eventName): void
-    {
-        $response = Client::instance()->execute(
-            $this->guid,
-            'waitForEvent',
-            ['event' => $eventName]
-        );
-
-        foreach ($response as $message) {
-            // read all messages to clear the response
-        }
     }
 }
