@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Playwright;
 
-use Generator;
+use Pest\Browser\Playwright\Concerns\InteractsWithPlaywright;
 use Pest\Browser\ServerManager;
 use Pest\Browser\Support\Selector;
+use RuntimeException;
 
 /**
  * @internal
  */
 final class Frame
 {
+    use InteractsWithPlaywright;
+
     /**
      * Constructs new frame.
      */
@@ -29,7 +32,7 @@ final class Frame
     public function goto(string $url): self
     {
         $url = mb_ltrim($url, '/');
-        $url = ServerManager::instance()->http()->url().'/'.$url;
+        $url = ServerManager::instance()->http()->url() . '/' . $url;
 
         if ($this->url === $url) {
             return $this;
@@ -69,6 +72,29 @@ final class Frame
     public function querySelector(string $selector): ?Element
     {
         return $this->locator($selector)->elementHandle();
+    }
+
+    /**
+     * Finds all elements matching the specified selector.
+     *
+     * @return Element[]
+     */
+    public function querySelectorAll(string $selector): array
+    {
+        $response = $this->sendMessage('querySelectorAll', ['selector' => $selector]);
+        $elements = [];
+
+        foreach ($response as $message) {
+            if (
+                isset($message['method']) && $message['method'] === '__create__'
+                && isset($message['params']['type']) && $message['params']['type'] === 'ElementHandle'
+                && isset($message['params']['guid'])
+            ) {
+                $elements[] = new Element($message['params']['guid']);
+            }
+        }
+
+        return $elements;
     }
 
     /**
@@ -197,6 +223,34 @@ final class Frame
     public function isHidden(string $selector): bool
     {
         return ! $this->isVisible($selector);
+    }
+
+    /**
+     * Returns whether the element is editable.
+     */
+    public function isEditable(string $selector): bool
+    {
+        try {
+            $response = $this->sendMessage('isEditable', ['selector' => $selector]);
+
+            return $this->processBooleanResponse($response);
+        } catch (RuntimeException $e) {
+            // If the element is not a form element or contenteditable, return false
+            if (str_contains($e->getMessage(), 'not an <input>, <textarea>, <select> or [contenteditable]')) {
+                return false;
+            }
+
+            // Re-throw other exceptions
+            throw $e;
+        }
+    }
+
+    /**
+     * Returns whether the element is disabled.
+     */
+    public function isDisabled(string $selector): bool
+    {
+        return ! $this->isEnabled($selector);
     }
 
     /**
@@ -412,161 +466,87 @@ final class Frame
     }
 
     /**
-     * Evaluates JavaScript in the frame context.
+     * Selects option(s) in a select element.
+     *
+     * @param  string|array|null  $value
+     * @param  string|array|null  $label
+     * @param  int|array|null  $index
+     */
+    public function selectOption(
+        string $selector,
+        $value = null,
+        $label = null,
+        $index = null,
+        ?bool $force = null,
+        ?bool $noWaitAfter = null,
+        ?bool $strict = null,
+        ?int $timeout = null
+    ): self {
+        $params = ['selector' => $selector];
+
+        // Add the appropriate selection criteria - choose only one
+        if ($value !== null) {
+            $params['value'] = is_array($value) ? $value : [$value];
+        } elseif ($label !== null) {
+            $params['label'] = is_array($label) ? $label : [$label];
+        } elseif ($index !== null) {
+            $params['index'] = is_array($index) ? $index : [$index];
+        }
+
+        // Add optional parameters
+        if ($force !== null) {
+            $params['force'] = $force;
+        }
+        if ($noWaitAfter !== null) {
+            $params['noWaitAfter'] = $noWaitAfter;
+        }
+        if ($strict !== null) {
+            $params['strict'] = $strict;
+        }
+        if ($timeout !== null) {
+            $params['timeout'] = $timeout;
+        }
+
+        $response = $this->sendMessage('selectOption', $params);
+        $this->processNavigationResponse($response);
+
+        return $this;
+    }
+
+    /**
+     * Evaluates a JavaScript expression in the frame context.
      *
      * @param  mixed  $arg
      * @return mixed
      */
     public function evaluate(string $pageFunction, $arg = null)
     {
-        $params = ['pageFunction' => $pageFunction];
+        $params = ['expression' => $pageFunction];
+
         if ($arg !== null) {
             $params['arg'] = $arg;
         }
 
-        $response = Client::instance()->execute(
-            $this->guid,
-            'evaluate',
-            $params
-        );
+        $response = $this->sendMessage('evaluate', $params);
 
-        /** @var array{result: array{value: mixed}} $message */
-        foreach ($response as $message) {
-            if (isset($message['result']['value'])) {
-                return $message['result']['value'];
-            }
-        }
-
-        return null;
+        return $this->processResultResponse($response);
     }
 
     /**
-     * Waits for an event to be emitted by the frame.
-     *
-     * @param  string  $eventName  The name of the event to wait for.
+     * Evaluates a JavaScript expression and returns a JSHandle.
      */
-    public function waitForEvent(string $eventName): void
+    public function evaluateHandle(string $pageFunction, $arg = null): mixed
     {
-        $response = Client::instance()->execute(
-            $this->guid,
-            'waitForEvent',
-            ['event' => $eventName]
-        );
+        $params = ['expression' => $pageFunction];
 
-        foreach ($response as $message) {
-            // read all messages to clear the response
-        }
-    }
-
-    /**
-     * Send a message to the server via the channel
-     *
-     * @param  array<string, mixed>  $params
-     */
-    private function sendMessage(string $method, array $params = []): Generator
-    {
-        return Client::instance()->execute($this->guid, $method, $params);
-    }
-
-    /**
-     * Process navigation response messages
-     */
-    private function processNavigationResponse(Generator $response): void
-    {
-        /** @var array{method: string|null, params: array{url: string|null}} $message */
-        foreach ($response as $message) {
-            if (isset($message['method']) && $message['method'] === 'navigated') {
-                $this->url = $message['params']['url'] ?? '';
-            }
-        }
-    }
-
-    /**
-     * Process response and extract result value
-     */
-    private function processResultResponse(Generator $response): mixed
-    {
-        /** @var array{result: array{value: mixed}} $message */
-        foreach ($response as $message) {
-            if (isset($message['result']['value'])) {
-                return $message['result']['value'];
-            }
+        if ($arg !== null) {
+            $params['arg'] = $arg;
         }
 
-        return null;
+        $response = $this->sendMessage('evaluateHandle', $params);
+
+        return $this->processResultResponse($response);
     }
 
-    /**
-     * Process response and extract string result
-     */
-    private function processStringResponse(Generator $response): string
-    {
-        $result = $this->processResultResponse($response);
-
-        if (! is_string($result) && ! is_numeric($result)) {
-            return '';
-        }
-
-        return (string) $result;
-    }
-
-    /**
-     * Process response and extract nullable string result
-     */
-    private function processNullableStringResponse(Generator $response): ?string
-    {
-        $result = $this->processResultResponse($response);
-
-        if ($result === null) {
-            return null;
-        }
-
-        if (! is_string($result) && ! is_numeric($result)) {
-            return null;
-        }
-
-        return (string) $result;
-    }
-
-    /**
-     * Process response and extract boolean result
-     */
-    private function processBooleanResponse(Generator $response): bool
-    {
-        $result = $this->processResultResponse($response);
-
-        if (! is_bool($result)) {
-            return false;
-        }
-
-        return $result;
-    }
-
-    /**
-     * Process response consuming all messages
-     */
-    private function processVoidResponse(Generator $response): void
-    {
-        foreach ($response as $message) {
-            // Consume all messages to clear the response
-        }
-    }
-
-    /**
-     * Process response to handle element creation messages.
-     */
-    private function processElementCreationResponse(Generator $response): ?Element
-    {
-        foreach ($response as $message) {
-            if (
-                isset($message['method']) && $message['method'] === '__create__'
-                && isset($message['params']['type']) && $message['params']['type'] === 'ElementHandle'
-                && isset($message['params']['guid'])
-            ) {
-                return new Element($message['params']['guid']);
-            }
-        }
-
-        return null;
-    }
+    // These methods are now provided by the InteractsWithPlaywright trait
 }

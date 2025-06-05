@@ -36,6 +36,11 @@
                     <input id="disabled-input" name="disabled-input" type="text" class="bg-gray-300 text-gray-500 p-2 border" value="disabled" disabled />
                 </div>
 
+                <div class="flex flex-col space-y-2">
+                    <label for="readonly-input">Readonly Input</label>
+                    <input id="readonly-input" name="readonly-input" type="text" class="bg-gray-100 text-gray-600 p-2 border" value="readonly" readonly />
+                </div>
+
                 <!-- Password Input -->
                 <div class="flex flex-col space-y-2">
                     <label for="password-input">Password</label>
@@ -109,6 +114,27 @@
                         <option value="option1">Option 1</option>
                         <option value="option2">Option 2</option>
                         <option value="option3">Option 3</option>
+                    </select>
+                </div>
+
+                <!-- Additional Select Elements for Testing -->
+                <div class="flex flex-col space-y-2">
+                    <label for="select-single">Select Single (for tests)</label>
+                    <select id="select-single" name="select-single" class="bg-white text-black p-2 border">
+                        <option value="">Choose an option</option>
+                        <option value="option1">Option 1</option>
+                        <option value="option2">Option 2</option>
+                        <option value="option3">Option 3</option>
+                    </select>
+                </div>
+
+                <div class="flex flex-col space-y-2">
+                    <label for="select-multiple">Select Multiple (for tests)</label>
+                    <select id="select-multiple" name="select-multiple" multiple class="bg-white text-black p-2 border">
+                        <option value="option1">Option 1</option>
+                        <option value="option2">Option 2</option>
+                        <option value="option3">Option 3</option>
+                        <option value="option4">Option 4</option>
                     </select>
                 </div>
 
@@ -223,6 +249,13 @@
                     <li>List item 2</li>
                 </ul>
             </div>
+
+            <!-- Elements for QuerySelectorAll testing -->
+            <div id="unique-element">This is a unique element for testing</div>
+            <div class="test-item">Test item 1</div>
+            <div class="test-item">Test item 2</div>
+            <div class="test-item">Test item 3</div>
+            <span class="test-item">Test item 4 (span)</span>
         </div>
     </section>
 

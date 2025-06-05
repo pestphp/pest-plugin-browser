@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Playwright;
 
-use Generator;
+use Pest\Browser\Playwright\Concerns\InteractsWithPlaywright;
 use Pest\Browser\Support\Selector;
 
 /**
@@ -12,6 +12,8 @@ use Pest\Browser\Support\Selector;
  */
 final class Element
 {
+    use InteractsWithPlaywright;
+
     /**
      * Constructs new element
      */
@@ -256,7 +258,7 @@ final class Element
      */
     public function screenshot(?array $options = null): string
     {
-        return $this->processStringResponse($this->sendMessage('screenshot', $options ?? []));
+        return $this->processBinaryResponse($this->sendMessage('screenshot', $options ?? []));
     }
 
     /**
@@ -289,7 +291,13 @@ final class Element
     {
         $params = array_merge(['selector' => $selector], $options ?? []);
 
-        return $this->processElementResponse($this->sendMessage('waitForSelector', $params));
+        $element = $this->processElementCreationResponse($this->sendMessage('waitForSelector', $params));
+
+        if ($element === null) {
+            return null;
+        }
+
+        return new self($element->guid);
     }
 
     /**
@@ -297,7 +305,13 @@ final class Element
      */
     public function querySelector(string $selector): ?self
     {
-        return $this->processElementCreationResponse($this->sendMessage('querySelector', ['selector' => $selector]));
+        $element = $this->processElementCreationResponse($this->sendMessage('querySelector', ['selector' => $selector]));
+
+        if ($element === null) {
+            return null;
+        }
+
+        return new self($element->guid);
     }
 
     /**
@@ -307,7 +321,9 @@ final class Element
      */
     public function querySelectorAll(string $selector): array
     {
-        return $this->processMultipleElementCreationResponse($this->sendMessage('querySelectorAll', ['selector' => $selector]));
+        $elements = $this->processMultipleElementCreationResponse($this->sendMessage('querySelectorAll', ['selector' => $selector]));
+
+        return array_map(fn (Element $element) => new self($element->guid), $elements);
     }
 
     /**
@@ -390,148 +406,5 @@ final class Element
         return $this->querySelector(Selector::getByTitleSelector($text, $exact));
     }
 
-    /**
-     * Send a message to the element through the Client.
-     *
-     * @param  array<string, mixed>  $params
-     */
-    private function sendMessage(string $method, array $params = []): Generator
-    {
-        return Client::instance()->execute($this->guid, $method, $params);
-    }
-
-    /**
-     * Process response and return result value.
-     */
-    private function processResultResponse(Generator $response): mixed
-    {
-        /** @var array{result: array{value: mixed}} $message */
-        foreach ($response as $message) {
-            if (isset($message['result']['value'])) {
-                return $message['result']['value'];
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Process response and return string value.
-     */
-    private function processStringResponse(Generator $response): string
-    {
-        $result = $this->processResultResponse($response);
-
-        if (! is_string($result) && ! is_numeric($result)) {
-            return '';
-        }
-
-        return (string) $result;
-    }
-
-    /**
-     * Process response and return nullable string value.
-     */
-    private function processNullableStringResponse(Generator $response): ?string
-    {
-        $result = $this->processResultResponse($response);
-
-        if ($result === null) {
-            return null;
-        }
-
-        if (! is_string($result) && ! is_numeric($result)) {
-            return null;
-        }
-
-        return (string) $result;
-    }
-
-    /**
-     * Process response and return boolean value.
-     */
-    private function processBooleanResponse(Generator $response): bool
-    {
-        $result = $this->processResultResponse($response);
-
-        return (bool) ($result ?? false);
-    }
-
-    /**
-     * Process response and return array value.
-     *
-     * @return array<mixed>
-     */
-    private function processArrayResponse(Generator $response): array
-    {
-        $result = $this->processResultResponse($response);
-
-        return (array) ($result ?? []);
-    }
-
-    /**
-     * Process response for void methods (consume all messages).
-     */
-    private function processVoidResponse(Generator $response): void
-    {
-        foreach ($response as $message) {
-            // read all messages to clear the response
-        }
-    }
-
-    /**
-     * Process response to return Element instance from result value.
-     */
-    private function processElementResponse(Generator $response): ?self
-    {
-        $result = $this->processResultResponse($response);
-
-        if (! is_string($result)) {
-            return null;
-        }
-
-        return new self($result);
-    }
-
-    /**
-     * Process response to handle element creation messages.
-     */
-    private function processElementCreationResponse(Generator $response): ?self
-    {
-        /** @var array{method: string|null, params: array{type: string|null, guid: string}} $message */
-        foreach ($response as $message) {
-            if (
-                isset($message['method'], $message['params']['type'], $message['params']['guid'])
-                && $message['method'] === '__create__'
-                && $message['params']['type'] === 'ElementHandle'
-            ) {
-                return new self($message['params']['guid']);
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Process response to handle multiple element creation messages.
-     *
-     * @return array<self>
-     */
-    private function processMultipleElementCreationResponse(Generator $response): array
-    {
-        $elements = [];
-
-        /** @var array{method: string|null, params: array{type: string|null, guid: string}} $message */
-        foreach ($response as $message) {
-            if (
-                isset($message['method'], $message['params']['type'], $message['params']['guid'])
-                && $message['method'] === '__create__'
-                && $message['params']['type'] === 'ElementHandle'
-            ) {
-                $elements[] = new self($message['params']['guid']);
-            }
-        }
-
-        return $elements;
-    }
+    // These methods are now provided by the InteractsWithPlaywright trait
 }

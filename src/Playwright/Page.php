@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Pest\Browser\Playwright;
 
 use Generator;
+use Pest\Browser\Playwright\Concerns\InteractsWithPlaywright;
 use Pest\Browser\Support\Screenshot;
 
 /**
@@ -12,6 +13,8 @@ use Pest\Browser\Support\Screenshot;
  */
 final class Page
 {
+    use InteractsWithPlaywright;
+
     /**
      * Constructs new page
      */
@@ -259,7 +262,43 @@ final class Page
     }
 
     /**
-     * Fills the element matching the specified selector with the given value.
+     * Returns whether the element matching the specified selector is editable.
+     */
+    public function isEditable(string $selector): bool
+    {
+        return $this->frame->isEditable($selector);
+    }
+
+    /**
+     * Returns whether the element matching the specified selector is disabled.
+     */
+    public function isDisabled(string $selector): bool
+    {
+        return $this->frame->isDisabled($selector);
+    }
+
+    /**
+     * Finds all elements matching the specified selector.
+     *
+     * @return Element[]
+     */
+    public function querySelectorAll(string $selector): array
+    {
+        return $this->frame->querySelectorAll($selector);
+    }
+
+    /**
+     * Sets the content of the page.
+     */
+    public function setContent(string $html): self
+    {
+        $this->frame->setContent($html);
+
+        return $this;
+    }
+
+    /**
+     * Fill an input field with text.
      */
     public function fill(string $selector, string $value): self
     {
@@ -269,7 +308,7 @@ final class Page
     }
 
     /**
-     * Checks the element matching the specified selector.
+     * Check a checkbox or radio button.
      */
     public function check(string $selector): self
     {
@@ -279,7 +318,7 @@ final class Page
     }
 
     /**
-     * Unchecks the element matching the specified selector.
+     * Uncheck a checkbox.
      */
     public function uncheck(string $selector): self
     {
@@ -289,7 +328,7 @@ final class Page
     }
 
     /**
-     * Hovers over the element matching the specified selector.
+     * Hover over an element.
      */
     public function hover(
         string $selector,
@@ -301,13 +340,22 @@ final class Page
         ?int $timeout = null,
         ?bool $trial = null
     ): self {
-        $this->frame->hover($selector, $force, $modifiers, $noWaitAfter, $position, $strict, $timeout, $trial);
+        $this->frame->hover(
+            $selector,
+            $force,
+            $modifiers,
+            $noWaitAfter,
+            $position,
+            $strict,
+            $timeout,
+            $trial
+        );
 
         return $this;
     }
 
     /**
-     * Focuses the element matching the specified selector.
+     * Focus an element.
      */
     public function focus(string $selector): self
     {
@@ -317,7 +365,7 @@ final class Page
     }
 
     /**
-     * Presses a key on the element matching the specified selector.
+     * Press a key on an element.
      */
     public function press(string $selector, string $key): self
     {
@@ -327,7 +375,7 @@ final class Page
     }
 
     /**
-     * Types text into the element matching the specified selector.
+     * Type text into an element.
      */
     public function type(string $selector, string $text): self
     {
@@ -376,18 +424,10 @@ final class Page
         return $this->frame->waitForSelector($selector, $options);
     }
 
-    /**
-     * Send a message to the server via the channel
-     *
-     * @param  array<string, mixed>  $params
-     */
-    private function sendMessage(string $method, array $params = []): Generator
-    {
-        return Client::instance()->execute($this->guid, $method, $params);
-    }
+    // Common methods are now provided by the InteractsWithPlaywright trait
 
     /**
-     * Process navigation response messages
+     * Override processNavigationResponse for Page specific behavior
      */
     private function processNavigationResponse(Generator $response): void
     {
