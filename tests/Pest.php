@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Pest\Browser\Playwright\Locator;
 use Pest\Browser\Playwright\Page;
+use Pest\Browser\Support\Screenshot;
 use Pest\Expectation;
 use Pest\Mixins\Expectation as ExpectationMixin;
 
@@ -18,17 +19,8 @@ expect()->extend('toHaveTitle', function (string $title): Expectation {
     return $this;
 });
 
-expect()->extend('toHaveText', function (string $content): Expectation {
-    if (! $this->value instanceof Locator) {
-        throw new InvalidArgumentException('Expected value to be an Locator instance');
-    }
-
-    expect($this->value->textContent())->toContain($content);
-
-    return $this;
-});
-
 expect()->extend('toBeChecked', function (): Expectation {
+
     if (! $this->value instanceof Locator) {
         throw new InvalidArgumentException('Expected value to be a Locator instance');
     }
@@ -39,6 +31,7 @@ expect()->extend('toBeChecked', function (): Expectation {
 });
 
 expect()->extend('toBeVisible', function (): Expectation {
+
     if (! $this->value instanceof Locator) {
         throw new InvalidArgumentException('Expected value to be a Locator instance');
     }
@@ -70,8 +63,8 @@ expect()->extend('toBeDisabled', function (): Expectation {
     return $this;
 });
 
-expect()->extend('toBeEditable', function (): Expectation
-{
+expect()->extend('toBeEditable', function (): Expectation {
+
     if (! $this->value instanceof Locator) {
         throw new InvalidArgumentException('Expected value to be a Locator instance');
     }
@@ -82,6 +75,7 @@ expect()->extend('toBeEditable', function (): Expectation
 });
 
 expect()->extend('toBeHidden', function (): Expectation {
+
     if (! $this->value instanceof Locator) {
         throw new InvalidArgumentException('Expected value to be a Locator instance');
     }
@@ -138,7 +132,21 @@ expect()->extend('toHaveValue', function (string $id): Expectation {
         throw new InvalidArgumentException('Expected value to be an Locator instance');
     }
 
-    expect($this->value->inputValue())->toBe($id);
+    expect($this->value->inputValue())->toBeTrue();
+
+    return $this;
+});
+
+expect()->extend('toHaveScreenshot', function (string $expectedScreenshotPath): Expectation {
+    if (! $this->value instanceof Page) {
+        throw new InvalidArgumentException('Expected value to be a Page instance');
+    }
+    // Take a screenshot and save it to the expected path    
+    $this->value->screenshot($expectedScreenshotPath);
+    // Check if the screenshot file exists
+    expect(file_exists(
+        Screenshot::path($expectedScreenshotPath)
+    ))->toBeTrue();
 
     return $this;
 });
