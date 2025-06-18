@@ -36,7 +36,7 @@ final class BrowserType
         $response = Client::instance()->execute(
             $this->guid,
             'launch',
-            ['browserType' => $this->name]
+            ['headless' => Playwright::isHeadless(), 'browserType' => $this->name]
         );
 
         /** @var array{result: array{browser: array{guid: string|null}}} $message */

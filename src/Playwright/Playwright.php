@@ -16,6 +16,18 @@ final class Playwright
      */
     private static array $browserTypes = [];
 
+    private static bool $headless = true;
+
+    public static function withUi(): void
+    {
+        self::$headless = false;
+    }
+
+    public static function isHeadless(): bool
+    {
+        return self::$headless;
+    }
+
     /**
      * Get chromium browser type
      */
