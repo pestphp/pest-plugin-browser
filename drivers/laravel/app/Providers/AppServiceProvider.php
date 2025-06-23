@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Events\ProcessPodcastEvent;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
+use SendPodcastNotification;
 
 final class AppServiceProvider extends ServiceProvider
 {
@@ -21,6 +24,9 @@ final class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Event::listen(
+            ProcessPodcastEvent::class,
+            SendPodcastNotification::class,
+        );
     }
 }
