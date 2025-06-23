@@ -41,6 +41,28 @@ final class Playwright
     }
 
     /**
+     * Close all browser pages
+     */
+    public static function close(): void
+    {
+        foreach (self::$browserTypes as $browserType) {
+            $browserType->close();
+        }
+
+        self::$browserTypes = [];
+    }
+
+    /**
+     * Reset playwright state, reset browser types, without closing them.
+     */
+    public static function reset(): void
+    {
+        foreach (self::$browserTypes as $browserType) {
+            $browserType->reset();
+        }
+    }
+
+    /**
      * Initialize Playwright
      */
     private static function initialize(string $browser): BrowserType
@@ -60,6 +82,7 @@ final class Playwright
                 && $message['params']['type'] === 'BrowserType'
             ) {
                 $name = $message['params']['initializer']['name'] ?? '';
+
                 self::$browserTypes[$name] = new BrowserType($message['params']['guid'], $name);
             }
         }

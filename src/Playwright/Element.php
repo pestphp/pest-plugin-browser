@@ -9,15 +9,15 @@ use Pest\Browser\Playwright\Concerns\InteractsWithPlaywright;
 /**
  * @internal
  */
-final class Element
+final readonly class Element
 {
     use InteractsWithPlaywright;
 
     /**
-     * Constructs new element
+     * Creates a new element instance.
      */
     public function __construct(
-        public string $guid,
+        private string $guid,
     ) {
         //
     }

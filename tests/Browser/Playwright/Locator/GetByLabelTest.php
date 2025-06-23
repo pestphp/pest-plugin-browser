@@ -62,9 +62,9 @@ it('returns proper selector format for getByLabel', function (): void {
     $parentLocator = $page->locator('body');
     $labelLocator = $parentLocator->getByLabel('Username');
 
-    expect($labelLocator->selector)->toContain(' >> ');
+    expect($labelLocator->selector())->toContain(' >> ');
     // The exact format depends on the Selector implementation
-    expect($labelLocator->selector)->toBeString();
+    expect($labelLocator->selector())->toBeString();
 });
 
 it('can interact with inputs found by label', function (): void {

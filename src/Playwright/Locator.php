@@ -7,25 +7,32 @@ namespace Pest\Browser\Playwright;
 use Generator;
 use Pest\Browser\Playwright\Concerns\InteractsWithPlaywright;
 use Pest\Browser\Support\Selector;
-use PHPUnit\Framework\ExpectationFailedException;
 use RuntimeException;
-use WebSocket\TimeoutException;
 
 /**
  * @internal
  */
-final class Locator
+final readonly class Locator
 {
     use InteractsWithPlaywright;
 
     /**
-     * Constructs new locator
+     * Creates a new locator instance.
      */
     public function __construct(
-        public string $frameGuid,
-        public string $selector,
+        private string $frameGuid,
+        private string $selector,
+        private bool $strictMode = true,
     ) {
         //
+    }
+
+    /**
+     * Get the selector string for this locator.
+     */
+    public function selector(): string
+    {
+        return $this->selector;
     }
 
     /**
@@ -33,8 +40,6 @@ final class Locator
      */
     public function isVisible(): bool
     {
-        $this->waitFor();
-
         $response = $this->sendMessage('isVisible');
 
         return $this->processBooleanResponse($response);
@@ -45,8 +50,6 @@ final class Locator
      */
     public function isChecked(): bool
     {
-        $this->waitFor();
-
         $response = $this->sendMessage('isChecked');
 
         return $this->processBooleanResponse($response);
@@ -57,8 +60,6 @@ final class Locator
      */
     public function isEnabled(): bool
     {
-        $this->waitFor();
-
         $response = $this->sendMessage('isEnabled');
 
         return $this->processBooleanResponse($response);
@@ -69,8 +70,6 @@ final class Locator
      */
     public function isDisabled(): bool
     {
-        $this->waitFor();
-
         $response = $this->sendMessage('isDisabled');
 
         return $this->processBooleanResponse($response);
@@ -81,8 +80,6 @@ final class Locator
      */
     public function isHidden(): bool
     {
-        $this->waitFor(['state' => 'hidden']);
-
         $response = $this->sendMessage('isHidden');
 
         return $this->processBooleanResponse($response);
@@ -93,11 +90,19 @@ final class Locator
      */
     public function isEditable(): bool
     {
-        $this->waitFor();
+        try {
+            $response = $this->sendMessage('isEditable');
 
-        $response = $this->sendMessage('isEditable');
+            return $this->processBooleanResponse($response);
+        } catch (RuntimeException $e) {
+            // If the element is not a form element or contenteditable, return false
+            if (str_contains($e->getMessage(), 'not an <input>, <textarea>, <select> or [contenteditable]')) {
+                return false;
+            }
 
-        return $this->processBooleanResponse($response);
+            // Re-throw other exceptions
+            throw $e;
+        }
     }
 
     /**
@@ -105,8 +110,6 @@ final class Locator
      */
     public function check(): void
     {
-        $this->waitFor();
-
         $response = $this->sendMessage('check');
 
         $this->processVoidResponse($response);
@@ -118,6 +121,7 @@ final class Locator
     public function uncheck(): void
     {
         $response = $this->sendMessage('uncheck');
+
         $this->processVoidResponse($response);
     }
 
@@ -129,6 +133,7 @@ final class Locator
     public function click(?array $options = null): void
     {
         $response = $this->sendMessage('click', $options ?? []);
+
         $this->processVoidResponse($response);
     }
 
@@ -140,6 +145,7 @@ final class Locator
     public function dblclick(?array $options = null): void
     {
         $response = $this->sendMessage('dblclick', $options ?? []);
+
         $this->processVoidResponse($response);
     }
 
@@ -152,6 +158,7 @@ final class Locator
     {
         $params = array_merge(['value' => $value], $options ?? []);
         $response = $this->sendMessage('fill', $params);
+
         $this->processVoidResponse($response);
     }
 
@@ -164,6 +171,7 @@ final class Locator
     {
         $params = array_merge(['text' => $text], $options ?? []);
         $response = $this->sendMessage('type', $params);
+
         $this->processVoidResponse($response);
     }
 
@@ -173,6 +181,7 @@ final class Locator
     public function clear(): void
     {
         $response = $this->sendMessage('fill', ['value' => '']);
+
         $this->processVoidResponse($response);
     }
 
@@ -182,6 +191,7 @@ final class Locator
     public function focus(): void
     {
         $response = $this->sendMessage('focus');
+
         $this->processVoidResponse($response);
     }
 
@@ -193,6 +203,7 @@ final class Locator
     public function hover(?array $options = null): void
     {
         $response = $this->sendMessage('hover', $options ?? []);
+
         $this->processVoidResponse($response);
     }
 
@@ -205,24 +216,46 @@ final class Locator
     {
         $params = array_merge(['key' => $key], $options ?? []);
         $response = $this->sendMessage('press', $params);
+
         $this->processVoidResponse($response);
     }
 
     /**
      * Select options by value in a select element matching the locator.
      *
-     * @param  array<int, string>|string  $values
-     * @param  array<string, mixed>|null  $options
+     * @param  array<int, string>|string|null  $values
+     * @param  array<string, mixed>|null  $options  Can include 'label', 'index', 'force', 'timeout', etc.
      * @return array<array-key, string>
      */
-    public function selectOption(array|string $values, ?array $options = null): array
+    public function selectOption(array|string|null $values = null, ?array $options = null): array
     {
         $element = $this->elementHandle();
         if (! $element instanceof Element) {
             throw new RuntimeException('Element not found');
         }
 
-        return $element->selectOption($values, $options);
+        $params = $options ?? [];
+
+        // Handle different selection criteria - values takes precedence if provided
+        if ($values !== null) {
+            $params['value'] = is_array($values) ? $values : [$values];
+        }
+        // Other criteria (label, index) should be provided via $options
+
+        $response = $this->sendMessage('selectOption', $params);
+        $result = $this->processArrayResponse($response);
+
+        // Ensure all values are strings for type safety
+        return array_map(function (mixed $value): string {
+            if (is_string($value)) {
+                return $value;
+            }
+            if (is_scalar($value) || $value === null) {
+                return (string) $value;
+            }
+
+            return '';
+        }, $result);
     }
 
     /**
@@ -284,13 +317,9 @@ final class Locator
      */
     public function waitFor(?array $options = null): void
     {
-        try {
-            $response = $this->sendMessage('waitForSelector', $options ?? []);
+        $response = $this->sendMessage('waitForSelector', $options ?? []);
 
-            $this->processVoidResponse($response);
-        } catch (TimeoutException) {
-            throw new ExpectationFailedException('Element not found.');
-        }
+        $this->processVoidResponse($response);
     }
 
     /**
@@ -459,33 +488,14 @@ final class Locator
      */
     public function count(): int
     {
-        // Use the nth selector approach to count elements
         $count = 0;
 
-        // Try up to 100 elements (reasonable limit)
         for ($i = 0; $i < 100; $i++) {
-            $nthSelector = $this->selector." >> nth={$i}";
+            $locator = $this->nth($i);
 
-            $response = Client::instance()->execute(
-                $this->frameGuid,
-                'querySelector',
-                ['selector' => $nthSelector]
-            );
+            $found = $locator->elementHandle();
 
-            $found = false;
-            /** @var array{method?: string, params: array{type?: string}} $message */
-            foreach ($response as $message) {
-                if (
-                    isset($message['method'], $message['params']['type'])
-                    && $message['method'] === '__create__'
-                    && $message['params']['type'] === 'ElementHandle'
-                ) {
-                    $found = true;
-                    break;
-                }
-            }
-
-            if (! $found) {
+            if (! $found instanceof Element) {
                 break;
             }
 
@@ -502,6 +512,7 @@ final class Locator
      */
     public function elementHandle(): ?Element
     {
+
         $response = $this->sendMessage('querySelector');
 
         return $this->processElementCreationResponse($response);
@@ -571,7 +582,6 @@ final class Locator
      */
     public function and(self $locator): self
     {
-        // This would require combining selectors in a way that both match
         return new self($this->frameGuid, $this->selector.':is('.$locator->selector.')');
     }
 
@@ -580,7 +590,6 @@ final class Locator
      */
     public function or(self $locator): self
     {
-        // This would require combining selectors with OR logic
         return new self($this->frameGuid, $this->selector.', '.$locator->selector);
     }
 
@@ -727,6 +736,22 @@ final class Locator
     }
 
     /**
+     * Drag this element to the target locator.
+     *
+     * @param  array<string, mixed>|null  $options
+     */
+    public function dragTo(self $target, ?array $options = null): void
+    {
+        $params = array_merge([
+            'source' => $this->selector,
+            'target' => $target->selector,
+        ], $options ?? []);
+        $response = $this->sendMessage('dragAndDrop', $params);
+
+        $this->processVoidResponse($response);
+    }
+
+    /**
      * Wait for the locator to match a specific state.
      *
      * @param  array<string, mixed>|null  $options
@@ -747,7 +772,10 @@ final class Locator
      */
     private function sendMessage(string $method, array $params = []): Generator
     {
-        $defaultParams = ['selector' => $this->selector, 'strict' => true];
+        $defaultParams = ['selector' => $this->selector];
+        if (! isset($params['strict'])) {
+            $defaultParams['strict'] = $this->strictMode;
+        }
         $finalParams = array_merge($defaultParams, $params);
 
         return Client::instance()->execute($this->frameGuid, $method, $finalParams);

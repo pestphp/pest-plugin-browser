@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Support;
 
-use RuntimeException;
+use Pest\Browser\Exceptions\PortNotFoundException;
 
 /**
  * @internal
@@ -12,35 +12,26 @@ use RuntimeException;
 final readonly class Port
 {
     /**
-     * Finds the first available port in the specified range.
-     */
-    public static function findAvailable(string $host, int $startPort, int $endPort): int
-    {
-        for ($port = $startPort; $port <= $endPort; $port++) {
-            if (self::isPortAvailable($host, $port)) {
-                return $port;
-            }
-        }
-
-        throw new RuntimeException("No available port found between [{$startPort}, {$endPort}]");
-    }
-
-    /**
      * Checks if a port is available.
      */
-    public static function isPortAvailable(string $host, int $port): bool
+    public static function find(): int
     {
-        $ch = curl_init("http://{$host}:{$port}");
+        $port = false;
 
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 1);
-        curl_setopt($ch, CURLOPT_NOBODY, true);
+        $sock = socket_create_listen(0);
 
-        curl_exec($ch);
+        if ($sock !== false) {
+            socket_getsockname($sock, $addr, $port);
 
-        $err = curl_errno($ch);
+            socket_close($sock);
+        }
 
-        curl_close($ch);
+        if ($port === false) {
+            throw new PortNotFoundException('Unable to find an available port.');
+        }
 
-        return $err !== 0;
+        assert(is_int($port));
+
+        return $port;
     }
 }

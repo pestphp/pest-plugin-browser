@@ -11,9 +11,8 @@ jobs:
         node: ['22.x']
         php: ['8.3', '8.4']
         dependency-version: [prefer-stable]
-        parallel: ['']
 
-    name: PHP ${{ matrix.php }} - Node ${{ matrix.node }} - ${{ matrix.os }} - ${{ matrix.dependency-version }} - ${{ matrix.parallel }}
+    name: PHP ${{ matrix.php }} - Node ${{ matrix.node }} - ${{ matrix.os }} - ${{ matrix.dependency-version }}
 
     steps:
     - name: Checkout
@@ -48,11 +47,8 @@ jobs:
     - name: Install PHP dependencies
       run: composer update --${{ matrix.dependency-version }} --no-interaction --no-progress --ansi
 
-    - name: Install NPM dependencies
-      run: |
-        npm install
-        npm run playwright -- install chromium
+    - name: Setup
+      run: composer setup
 
     - name: Tests
-      run: |
-        composer test
+      run: composer test

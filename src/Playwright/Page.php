@@ -7,8 +7,12 @@ namespace Pest\Browser\Playwright;
 use Generator;
 use Pest\Browser\Playwright\Concerns\InteractsWithPlaywright;
 use Pest\Browser\ServerManager;
+use Pest\Browser\Support\ImageDiffSlider;
+use Pest\Browser\Support\JavaScriptSerializer;
 use Pest\Browser\Support\Screenshot;
 use Pest\Browser\Support\Selector;
+use Pest\TestSuite;
+use PHPUnit\Framework\ExpectationFailedException;
 use RuntimeException;
 
 /**
@@ -19,14 +23,28 @@ final class Page
     use InteractsWithPlaywright;
 
     /**
-     * Constructs new page
+     * Whether the page has been closed.
+     */
+    private bool $closed = false;
+
+    /**
+     * Creates a new page instance.
      */
     public function __construct(
-        public string $guid,
-        public string $frameGuid,
-        public string $url = '',
+        private readonly Context $context,
+        private readonly string $guid,
+        private readonly string $frameGuid,
+        private string $url = '',
     ) {
         //
+    }
+
+    /**
+     * Get the browser context.
+     */
+    public function context(): Context
+    {
+        return $this->context;
     }
 
     /**
@@ -39,22 +57,21 @@ final class Page
 
     /**
      * Navigates to the given URL.
+     *
+     * @param  array<string, mixed>  $options
      */
-    public function goto(string $url): self
+    public function goto(string $url, array $options = []): self
     {
-        if (! str_starts_with($url, 'http://') && ! str_starts_with($url, 'https://')) {
-            $url = mb_ltrim($url, '/');
+        $url = ServerManager::instance()->http()->rewrite($url);
 
-            $url = ServerManager::instance()->http()->url().'/'.$url;
-        }
-
-        if ($this->url === $url) {
-            return $this;
-        }
-
-        $response = $this->sendMessage('goto', ['url' => $url, 'waitUntil' => 'load']);
+        $response = $this->sendMessage('goto', [
+            ...['url' => $url, 'waitUntil' => 'load'],
+            ...$options,
+        ]);
 
         $this->processNavigationResponse($response);
+
+        $this->waitForSelector('body', ['state' => 'attached']);
 
         return $this;
     }
@@ -74,9 +91,7 @@ final class Page
      */
     public function getAttribute(string $selector, string $attribute): ?string
     {
-        $response = $this->sendMessage('getAttribute', ['selector' => $selector, 'name' => $attribute]);
-
-        return $this->processNullableStringResponse($response);
+        return $this->locator($selector)->getAttribute($attribute);
     }
 
     /**
@@ -118,7 +133,7 @@ final class Page
      */
     public function locator(string $selector): Locator
     {
-        return new Locator($this->frameGuid, $selector);
+        return new Locator($this->frameGuid, $selector, true);
     }
 
     /**
@@ -186,8 +201,7 @@ final class Page
      */
     public function click(string $selector): self
     {
-        $response = $this->sendMessage('click', ['selector' => $selector]);
-        $this->processNavigationResponse($response);
+        $this->locatorNonStrict($selector)->click();
 
         return $this;
     }
@@ -197,8 +211,7 @@ final class Page
      */
     public function doubleClick(string $selector): self
     {
-        $response = $this->sendMessage('dblclick', ['selector' => $selector]);
-        $this->processNavigationResponse($response);
+        $this->locatorNonStrict($selector)->dblclick();
 
         return $this;
     }
@@ -218,9 +231,7 @@ final class Page
      */
     public function isEnabled(string $selector): bool
     {
-        $response = $this->sendMessage('isEnabled', ['selector' => $selector]);
-
-        return $this->processBooleanResponse($response);
+        return $this->locatorNonStrict($selector)->isEnabled();
     }
 
     /**
@@ -228,9 +239,7 @@ final class Page
      */
     public function isVisible(string $selector): bool
     {
-        $response = $this->sendMessage('isVisible', ['selector' => $selector]);
-
-        return $this->processBooleanResponse($response);
+        return $this->locatorNonStrict($selector)->isVisible();
     }
 
     /**
@@ -246,19 +255,7 @@ final class Page
      */
     public function isEditable(string $selector): bool
     {
-        try {
-            $response = $this->sendMessage('isEditable', ['selector' => $selector]);
-
-            return $this->processBooleanResponse($response);
-        } catch (RuntimeException $e) {
-            // If the element is not a form element or contenteditable, return false
-            if (str_contains($e->getMessage(), 'not an <input>, <textarea>, <select> or [contenteditable]')) {
-                return false;
-            }
-
-            // Re-throw other exceptions
-            throw $e;
-        }
+        return $this->locatorNonStrict($selector)->isEditable();
     }
 
     /**
@@ -266,7 +263,7 @@ final class Page
      */
     public function isDisabled(string $selector): bool
     {
-        return ! $this->isEnabled($selector);
+        return $this->locatorNonStrict($selector)->isDisabled();
     }
 
     /**
@@ -274,8 +271,7 @@ final class Page
      */
     public function fill(string $selector, string $value): self
     {
-        $response = $this->sendMessage('fill', ['selector' => $selector, 'value' => $value]);
-        $this->processNavigationResponse($response);
+        $this->locatorNonStrict($selector)->fill($value);
 
         return $this;
     }
@@ -285,19 +281,15 @@ final class Page
      */
     public function innerText(string $selector): string
     {
-        $response = $this->sendMessage('innerText', ['selector' => $selector]);
-
-        return $this->processStringResponse($response);
+        return $this->locatorNonStrict($selector)->innerText();
     }
 
     /**
      * Returns element's text content.
      */
-    public function textContent(string $selector): ?string
+    public function textContent(string $selector = 'html'): ?string
     {
-        $response = $this->sendMessage('textContent', ['selector' => $selector]);
-
-        return $this->processNullableStringResponse($response);
+        return $this->locatorNonStrict($selector)->textContent();
     }
 
     /**
@@ -305,9 +297,7 @@ final class Page
      */
     public function inputValue(string $selector): string
     {
-        $response = $this->sendMessage('inputValue', ['selector' => $selector]);
-
-        return $this->processStringResponse($response);
+        return $this->locatorNonStrict($selector)->inputValue();
     }
 
     /**
@@ -315,9 +305,7 @@ final class Page
      */
     public function isChecked(string $selector): bool
     {
-        $response = $this->sendMessage('isChecked', ['selector' => $selector]);
-
-        return $this->processBooleanResponse($response);
+        return $this->locatorNonStrict($selector)->isChecked();
     }
 
     /**
@@ -325,8 +313,7 @@ final class Page
      */
     public function check(string $selector): self
     {
-        $response = $this->sendMessage('check', ['selector' => $selector]);
-        $this->processNavigationResponse($response);
+        $this->locatorNonStrict($selector)->check();
 
         return $this;
     }
@@ -336,8 +323,7 @@ final class Page
      */
     public function uncheck(string $selector): self
     {
-        $response = $this->sendMessage('uncheck', ['selector' => $selector]);
-        $this->processNavigationResponse($response);
+        $this->locatorNonStrict($selector)->uncheck();
 
         return $this;
     }
@@ -358,32 +344,31 @@ final class Page
         ?int $timeout = null,
         ?bool $trial = null
     ): self {
-        $params = ['selector' => $selector];
+        $options = [];
 
         if ($force !== null) {
-            $params['force'] = $force;
+            $options['force'] = $force;
         }
         if ($modifiers !== null) {
-            $params['modifiers'] = $modifiers;
+            $options['modifiers'] = $modifiers;
         }
         if ($noWaitAfter !== null) {
-            $params['noWaitAfter'] = $noWaitAfter;
+            $options['noWaitAfter'] = $noWaitAfter;
         }
         if ($position !== null) {
-            $params['position'] = $position;
+            $options['position'] = $position;
         }
         if ($strict !== null) {
-            $params['strict'] = $strict;
+            $options['strict'] = $strict;
         }
         if ($timeout !== null) {
-            $params['timeout'] = $timeout;
+            $options['timeout'] = $timeout;
         }
         if ($trial !== null) {
-            $params['trial'] = $trial;
+            $options['trial'] = $trial;
         }
 
-        $response = $this->sendMessage('hover', $params);
-        $this->processVoidResponse($response);
+        $this->locatorNonStrict($selector)->hover($options);
 
         return $this;
     }
@@ -393,8 +378,7 @@ final class Page
      */
     public function focus(string $selector): self
     {
-        $response = $this->sendMessage('focus', ['selector' => $selector]);
-        $this->processVoidResponse($response);
+        $this->locatorNonStrict($selector)->focus();
 
         return $this;
     }
@@ -404,8 +388,7 @@ final class Page
      */
     public function press(string $selector, string $key): self
     {
-        $response = $this->sendMessage('press', ['selector' => $selector, 'key' => $key]);
-        $this->processVoidResponse($response);
+        $this->locatorNonStrict($selector)->press($key);
 
         return $this;
     }
@@ -415,8 +398,7 @@ final class Page
      */
     public function type(string $selector, string $text): self
     {
-        $response = $this->sendMessage('type', ['selector' => $selector, 'text' => $text]);
-        $this->processVoidResponse($response);
+        $this->locatorNonStrict($selector)->type($text);
 
         return $this;
     }
@@ -456,10 +438,10 @@ final class Page
      */
     public function waitForSelector(string $selector, ?array $options = null): ?Element
     {
-        $params = array_merge(['selector' => $selector], $options ?? []);
-        $response = $this->sendMessage('waitForSelector', $params);
+        $locator = $this->locatorNonStrict($selector);
+        $locator->waitFor($options);
 
-        return $this->processElementCreationResponse($response);
+        return $locator->elementHandle();
     }
 
     /**
@@ -467,8 +449,10 @@ final class Page
      */
     public function dragAndDrop(string $source, string $target): self
     {
-        $response = $this->sendMessage('dragAndDrop', ['source' => $source, 'target' => $target]);
-        $this->processVoidResponse($response);
+        $sourceLocator = $this->locatorNonStrict($source);
+        $targetLocator = $this->locatorNonStrict($target);
+
+        $sourceLocator->dragTo($targetLocator);
 
         return $this;
     }
@@ -501,33 +485,30 @@ final class Page
         ?bool $strict = null,
         ?int $timeout = null
     ): self {
-        $params = ['selector' => $selector];
+        $options = [];
 
         // Add the appropriate selection criteria - choose only one
-        if ($value !== null) {
-            $params['value'] = is_array($value) ? $value : [$value];
-        } elseif ($label !== null) {
-            $params['label'] = is_array($label) ? $label : [$label];
+        if ($label !== null) {
+            $options['label'] = is_array($label) ? $label : [$label];
         } elseif ($index !== null) {
-            $params['index'] = is_array($index) ? $index : [$index];
+            $options['index'] = is_array($index) ? $index : [$index];
         }
 
         // Add optional parameters
         if ($force !== null) {
-            $params['force'] = $force;
+            $options['force'] = $force;
         }
         if ($noWaitAfter !== null) {
-            $params['noWaitAfter'] = $noWaitAfter;
+            $options['noWaitAfter'] = $noWaitAfter;
         }
         if ($strict !== null) {
-            $params['strict'] = $strict;
+            $options['strict'] = $strict;
         }
         if ($timeout !== null) {
-            $params['timeout'] = $timeout;
+            $options['timeout'] = $timeout;
         }
 
-        $response = $this->sendMessage('selectOption', $params);
-        $this->processNavigationResponse($response);
+        $this->locatorNonStrict($selector)->selectOption($value, $options);
 
         return $this;
     }
@@ -537,13 +518,12 @@ final class Page
      */
     public function evaluate(string $pageFunction, mixed $arg = null): mixed
     {
-        $params = ['expression' => $pageFunction];
+        $params = [
+            'expression' => $pageFunction,
+            'arg' => JavaScriptSerializer::serializeArgument($arg),
+        ];
 
-        if ($arg !== null) {
-            $params['arg'] = $arg;
-        }
-
-        $response = $this->sendMessage('evaluate', $params);
+        $response = $this->sendMessage('evaluateExpression', $params);
 
         return $this->processResultResponse($response);
     }
@@ -551,17 +531,35 @@ final class Page
     /**
      * Evaluates a JavaScript expression and returns a JSHandle.
      */
-    public function evaluateHandle(string $pageFunction, mixed $arg = null): mixed
+    public function evaluateHandle(string $pageFunction, mixed $arg = null): JSHandle
     {
-        $params = ['expression' => $pageFunction];
+        $params = [
+            'expression' => $pageFunction,
+            'arg' => JavaScriptSerializer::serializeArgument($arg),
+        ];
 
-        if ($arg !== null) {
-            $params['arg'] = $arg;
+        $response = $this->sendMessage('evaluateExpressionHandle', $params);
+
+        foreach ($response as $message) {
+            if (
+                is_array($message) && is_array($message['params'] ?? null)
+                && isset($message['method'], $message['params']['type'], $message['params']['guid'])
+                && $message['method'] === '__create__'
+                && $message['params']['type'] === 'JSHandle'
+            ) {
+                return new JSHandle((string) $message['params']['guid']); // @phpstan-ignore-line
+            }
+
+            if (
+                is_array($message)
+                && is_array($message['result'] ?? null)
+                && isset($message['result']['handle'])
+            ) {
+                return new JSHandle($message['result']['handle']['guid']); // @phpstan-ignore-line
+            }
         }
 
-        $response = $this->sendMessage('evaluateHandle', $params);
-
-        return $this->processResultResponse($response);
+        throw new RuntimeException('Failed to create JSHandle from evaluate response');
     }
 
     /**
@@ -602,6 +600,105 @@ final class Page
      */
     public function screenshot(?string $filename = null): void
     {
+        $binary = $this->screenshotBinary();
+
+        if ($binary === null) {
+            return;
+        }
+
+        Screenshot::save($binary, $filename);
+    }
+
+    /**
+     * Make a screenshot of the page and compare it with the expected one.
+     *
+     * If the screenshot does not match, it will throw an ExpectationFailedException.
+     * The diff will be saved in the screenshots directory.
+     *
+     * @throws ExpectationFailedException
+     */
+    public function toMatchScreenshot(bool $showDiff = false): void
+    {
+        $actualImageBlob = $this->screenshotBinary();
+
+        try {
+            expect($actualImageBlob)->toMatchSnapshot();
+        } catch (ExpectationFailedException) {
+            [$snapshotName, $expectedImageBlob] = TestSuite::getInstance()->snapshots->get();
+
+            $response = Client::instance()->execute(
+                $this->guid,
+                'expectScreenshot',
+                [
+                    'type' => 'png', 'fullPage' => true, 'hideCaret' => true,
+                    'isNot' => false, 'expected' => $expectedImageBlob,
+                ]
+            );
+
+            // keep only the filename without the path and extension
+            $snapshotName = pathinfo($snapshotName, PATHINFO_FILENAME);
+            /** @var array{result: array{diff: string|null}} $message */
+            foreach ($response as $message) {
+                if (isset($message['result']['diff'])) {
+                    $sliderDir = Screenshot::dir().'/.sliders';
+
+                    if (is_dir($sliderDir) === false) {
+                        mkdir($sliderDir, 0755, true);
+                    }
+
+                    $sliderPath = $sliderDir.'/'.$snapshotName.'.html';
+                    $diffImage = $showDiff ? $message['result']['diff'] : $actualImageBlob;
+
+                    // @phpstan-ignore-next-line
+                    file_put_contents($sliderPath, ImageDiffSlider::generate(base64_decode($expectedImageBlob), base64_decode((string) $diffImage), test()->name()));
+
+                    throw new ExpectationFailedException('snapshot does not match the current screenshot. Check '.$sliderPath);
+                }
+            }
+
+            throw new ExpectationFailedException('No "visual" differences found, but the snapshot does not match the current screenshot.');
+        }
+    }
+
+    /**
+     * Closes the page.
+     */
+    public function close(): void
+    {
+        if ($this->context->browser()->isClosed()
+            || $this->context->isClosed()
+            || $this->closed) {
+            return;
+        }
+
+        $response = $this->sendMessage('close');
+
+        $this->processVoidResponse($response);
+
+        $this->closed = true;
+    }
+
+    /**
+     * Checks if the page is closed.
+     */
+    public function isClosed(): bool
+    {
+        return $this->closed;
+    }
+
+    /**
+     * Create a non-strict locator for internal use.
+     */
+    private function locatorNonStrict(string $selector): Locator
+    {
+        return new Locator($this->frameGuid, $selector, false);
+    }
+
+    /**
+     * Screenshots the page and returns the binary data.
+     */
+    private function screenshotBinary(): ?string
+    {
         $response = Client::instance()->execute(
             $this->guid,
             'screenshot',
@@ -611,9 +708,11 @@ final class Page
         /** @var array{result: array{binary: string|null}} $message */
         foreach ($response as $message) {
             if (isset($message['result']['binary'])) {
-                Screenshot::save($message['result']['binary'], $filename);
+                return $message['result']['binary'];
             }
         }
+
+        return null;
     }
 
     /**
@@ -648,6 +747,8 @@ final class Page
     private function isPageLevelOperation(string $method): bool
     {
         $pageLevelOperations = [
+            'close',
+            'Network.setExtraHTTPHeaders',
             'goForward',
             'goBack',
             'reload',

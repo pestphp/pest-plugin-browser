@@ -11,8 +11,8 @@ it('can combine locators with and()', function (): void {
 
     $combined = $buttons->and($clickButtons);
 
-    expect($combined)->toBeInstanceOf(Locator::class);
-    expect($combined->count())->toBeGreaterThan(0);
+    expect($combined)->toBeInstanceOf(Locator::class)
+        ->and($combined->count())->toBeGreaterThan(0);
 });
 
 it('can combine locators with or()', function (): void {

@@ -80,8 +80,8 @@ it('returns proper selector format for getByTitle', function (): void {
     $parentLocator = $page->locator('body');
     $titleLocator = $parentLocator->getByTitle('Help Link');
 
-    expect($titleLocator->selector)->toContain(' >> ');
-    expect($titleLocator->selector)->toBeString();
+    expect($titleLocator->selector())->toContain(' >> ');
+    expect($titleLocator->selector())->toBeString();
 });
 
 it('can interact with elements found by title', function (): void {
@@ -124,6 +124,6 @@ it('can distinguish between different title attributes', function (): void {
     expect($helpLocator)->toBeInstanceOf(Locator::class);
     expect($importantLocator)->toBeInstanceOf(Locator::class);
 
-    expect($infoLocator->selector)->not()->toBe($helpLocator->selector);
-    expect($helpLocator->selector)->not()->toBe($importantLocator->selector);
+    expect($infoLocator->selector())->not()->toBe($helpLocator->selector());
+    expect($helpLocator->selector())->not()->toBe($importantLocator->selector());
 });

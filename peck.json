@@ -21,7 +21,12 @@
             "doctype",
             "checkboxes",
             "unchecks",
-            "attr"
+            "attr",
+            "autoloading",
+            "deserialization",
+            "npx",
+            "tcp",
+            "filepath"
         ],
         "paths": []
     }

@@ -7,8 +7,8 @@ namespace Pest\Browser\Playwright\Concerns;
 use Generator;
 use Pest\Browser\Playwright\Client;
 use Pest\Browser\Playwright\Element;
-use Pest\Browser\Playwright\Locator;
 use Pest\Browser\Playwright\Page;
+use Pest\Browser\Support\JavaScriptSerializer;
 
 /**
  * @internal
@@ -30,10 +30,10 @@ trait InteractsWithPlaywright
      */
     private function processResultResponse(Generator $response): mixed
     {
-        /** @var array{result: array{value: mixed}} $message */
+        /** @var array{result?: array{value: mixed}} $message */
         foreach ($response as $message) {
             if (isset($message['result']['value'])) {
-                return $message['result']['value'];
+                return JavaScriptSerializer::parseValue($message['result']['value']);
             }
         }
 
@@ -103,9 +103,7 @@ trait InteractsWithPlaywright
      */
     private function processVoidResponse(Generator $response): void
     {
-        foreach ($response as $message) {
-            // Consume all messages to clear the response
-        }
+        iterator_to_array($response);
     }
 
     /**

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-it('may have a title', function (): void {
+it('may have text', function (): void {
     $page = page()->goto('/');
 
     $locator = $page->locator('h3');
@@ -10,7 +10,7 @@ it('may have a title', function (): void {
     expect($locator)->toHaveText('Pest is a testing');
 });
 
-it('may not have a title', function (): void {
+it('may not have text', function (): void {
     $page = page()->goto('/');
 
     $locator = $page->locator('h3');

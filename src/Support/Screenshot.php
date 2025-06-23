@@ -63,14 +63,19 @@ final class Screenshot
             return;
         }
 
-        $files = glob(self::dir().'/*.png');
+        foreach ([
+            self::dir().'/.sliders',
+            self::dir(),
+        ] as $dir) {
+            $files = glob($dir.'/*');
 
-        if (is_array($files)) {
-            foreach ($files as $file) {
-                unlink($file);
+            if (is_array($files)) {
+                foreach ($files as $file) {
+                    @unlink($file);
+                }
             }
-        }
 
-        rmdir(self::dir());
+            @rmdir($dir);
+        }
     }
 }

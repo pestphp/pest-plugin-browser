@@ -15,8 +15,12 @@
         "php": "^8.3",
         "pestphp/pest": "^4.0.0",
         "pestphp/pest-plugin": "^4.0.0",
+        "phrity/websocket": "^3.5.0",
+        "react/event-loop": "^1.5",
+        "react/http": "^1.11",
         "symfony/process": "^7.3.0",
-        "textalk/websocket": "^1.6.3"
+        "symfony/psr-http-message-bridge": "^7.3",
+        "ext-sockets": "*"
     },
     "autoload": {
         "psr-4": {
@@ -26,13 +30,30 @@
             "src/Autoload.php"
         ]
     },
+    "autoload-dev": {
+        "psr-4": {
+            "App\\": "drivers/laravel/app/",
+            "Database\\Factories\\": "drivers/laravel/database/factories/",
+            "Database\\Seeders\\": "drivers/laravel/database/seeders/",
+            "Tests\\": "tests/"
+        }
+    },
     "require-dev": {
         "laravel/pint": "^1.22.1",
         "peckphp/peck": "^0.1.3",
         "pestphp/pest-dev-tools": "^4.0.0",
         "pestphp/pest-plugin-type-coverage": "^4.0.0",
         "ext-pcntl": "*",
-        "ext-posix": "*"
+        "ext-posix": "*",
+        "laravel/framework": "^11.45.1",
+        "laravel/tinker": "^2.10.1",
+        "livewire/livewire": "^3.6.3",
+        "fakerphp/faker": "^1.24.1",
+        "laravel/pail": "^1.2.3",
+        "laravel/sail": "^1.43.1",
+        "mockery/mockery": "^1.6.12",
+        "nunomaduro/collision": "^8.8.1",
+        "pestphp/pest-plugin-laravel": "^4.0"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
@@ -44,6 +65,10 @@
         }
     },
     "scripts": {
+        "setup": [
+            "cd drivers/laravel && npm install && npm run build",
+            "npx playwright install"
+        ],
         "bump:minor": [
             "composer update && composer bump",
             "npx npm-check-updates -u -t minor && npm install"
@@ -52,26 +77,22 @@
             "rector",
             "pint"
         ],
+        "test:profanity": "pest --profanity --compact --language=en",
         "test:type-coverage": "pest --type-coverage --exactly=100",
         "test:typos": "peck",
         "test:lint": [
             "rector --dry-run",
             "pint --test"
         ],
-        "test:unit": "pest --parallel --coverage --exactly=83.2",
+        "test:unit": "pest --parallel",
         "test:types": "phpstan",
         "test": [
             "@test:lint",
+            "@test:profanity",
             "@test:type-coverage",
             "@test:typos",
-            "@test:unit",
-            "@test:types"
-        ],
-        "post-update-cmd": [
-            "composer install -d playground --ansi"
-        ],
-        "post-install-cmd": [
-            "composer install -d playground --ansi"
+            "@test:types",
+            "@test:unit"
         ]
     },
     "extra": {

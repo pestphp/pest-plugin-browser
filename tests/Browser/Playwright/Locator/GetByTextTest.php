@@ -62,8 +62,8 @@ it('returns proper selector format for getByText', function (): void {
     $parentLocator = $page->locator('body');
     $textLocator = $parentLocator->getByText('Info');
 
-    expect($textLocator->selector)->toContain(' >> ');
-    expect($textLocator->selector)->toContain('text=');
+    expect($textLocator->selector())->toContain(' >> ');
+    expect($textLocator->selector())->toContain('text=');
 });
 
 it('can interact with buttons found by text', function (): void {

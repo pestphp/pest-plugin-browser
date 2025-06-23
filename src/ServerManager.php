@@ -4,10 +4,15 @@ declare(strict_types=1);
 
 namespace Pest\Browser;
 
-use Pest\Browser\Exceptions\ServerNotFoundException;
-use Pest\Browser\Support\FakeProcess;
-use Pest\Browser\Support\Process;
+use Pest\Browser\Contracts\HttpServer;
+use Pest\Browser\Contracts\PlaywrightServer;
+use Pest\Browser\Drivers\Laravel\LaravelHttpServer;
+use Pest\Browser\Playwright\Servers\AlreadyStartedPlaywrightServer;
+use Pest\Browser\Playwright\Servers\PlaywrightNpxServer;
+use Pest\Browser\Support\Port;
 use Pest\Plugins\Parallel;
+use React\EventLoop\Loop;
+use Symfony\Bridge\PsrHttpMessage\Factory\HttpFoundationFactory;
 
 /**
  * @internal
@@ -17,7 +22,7 @@ final class ServerManager
     /**
      * The default host for the server.
      */
-    private const string DEFAULT_HOST = '127.0.0.1';
+    public const string DEFAULT_HOST = '127.0.0.1';
 
     /**
      * The singleton instance of the server manager.
@@ -25,14 +30,14 @@ final class ServerManager
     private static ?ServerManager $instance = null;
 
     /**
-     * The HTTP server process.
-     */
-    private ?Process $http = null;
-
-    /**
      * The Playwright server process.
      */
-    private ?Process $playwright = null;
+    private ?PlaywrightServer $playwright = null;
+
+    /**
+     * The HTTP server process.
+     */
+    private ?HttpServer $http = null;
 
     /**
      * Gets the singleton instance of the server manager.
@@ -43,55 +48,42 @@ final class ServerManager
     }
 
     /**
-     * Returns the "http" instance based on the environment.
-     *
-     * @throws ServerNotFoundException
-     */
-    public function http(): Process
-    {
-        if ($this->http instanceof Process) {
-            return $this->http;
-        }
-
-        $baseDirectory = match (true) {
-            // laravel...
-            function_exists('app_path') => app_path(),
-
-            // playground...
-            file_exists(__DIR__.'/../playground/artisan') => __DIR__.'/../playground',
-
-            // no server found...
-            default => throw new ServerNotFoundException('No server found for the current environment.'),
-        };
-
-        assert(is_string($baseDirectory));
-
-        return $this->http = Process::create(
-            $baseDirectory,
-            'php artisan serve --host=%s --port=%d',
-            self::DEFAULT_HOST,
-            'Server running on',
-        );
-    }
-
-    /**
      * Returns the Playwright server process instance.
      */
-    public function playwright(): Process|FakeProcess
+    public function playwright(): PlaywrightServer
     {
         if (Parallel::isWorker()) {
-            return new FakeProcess(
-                self::DEFAULT_HOST,
-                8077,
-            );
+            return AlreadyStartedPlaywrightServer::fromPersisted();
         }
 
-        return $this->playwright ??= Process::create(
+        $port = Port::find();
+
+        $this->playwright ??= PlaywrightNpxServer::create(
             __DIR__.'/..',
             'npx playwright run-server --host %s --port %d',
             self::DEFAULT_HOST,
+            $port,
             'Listening on',
-            8077,
+        );
+
+        AlreadyStartedPlaywrightServer::persist(
+            self::DEFAULT_HOST,
+            $port,
+        );
+
+        return $this->playwright;
+    }
+
+    /**
+     * Returns the HTTP server process instance.
+     */
+    public function http(): HttpServer
+    {
+        return $this->http ??= new LaravelHttpServer(
+            Loop::get(),
+            new HttpFoundationFactory(),
+            self::DEFAULT_HOST,
+            Port::find(),
         );
     }
 }

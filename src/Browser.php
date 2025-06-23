@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Pest\Browser;
 
+use Illuminate\Routing\UrlGenerator;
+use Pest\Browser\Playwright\Client;
 use Pest\Browser\Playwright\Page;
 
 /**
@@ -11,6 +13,32 @@ use Pest\Browser\Playwright\Page;
  */
 trait Browser
 {
+    /**
+     * Marks the test as a browser test.
+     *
+     * @internal
+     */
+    public function __markAsBrowserTest(): void
+    {
+        Client::instance()->connectTo(
+            ServerManager::instance()->playwright()->url(),
+        );
+
+        ServerManager::instance()->http()->start();
+
+        $url = ServerManager::instance()->http()->url();
+
+        config(['app.url' => $url]);
+
+        if (app()->bound('url')) {
+            $urlGenerator = app('url');
+
+            assert($urlGenerator instanceof UrlGenerator);
+
+            $urlGenerator->useOrigin($url);
+        }
+    }
+
     /**
      * gets the page instance for given URL.
      *

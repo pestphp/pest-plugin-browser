@@ -10,16 +10,16 @@ namespace Pest\Browser\Playwright;
 final class BrowserType
 {
     /**
-     * Browser.
+     * The browser instance.
      */
-    private Browser $browser;
+    private ?Browser $browser = null;
 
     /**
-     * Constructs browser type.
+     * Creates a new browser type instance.
      */
     public function __construct(
-        public string $guid,
-        public string $name,
+        private readonly string $guid,
+        private readonly string $name,
     ) {
         //
     }
@@ -29,23 +29,49 @@ final class BrowserType
      */
     public function launch(): Browser
     {
-        if (isset($this->browser)) {
+        if ($this->browser instanceof Browser) {
             return $this->browser;
         }
 
         $response = Client::instance()->execute(
             $this->guid,
             'launch',
-            ['browserType' => $this->name]
+            ['browserType' => $this->name, 'headless' => true],
         );
 
         /** @var array{result: array{browser: array{guid: string|null}}} $message */
         foreach ($response as $message) {
             if (isset($message['result']['browser']['guid'])) {
-                $this->browser = new Browser($message['result']['browser']['guid']);
+                $guid = $message['result']['browser']['guid'];
+
+                $this->browser = new Browser($guid);
             }
         }
 
+        assert($this->browser instanceof Browser, 'Browser instance was not created successfully.');
+
         return $this->browser;
+    }
+
+    /**
+     * Closes the browser type.
+     */
+    public function close(): void
+    {
+        if ($this->browser instanceof Browser) {
+            $this->browser->close();
+        }
+
+        $this->browser = null;
+    }
+
+    /**
+     * Resets the browser type state, without closing the browser.
+     */
+    public function reset(): void
+    {
+        if ($this->browser instanceof Browser) {
+            $this->browser->reset();
+        }
     }
 }

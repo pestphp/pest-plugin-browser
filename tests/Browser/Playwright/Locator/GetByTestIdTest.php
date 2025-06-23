@@ -54,8 +54,8 @@ it('returns proper selector format for getByTestId', function (): void {
     $parentLocator = $page->locator('body');
     $testIdLocator = $parentLocator->getByTestId('submit-button');
 
-    expect($testIdLocator->selector)->toContain(' >> ');
-    expect($testIdLocator->selector)->toContain('[data-testid="submit-button"]');
+    expect($testIdLocator->selector())->toContain(' >> ');
+    expect($testIdLocator->selector())->toContain('[data-testid="submit-button"]');
 });
 
 it('can interact with elements found by getByTestId', function (): void {

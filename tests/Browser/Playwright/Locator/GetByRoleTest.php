@@ -62,8 +62,8 @@ it('returns proper selector format for getByRole', function (): void {
     $parentLocator = $page->locator('body');
     $roleLocator = $parentLocator->getByRole('button');
 
-    expect($roleLocator->selector)->toContain(' >> ');
-    expect($roleLocator->selector)->toContain('role=button');
+    expect($roleLocator->selector())->toContain(' >> ');
+    expect($roleLocator->selector())->toContain('role=button');
 });
 
 it('can interact with elements found by role', function (): void {
@@ -90,8 +90,8 @@ it('can find multiple buttons with same role', function (): void {
     $containerLocator = $page->locator('.mb-8');
     $buttonsLocator = $containerLocator->getByRole('button');
 
-    expect($buttonsLocator)->toBeInstanceOf(Locator::class);
-    expect($buttonsLocator->count())->toBeGreaterThan(1);
+    expect($buttonsLocator)->toBeInstanceOf(Locator::class)
+        ->and($buttonsLocator->count())->toBeGreaterThan(1);
 });
 
 it('works with role parameters for specificity', function (): void {

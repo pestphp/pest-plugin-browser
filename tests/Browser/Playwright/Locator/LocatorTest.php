@@ -90,8 +90,8 @@ it('returns proper selector string format', function (): void {
     $parentLocator = $page->getByTestId('profile-section');
     $childLocator = $parentLocator->locator('button');
 
-    expect($childLocator->selector)->toContain(' >> ');
-    expect($childLocator->selector)->toContain('button');
+    expect($childLocator->selector())->toContain(' >> ');
+    expect($childLocator->selector())->toContain('button');
 });
 
 it('can locate form elements within containers', function (): void {
@@ -126,8 +126,8 @@ it('can use class selectors within parent locator', function (): void {
     $containerLocator = $page->locator('body');
     $sectionLocator = $containerLocator->locator('.section');
 
-    expect($sectionLocator)->toBeInstanceOf(Locator::class);
-    expect($sectionLocator->count())->toBeGreaterThan(0);
+    expect($sectionLocator)->toBeInstanceOf(Locator::class)
+        ->and($sectionLocator->count())->toBeGreaterThan(0);
 });
 
 it('handles non-existent selectors gracefully', function (): void {
@@ -162,11 +162,11 @@ it('maintains selector hierarchy correctly', function (): void {
     $level2 = $level1->locator('div');
     $level3 = $level2->locator('p');
 
-    expect($level1->selector)->toContain('[data-testid="profile-section"]');
-    expect($level2->selector)->toContain('[data-testid="profile-section"]');
-    expect($level2->selector)->toContain(' >> div');
-    expect($level3->selector)->toContain('[data-testid="profile-section"]');
-    expect($level3->selector)->toContain(' >> div >> p');
+    expect($level1->selector())->toContain('[data-testid="profile-section"]');
+    expect($level2->selector())->toContain('[data-testid="profile-section"]');
+    expect($level2->selector())->toContain(' >> div');
+    expect($level3->selector())->toContain('[data-testid="profile-section"]');
+    expect($level3->selector())->toContain(' >> div >> p');
 });
 
 it('can locate elements using descendant selectors', function (): void {

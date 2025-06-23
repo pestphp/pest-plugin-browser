@@ -4,26 +4,37 @@ declare(strict_types=1);
 
 namespace Pest\Browser;
 
-use Pest\Browser\Support\Screenshot;
+use Pest\Browser\Filters\UsesBrowserTestCaseMethodFilter;
+use Pest\Browser\Playwright\Playwright;
 use Pest\Contracts\Plugins\Bootable;
 use Pest\Contracts\Plugins\Terminable;
 use Pest\Plugins\Parallel;
+use Pest\TestSuite;
 
 /**
  * @internal
  */
-final readonly class Plugin implements Bootable, Terminable // @pest-arch-ignore-line
+final class Plugin implements Bootable, Terminable // @pest-arch-ignore-line
 {
+    /**
+     * Indicates whether the plugin has been booted.
+     */
+    public static bool $booted = false;
+
     /**
      * Boots the plugin.
      */
     public function boot(): void
     {
-        if (Parallel::isWorker() === false) {
-            ServerManager::instance()->playwright()->start();
+        TestSuite::getInstance()
+            ->tests
+            ->addTestCaseMethodFilter(new UsesBrowserTestCaseMethodFilter());
 
-            Screenshot::cleanup();
-        }
+        pest()->afterEach(function (): void {
+            ServerManager::instance()->http()->flush();
+
+            Playwright::reset();
+        })->in($this->in());
     }
 
     /**
@@ -31,10 +42,22 @@ final readonly class Plugin implements Bootable, Terminable // @pest-arch-ignore
      */
     public function terminate(): void
     {
+        if (Parallel::isWorker() || Parallel::isEnabled() === false) {
+            ServerManager::instance()->http()->stop();
+
+            Playwright::close();
+        }
+
         if (Parallel::isWorker() === false) {
             ServerManager::instance()->playwright()->stop();
         }
+    }
 
-        ServerManager::instance()->http()->stop();
+    /**
+     * Returns the path where the test files are located.
+     */
+    private function in(): string
+    {
+        return TestSuite::getInstance()->rootPath.DIRECTORY_SEPARATOR.TestSuite::getInstance()->testPath;
     }
 }

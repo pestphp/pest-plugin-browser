@@ -6,6 +6,9 @@ parameters:
     paths:
         - src
 
+    excludePaths:
+        - src/Autoload.php
+
     ignoreErrors:
         - identifier: trait.unused
 
