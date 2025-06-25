@@ -74,3 +74,12 @@ Route::get('/', function () {
 Route::get('/test/{page}', function ($page) {
     return view('test-pages.'.$page);
 })->name('test-page');
+
+Route::get('/event', function () {
+    event(new App\Events\ProcessPodcastEvent());
+
+    return [
+        'message' => 'Event dispatched successfully.',
+        'status' => 'success',
+    ];
+})->name('event');
