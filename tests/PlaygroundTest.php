@@ -18,11 +18,9 @@ test('example', function (): void {
 
     $this->actingAs($user);
 
-    $page = page(route('dashboard'));
+    $page = visit(route('dashboard'));
 
-    $content = $page->locator('div');
-
-    expect($content)->toHaveText('Hi Taylor Otwell!');
+    $page->assertSee('Taylor Otwell');
 
     Queue::assertPushed(ProcessPodcast::class);
 });

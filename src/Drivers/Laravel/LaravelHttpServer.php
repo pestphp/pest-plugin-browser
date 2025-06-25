@@ -9,6 +9,7 @@ use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Illuminate\Http\Request;
 use Pest\Browser\Contracts\HttpServer;
 use Pest\Browser\Exceptions\ServerNotFoundException;
+use Pest\Browser\Execution;
 use Psr\Http\Message\ServerRequestInterface;
 use React\EventLoop\LoopInterface;
 use React\Http\HttpServer as ReactHttpServer;
@@ -27,6 +28,9 @@ use Symfony\Bridge\PsrHttpMessage\Factory\HttpFoundationFactory;
 use Symfony\Component\Mime\MimeTypes;
 use Throwable;
 
+/**
+ * @codeCoverageIgnore
+ */
 final class LaravelHttpServer implements HttpServer
 {
     /**
@@ -41,6 +45,11 @@ final class LaravelHttpServer implements HttpServer
      * @var array<int, ConnectionInterface>
      */
     private array $connections = [];
+
+    /**
+     * The original asset URL, if set.
+     */
+    private ?string $originalAssetUrl = null;
 
     /**
      * Creates a new laravel http server instance.
@@ -59,7 +68,7 @@ final class LaravelHttpServer implements HttpServer
      */
     public function __destruct()
     {
-        $this->stop();
+        $this->stop(); // @codeCoverageIgnore
     }
 
     /**
@@ -127,6 +136,7 @@ final class LaravelHttpServer implements HttpServer
      */
     public function stop(): void
     {
+        // @codeCoverageIgnoreStart
         if ($this->socket instanceof SocketServer) {
             $this->flush();
 
@@ -170,6 +180,14 @@ final class LaravelHttpServer implements HttpServer
     }
 
     /**
+     * Sets the original asset URL.
+     */
+    public function setOriginalAssetUrl(string $url): void
+    {
+        $this->originalAssetUrl = mb_rtrim($url, '/');
+    }
+
+    /**
      * Handle the incoming request and return a response.
      *
      * @return PromiseInterface<Response>
@@ -198,16 +216,54 @@ final class LaravelHttpServer implements HttpServer
     {
         // @phpstan-ignore-next-line
         return new Promise(function (callable $resolve) use ($request): void {
-            $this->loop->futureTick(fn () => $this->loop->stop());
+            if (class_exists(\Tighten\Ziggy\BladeRouteGenerator::class)) {
+                \Tighten\Ziggy\BladeRouteGenerator::$generated = false;
+            }
+
+            if (app()->resolved(\Livewire\LivewireManager::class)) {
+                $manager = app()->make(\Livewire\LivewireManager::class);
+
+                // @phpstan-ignore-next-line
+                if (method_exists($manager, 'flushState')) {
+                    $manager->flushState();
+                }
+            }
+
+            // @phpstan-ignore-next-line
+            if (app()->resolved(\Inertia\ResponseFactory::class)) {
+                // @phpstan-ignore-next-line
+                $factory = app()->make(\Inertia\ResponseFactory::class);
+
+                if (method_exists($factory, 'flushShared')) {
+                    // @phpstan-ignore-next-line
+                    $factory->flushShared();
+                }
+            }
+
+            if (Execution::instance()->isPaused() === false) {
+                $this->loop->futureTick(fn () => $this->loop->stop());
+            }
 
             $kernel = app()->make(HttpKernel::class);
 
             $response = $kernel->handle($request);
 
+            $content = $response->getContent();
+
+            if ($content === false) {
+                try {
+                    ob_start();
+                    $response->sendContent();
+                } finally {
+                    // @phpstan-ignore-next-line
+                    $content = mb_trim(ob_get_clean());
+                }
+            }
+
             $resolve(new Response(
                 $response->getStatusCode(),
                 $response->headers->all(), // @phpstan-ignore-line
-                $response->getContent(), // @phpstan-ignore-line
+                $content,
                 $response->getProtocolVersion(),
             ));
 
@@ -223,7 +279,7 @@ final class LaravelHttpServer implements HttpServer
     private function asset(string $filepath): PromiseInterface
     {
         // @phpstan-ignore-next-line
-        return new Promise(static function (callable $resolve) use ($filepath): void {
+        return new Promise(function (callable $resolve) use ($filepath): void {
             $file = fopen($filepath, 'r');
 
             if ($file === false) {
@@ -232,15 +288,44 @@ final class LaravelHttpServer implements HttpServer
                 return;
             }
 
-            $contentType = (new MimeTypes())->guessMimeType($filepath);
+            $mimeTypes = new MimeTypes();
+            $contentType = $mimeTypes->getMimeTypes(pathinfo($filepath, PATHINFO_EXTENSION));
 
-            if ($contentType === null) {
-                $contentType = 'application/octet-stream';
+            $contentType = $contentType[0] ?? 'application/octet-stream';
+
+            if (str_ends_with($filepath, '.js')) {
+                $temporaryStream = fopen('php://temp', 'r+');
+                assert($temporaryStream !== false, 'Failed to open temporary stream.');
+
+                // @phpstan-ignore-next-line
+                $temporaryContent = fread($file, (int) filesize($filepath));
+
+                assert($temporaryContent !== false, 'Failed to open temporary stream.');
+
+                $content = $this->rewriteAssetUrl($temporaryContent);
+
+                fwrite($temporaryStream, $content);
+
+                rewind($temporaryStream);
+
+                $file = $temporaryStream;
             }
 
             $resolve(new Response(200, [
                 'Content-Type' => $contentType,
             ], new ReadableResourceStream($file)));
         });
+    }
+
+    /**
+     * Rewrite the asset URL in the given content.
+     */
+    private function rewriteAssetUrl(string $content): string
+    {
+        if ($this->originalAssetUrl === null) {
+            return $content;
+        }
+
+        return str_replace($this->originalAssetUrl, $this->url(), $content);
     }
 }

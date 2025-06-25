@@ -512,7 +512,6 @@ final readonly class Locator
      */
     public function elementHandle(): ?Element
     {
-
         $response = $this->sendMessage('querySelector');
 
         return $this->processElementCreationResponse($response);
@@ -670,6 +669,17 @@ final readonly class Locator
             throw new RuntimeException('Element not found');
         }
         $element->tap($options);
+    }
+
+    /**
+     * Set input files for a file input element.
+     */
+    public function setInputFiles(string $path): void
+    {
+        $params = ['localPaths' => [$path]];
+        $response = $this->sendMessage('setInputFiles', $params);
+
+        $this->processVoidResponse($response);
     }
 
     /**

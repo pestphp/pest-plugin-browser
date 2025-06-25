@@ -7,7 +7,6 @@ namespace Pest\Browser\Playwright\Concerns;
 use Generator;
 use Pest\Browser\Playwright\Client;
 use Pest\Browser\Playwright\Element;
-use Pest\Browser\Playwright\Page;
 use Pest\Browser\Support\JavaScriptSerializer;
 
 /**
@@ -104,26 +103,6 @@ trait InteractsWithPlaywright
     private function processVoidResponse(Generator $response): void
     {
         iterator_to_array($response);
-    }
-
-    /**
-     * Process navigation response messages
-     */
-    private function processNavigationResponse(Generator $response): void
-    {
-        /** @var array{method: string|null, params: array{url: string|null}} $message */
-        foreach ($response as $message) {
-            if (! isset($message['method'])) {
-                continue;
-            }
-            if ($message['method'] !== 'navigated') {
-                continue;
-            }
-            if (! $this instanceof Page) {
-                continue;
-            }
-            $this->url = $message['params']['url'] ?? '';
-        }
     }
 
     /**

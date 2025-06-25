@@ -28,7 +28,7 @@ final readonly class BrowserTestIdentifier
             return true;
         }
 
-        return self::usesPageFunction($factory->closure ?? fn (): null => null);
+        return self::usesVisitFunction($factory->closure ?? fn (): null => null);
     }
 
     /**
@@ -59,7 +59,7 @@ final readonly class BrowserTestIdentifier
     /**
      * Checks if the given closure uses the "page" function.
      */
-    private static function usesPageFunction(Closure $closure): bool
+    private static function usesVisitFunction(Closure $closure): bool
     {
         try {
             $ref = new ReflectionFunction($closure);
@@ -92,7 +92,7 @@ final readonly class BrowserTestIdentifier
             if (
                 is_array($tokens[$i]) &&
                 $tokens[$i][0] === T_STRING &&
-                mb_strtolower($tokens[$i][1]) === 'page' &&
+                mb_strtolower($tokens[$i][1]) === 'visit' &&
                 $tokens[$i + 1] === '('
             ) {
                 return true;

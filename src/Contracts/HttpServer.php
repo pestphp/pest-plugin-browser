@@ -33,4 +33,9 @@ interface HttpServer
      * Returns the server's URL.
      */
     public function url(): string;
+
+    /**
+     * Sets the original asset URL for the server.
+     */
+    public function setOriginalAssetUrl(string $url): void;
 }

@@ -13,14 +13,16 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
+        "ext-sockets": "*",
         "pestphp/pest": "^4.0.0",
         "pestphp/pest-plugin": "^4.0.0",
         "phrity/websocket": "^3.5.0",
+        "react/async": "^4.3",
         "react/event-loop": "^1.5",
         "react/http": "^1.11",
+        "react/promise-timer": "^1.11",
         "symfony/process": "^7.3.0",
-        "symfony/psr-http-message-bridge": "^7.3",
-        "ext-sockets": "*"
+        "symfony/psr-http-message-bridge": "^7.3"
     },
     "autoload": {
         "psr-4": {
@@ -52,7 +54,7 @@
         "laravel/pail": "^1.2.3",
         "laravel/sail": "^1.43.1",
         "mockery/mockery": "^1.6.12",
-        "nunomaduro/collision": "^8.8.1",
+        "nunomaduro/collision": "^8.8.2",
         "pestphp/pest-plugin-laravel": "^4.0"
     },
     "minimum-stability": "dev",

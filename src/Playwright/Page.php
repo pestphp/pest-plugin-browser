@@ -5,14 +5,16 @@ declare(strict_types=1);
 namespace Pest\Browser\Playwright;
 
 use Generator;
-use Pest\Browser\Playwright\Concerns\InteractsWithPlaywright;
+use Pest\Browser\Execution;
 use Pest\Browser\ServerManager;
 use Pest\Browser\Support\ImageDiffSlider;
 use Pest\Browser\Support\JavaScriptSerializer;
 use Pest\Browser\Support\Screenshot;
 use Pest\Browser\Support\Selector;
 use Pest\TestSuite;
+use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\ExpectationFailedException;
+use ReflectionClass;
 use RuntimeException;
 
 /**
@@ -20,12 +22,17 @@ use RuntimeException;
  */
 final class Page
 {
-    use InteractsWithPlaywright;
+    use Concerns\InteractsWithPlaywright;
 
     /**
      * Whether the page has been closed.
      */
     private bool $closed = false;
+
+    /**
+     * Enable or disable strict locators.
+     */
+    private bool $strictLocators = true;
 
     /**
      * Creates a new page instance.
@@ -34,7 +41,6 @@ final class Page
         private readonly Context $context,
         private readonly string $guid,
         private readonly string $frameGuid,
-        private string $url = '',
     ) {
         //
     }
@@ -52,7 +58,32 @@ final class Page
      */
     public function url(): string
     {
-        return $this->url;
+        $url = $this->await(
+            fn (): mixed => $this->evaluate('() => window.location.href'),
+        );
+
+        assert(is_string($url), 'Expected URL to be a string, got: '.gettype($url));
+
+        return $url;
+    }
+
+    /**
+     * Performs the given callback in unstrict mode.
+     *
+     * @template TReturn
+     *
+     * @param  callable(Page): TReturn  $callback
+     * @return TReturn
+     */
+    public function unstrict(callable $callback): mixed
+    {
+        try {
+            $this->strictLocators = false;
+
+            return $callback($this);
+        } finally {
+            $this->strictLocators = true;
+        }
     }
 
     /**
@@ -69,9 +100,7 @@ final class Page
             ...$options,
         ]);
 
-        $this->processNavigationResponse($response);
-
-        $this->waitForSelector('body', ['state' => 'attached']);
+        $this->processVoidResponse($response);
 
         return $this;
     }
@@ -84,14 +113,6 @@ final class Page
         $response = $this->sendMessage('title');
 
         return $this->processStringResponse($response);
-    }
-
-    /**
-     * Get the value of an attribute of the first element matching the selector within the page.
-     */
-    public function getAttribute(string $selector, string $attribute): ?string
-    {
-        return $this->locator($selector)->getAttribute($attribute);
     }
 
     /**
@@ -133,7 +154,7 @@ final class Page
      */
     public function locator(string $selector): Locator
     {
-        return new Locator($this->frameGuid, $selector, true);
+        return new Locator($this->frameGuid, $selector, $this->strictLocators);
     }
 
     /**
@@ -197,23 +218,19 @@ final class Page
     }
 
     /**
-     * Clicks the element matching the specified selector.
+     * Create a locator that matches elements by given ID attribute.
      */
-    public function click(string $selector): self
+    public function getById(string $id): Locator
     {
-        $this->locatorNonStrict($selector)->click();
-
-        return $this;
+        return $this->locator(Selector::getByIdSelector($id));
     }
 
     /**
-     * Double-clicks the element matching the specified selector.
+     * Create a locator that matches elements by given name attribute.
      */
-    public function doubleClick(string $selector): self
+    public function getByName(string $name): Locator
     {
-        $this->locatorNonStrict($selector)->dblclick();
-
-        return $this;
+        return $this->locator(Selector::getByNameSelector($name));
     }
 
     /**
@@ -227,180 +244,11 @@ final class Page
     }
 
     /**
-     * Returns whether the element is enabled.
+     * Gets the text content of the body element.
      */
-    public function isEnabled(string $selector): bool
+    public function textContent(): ?string
     {
-        return $this->locatorNonStrict($selector)->isEnabled();
-    }
-
-    /**
-     * Returns whether the element is visible.
-     */
-    public function isVisible(string $selector): bool
-    {
-        return $this->locatorNonStrict($selector)->isVisible();
-    }
-
-    /**
-     * Returns whether the element is hidden.
-     */
-    public function isHidden(string $selector): bool
-    {
-        return ! $this->isVisible($selector);
-    }
-
-    /**
-     * Returns whether the element is editable.
-     */
-    public function isEditable(string $selector): bool
-    {
-        return $this->locatorNonStrict($selector)->isEditable();
-    }
-
-    /**
-     * Returns whether the element is disabled.
-     */
-    public function isDisabled(string $selector): bool
-    {
-        return $this->locatorNonStrict($selector)->isDisabled();
-    }
-
-    /**
-     * Fills a form field with the given value.
-     */
-    public function fill(string $selector, string $value): self
-    {
-        $this->locatorNonStrict($selector)->fill($value);
-
-        return $this;
-    }
-
-    /**
-     * Returns element's inner text.
-     */
-    public function innerText(string $selector): string
-    {
-        return $this->locatorNonStrict($selector)->innerText();
-    }
-
-    /**
-     * Returns element's text content.
-     */
-    public function textContent(string $selector = 'html'): ?string
-    {
-        return $this->locatorNonStrict($selector)->textContent();
-    }
-
-    /**
-     * Returns the input value for input elements.
-     */
-    public function inputValue(string $selector): string
-    {
-        return $this->locatorNonStrict($selector)->inputValue();
-    }
-
-    /**
-     * Checks whether the element is checked (for checkboxes and radio buttons).
-     */
-    public function isChecked(string $selector): bool
-    {
-        return $this->locatorNonStrict($selector)->isChecked();
-    }
-
-    /**
-     * Checks the element (for checkboxes and radio buttons).
-     */
-    public function check(string $selector): self
-    {
-        $this->locatorNonStrict($selector)->check();
-
-        return $this;
-    }
-
-    /**
-     * Unchecks the element (for checkboxes and radio buttons).
-     */
-    public function uncheck(string $selector): self
-    {
-        $this->locatorNonStrict($selector)->uncheck();
-
-        return $this;
-    }
-
-    /**
-     * Hovers over the element matching the specified selector.
-     *
-     * @param  array<int, string>|null  $modifiers
-     * @param  array<int, int>|null  $position
-     */
-    public function hover(
-        string $selector,
-        ?bool $force = null,
-        ?array $modifiers = null,
-        ?bool $noWaitAfter = null,
-        ?array $position = null,
-        ?bool $strict = null,
-        ?int $timeout = null,
-        ?bool $trial = null
-    ): self {
-        $options = [];
-
-        if ($force !== null) {
-            $options['force'] = $force;
-        }
-        if ($modifiers !== null) {
-            $options['modifiers'] = $modifiers;
-        }
-        if ($noWaitAfter !== null) {
-            $options['noWaitAfter'] = $noWaitAfter;
-        }
-        if ($position !== null) {
-            $options['position'] = $position;
-        }
-        if ($strict !== null) {
-            $options['strict'] = $strict;
-        }
-        if ($timeout !== null) {
-            $options['timeout'] = $timeout;
-        }
-        if ($trial !== null) {
-            $options['trial'] = $trial;
-        }
-
-        $this->locatorNonStrict($selector)->hover($options);
-
-        return $this;
-    }
-
-    /**
-     * Focuses the element matching the specified selector.
-     */
-    public function focus(string $selector): self
-    {
-        $this->locatorNonStrict($selector)->focus();
-
-        return $this;
-    }
-
-    /**
-     * Presses a key on the element matching the specified selector.
-     */
-    public function press(string $selector, string $key): self
-    {
-        $this->locatorNonStrict($selector)->press($key);
-
-        return $this;
-    }
-
-    /**
-     * Types text into the element matching the specified selector.
-     */
-    public function type(string $selector, string $text): self
-    {
-        $this->locatorNonStrict($selector)->type($text);
-
-        return $this;
+        return $this->locator('body')->textContent();
     }
 
     /**
@@ -438,23 +286,35 @@ final class Page
      */
     public function waitForSelector(string $selector, ?array $options = null): ?Element
     {
-        $locator = $this->locatorNonStrict($selector);
+        $locator = $this->locator($selector);
         $locator->waitFor($options);
 
         return $locator->elementHandle();
     }
 
     /**
-     * Performs drag and drop operation.
+     * Awaits for a condition to be met, retrying until the timeout is reached.
      */
-    public function dragAndDrop(string $source, string $target): self
+    public function await(callable $callback, int|float $timeout = 1): mixed
     {
-        $sourceLocator = $this->locatorNonStrict($source);
-        $targetLocator = $this->locatorNonStrict($target);
+        $originalCount = Assert::getCount();
 
-        $sourceLocator->dragTo($targetLocator);
+        $start = microtime(true);
+        $end = $start + $timeout;
 
-        return $this;
+        while (microtime(true) < $end) {
+            try {
+                return $callback();
+            } catch (ExpectationFailedException) {
+                //
+            }
+
+            $this->resetAssertions($originalCount);
+
+            Execution::instance()->pause(0.01);
+        }
+
+        return $callback();
     }
 
     /**
@@ -464,51 +324,6 @@ final class Page
     {
         $response = $this->sendMessage('setContent', ['html' => $html]);
         $this->processVoidResponse($response);
-
-        return $this;
-    }
-
-    /**
-     * Selects option(s) in a select element.
-     *
-     * @param  array<int, string>|string|null  $value
-     * @param  array<int, string>|string|null  $label
-     * @param  array<int, int>|int|null  $index
-     */
-    public function selectOption(
-        string $selector,
-        array|string|null $value = null,
-        array|string|null $label = null,
-        array|int|null $index = null,
-        ?bool $force = null,
-        ?bool $noWaitAfter = null,
-        ?bool $strict = null,
-        ?int $timeout = null
-    ): self {
-        $options = [];
-
-        // Add the appropriate selection criteria - choose only one
-        if ($label !== null) {
-            $options['label'] = is_array($label) ? $label : [$label];
-        } elseif ($index !== null) {
-            $options['index'] = is_array($index) ? $index : [$index];
-        }
-
-        // Add optional parameters
-        if ($force !== null) {
-            $options['force'] = $force;
-        }
-        if ($noWaitAfter !== null) {
-            $options['noWaitAfter'] = $noWaitAfter;
-        }
-        if ($strict !== null) {
-            $options['strict'] = $strict;
-        }
-        if ($timeout !== null) {
-            $options['timeout'] = $timeout;
-        }
-
-        $this->locatorNonStrict($selector)->selectOption($value, $options);
 
         return $this;
     }
@@ -568,7 +383,7 @@ final class Page
     public function forward(): self
     {
         $response = $this->sendMessage('goForward');
-        $this->processNavigationResponse($response);
+        $this->processVoidResponse($response);
 
         return $this;
     }
@@ -579,7 +394,7 @@ final class Page
     public function back(): self
     {
         $response = $this->sendMessage('goBack');
-        $this->processNavigationResponse($response);
+        $this->processVoidResponse($response);
 
         return $this;
     }
@@ -590,7 +405,7 @@ final class Page
     public function reload(): self
     {
         $response = $this->sendMessage('reload', ['waitUntil' => 'load']);
-        $this->processNavigationResponse($response);
+        $this->processVoidResponse($response);
 
         return $this;
     }
@@ -672,7 +487,6 @@ final class Page
         }
 
         $response = $this->sendMessage('close');
-
         $this->processVoidResponse($response);
 
         $this->closed = true;
@@ -687,11 +501,20 @@ final class Page
     }
 
     /**
-     * Create a non-strict locator for internal use.
+     * Resets the assertion count to the original value.
      */
-    private function locatorNonStrict(string $selector): Locator
+    private function resetAssertions(int $originalCount): void
     {
-        return new Locator($this->frameGuid, $selector, false);
+        if (Assert::getCount() === $originalCount) {
+            return;
+        }
+
+        $reflector = new ReflectionClass(Assert::class);
+        $property = $reflector->getProperty('count');
+        $property->setAccessible(true);
+
+        // @phpstan-ignore-next-line
+        $property->setValue(Assert::class, $originalCount);
     }
 
     /**
@@ -713,19 +536,6 @@ final class Page
         }
 
         return null;
-    }
-
-    /**
-     * Override processNavigationResponse for Page specific behavior
-     */
-    private function processNavigationResponse(Generator $response): void
-    {
-        /** @var array{method: string|null, params: array{url: string|null}} $message */
-        foreach ($response as $message) {
-            if (isset($message['method']) && $message['method'] === 'navigated') {
-                $this->url = $message['params']['url'] ?? '';
-            }
-        }
     }
 
     /**

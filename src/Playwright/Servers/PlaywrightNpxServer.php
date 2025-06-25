@@ -83,7 +83,7 @@ final class PlaywrightNpxServer implements PlaywrightServer
         if ($this->systemProcess instanceof SystemProcess && $this->isRunning()) {
             $this->systemProcess->stop(
                 timeout: 0.1,
-                signal: windows_os() ? null : SIGTERM,
+                signal: PHP_OS_FAMILY === 'Windows' ? null : SIGTERM,
             );
         }
 

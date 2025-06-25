@@ -27,6 +27,12 @@
 5. Testing
 - When editing code, run only the related tests during development.
 - Before finishing the task, run `composer test` to ensure the full suite passes.
+- When using pest, always make sure to use chainable `expect()` methods:
+
+```php
+expect($value)->toBeTrue()
+    ->and($anotherValue)->toBeFalse();
+```
 
 6. Other
 - Prefer value objects over raw arrays when appropriate.

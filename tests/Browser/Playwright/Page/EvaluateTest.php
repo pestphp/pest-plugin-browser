@@ -36,7 +36,7 @@ it('evaluates JavaScript expressions that modify DOM', function (): void {
     $page = page('/test/frame-tests');
 
     $page->evaluate('document.querySelector("#test-content p").textContent = "Modified text"');
-    $result = $page->textContent('#test-content p');
+    $result = $page->locator('#test-content p')->textContent();
     expect($result)->toBe('Modified text');
 });
 
@@ -74,7 +74,7 @@ it('evaluates JavaScript expressions with complex arguments', function (): void 
     $page = page('/test/frame-tests');
 
     // First, verify the element exists and get its initial content
-    $initialContent = $page->textContent('#test-content p');
+    $initialContent = $page->locator('#test-content p')->textContent();
     expect($initialContent)->toBe('This is the main content for testing.');
 
     $data = ['text' => 'New content', 'selector' => '#test-content p'];

@@ -22,7 +22,7 @@ it('can evaluate expressions that modify a JSHandle element', function (): void 
 
     $handle->evaluate('input => { input.value = "test value"; return true; }');
 
-    $value = $page->inputValue('#test-input');
+    $value = $page->locator('#test-input')->inputValue();
     expect($value)->toBe('test value');
 });
 
@@ -35,7 +35,7 @@ it('can pass arguments when evaluating expressions on a JSHandle', function (): 
     $result = $handle->evaluate('(node, text) => { node.textContent = text; return node.textContent; }', 'Updated content');
     expect($result)->toBe('Updated content');
 
-    $content = $page->textContent('#test-content');
+    $content = $page->locator('#test-content')->textContent();
     expect($content)->toBe('Updated content');
 });
 

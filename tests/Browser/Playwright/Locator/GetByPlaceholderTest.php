@@ -68,11 +68,12 @@ it('preserves frame context with getByPlaceholder', function (): void {
 
 it('returns proper selector format for getByPlaceholder', function (): void {
     $page = page()->goto('/test/selector-tests');
+
     $parentLocator = $page->locator('body');
     $placeholderLocator = $parentLocator->getByPlaceholder('Search...');
 
-    expect($placeholderLocator->selector())->toContain(' >> ');
-    expect($placeholderLocator->selector())->toBeString();
+    expect($placeholderLocator->selector())->toContain(' >> ')
+        ->and($placeholderLocator->selector())->toBeString();
 });
 
 it('can interact with inputs found by placeholder', function (): void {

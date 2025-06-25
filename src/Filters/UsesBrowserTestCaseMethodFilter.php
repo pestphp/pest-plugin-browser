@@ -13,6 +13,11 @@ use Pest\Factories\TestCaseMethodFactory;
 use Pest\Plugins\Parallel;
 use Pest\Support\Backtrace;
 
+/**
+ * @internal
+ *
+ * @codeCoverageIgnore
+ */
 final readonly class UsesBrowserTestCaseMethodFilter implements TestCaseMethodFilter
 {
     /**

@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Playwright;
 
+use Exception;
+
 /**
  * @internal
  */
 final class Context
 {
+    use Concerns\InteractsWithPlaywright;
+
     /**
      * Indicates whether the browser context is closed.
      */
@@ -55,7 +59,7 @@ final class Context
             }
         }
 
-        return new Page($this, $pageGuid, $frameGuid, $frameUrl);
+        return new Page($this, $pageGuid, $frameGuid);
     }
 
     /**
@@ -67,7 +71,17 @@ final class Context
             return;
         }
 
-        Client::instance()->execute($this->guid, 'close');
+        try {
+            // fix this...
+            $response = $this->sendMessage('close');
+            $this->processVoidResponse($response);
+        } catch (Exception $e) {
+            if (str_contains($e->getMessage(), 'has been closed')) {
+                return;
+            }
+
+            throw $e;
+        }
 
         $this->closed = true;
     }

@@ -73,8 +73,8 @@ it('handles non-existent testId gracefully', function (): void {
     $parentLocator = $page->locator('body');
     $nonExistentLocator = $parentLocator->getByTestId('non-existent-testid');
 
-    expect($nonExistentLocator)->toBeInstanceOf(Locator::class);
-    expect($nonExistentLocator->count())->toBe(0);
+    expect($nonExistentLocator)->toBeInstanceOf(Locator::class)
+        ->and($nonExistentLocator->count())->toBe(0);
 });
 
 it('can be used with multiple matching parent elements', function (): void {

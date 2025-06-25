@@ -7,7 +7,7 @@ use Pest\Browser\ServerManager;
 test('route helper', function (): void {
     $route = route('auth');
 
-    page();
+    visit();
 
     $url = ServerManager::instance()->http()->url();
 
