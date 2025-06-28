@@ -392,4 +392,20 @@ final readonly class On
             $this->options,
         );
     }
+
+    /**
+     * Enables incognito mode.
+     */
+    public function incognito(): self
+    {
+        return new self(
+            $this->browserType,
+            $this->device,
+            $this->url,
+            [
+                ...$this->options,
+                'incognito' => true,
+            ]
+        );
+    }
 }

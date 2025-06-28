@@ -94,3 +94,23 @@ it('may visit a page with custom locale and timezone', function (): void {
     $timezone = $page->script('Intl.DateTimeFormat().resolvedOptions().timeZone');
     expect($timezone)->toBe('Europe/Paris');
 });
+
+it('may visit a page in incognito mode', function (): void {
+    Route::get('/set-cookie', fn () => response('normal-cookie-set')->cookie('test_cookie', 'normal'));
+    Route::get('/check-cookie', fn () => request()->cookie('test_cookie', 'none'));
+    Route::get('/set-cookie-incognito', fn () => response('incognito-cookie-set')->cookie('test_cookie', 'incognito'));
+
+    $normalPage = visit('/set-cookie')->on();
+    $normalPage->navigate('/check-cookie');
+    $normalPage->assertSee('normal');
+
+    $incognitoPage = visit('/check-cookie')->on()->incognito();
+    $incognitoPage->assertSee('none');
+
+    $incognitoPage = visit('/set-cookie-incognito')->on()->incognito();
+    $incognitoPage->navigate('/check-cookie');
+    $incognitoPage->assertSee('incognito');
+
+    $normalPage->navigate('/check-cookie');
+    $normalPage->assertSee('normal');
+});

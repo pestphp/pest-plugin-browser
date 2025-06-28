@@ -91,6 +91,16 @@ final readonly class Webpage
     }
 
     /**
+     * Navigate to a given URL.
+     */
+    public function navigate(string $url): self
+    {
+        $this->page->goto($url);
+
+        return $this;
+    }
+
+    /**
      * Gets the locator for the given selector.
      */
     private function guessLocator(string $selector, ?string $value = null): Locator
