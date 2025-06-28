@@ -97,4 +97,14 @@ final readonly class Webpage
     {
         return (new GuessLocator($this->page))->for($selector, $value);
     }
+
+    /**
+     * Navigate to a given URL.
+     */
+    public function navigate(string $url): self
+    {
+        $this->page->goto($url);
+
+        return $this;
+    }
 }
