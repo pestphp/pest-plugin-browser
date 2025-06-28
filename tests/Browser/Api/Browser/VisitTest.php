@@ -94,3 +94,12 @@ it('may visit a page with custom locale and timezone', function (): void {
     $timezone = $page->script('Intl.DateTimeFormat().resolvedOptions().timeZone');
     expect($timezone)->toBe('Europe/Paris');
 });
+
+it('may navigate page', function (): void {
+    Route::get('/set-cookie', fn () => response('normal-cookie-set')->cookie('test_cookie', 'normal'));
+    Route::get('/check-cookie', fn () => request()->cookie('test_cookie', 'none'));
+
+    $normalPage = visit('/set-cookie')->on();
+    $normalPage->navigate('/check-cookie');
+    $normalPage->assertSee('normal');
+});
