@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Api;
 
+use Illuminate\Support\Traits\Macroable;
 use Pest\Browser\Execution;
 use Pest\Browser\Playwright\Locator;
 use Pest\Browser\Playwright\Page;
 use Pest\Browser\Support\GuessLocator;
 
-final readonly class Webpage
+final class Webpage
 {
     use Concerns\InteractsWithElements,
         Concerns\InteractsWithTab,
@@ -17,7 +18,8 @@ final readonly class Webpage
         Concerns\MakesConsoleAssertions,
         Concerns\MakesElementAssertions,
         Concerns\MakesScreenshotAssertions,
-        Concerns\MakesUrlAssertions;
+        Concerns\MakesUrlAssertions,
+        Macroable;
 
     /**
      * The page instance.

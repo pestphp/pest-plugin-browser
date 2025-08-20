@@ -21,6 +21,8 @@ final class PendingAwaitablePage
      */
     private ?AwaitableWebpage $waitablePage = null;
 
+    public static array $initScripts = [];
+
     /**
      * Creates a new pending awaitable page instance.
      *
@@ -121,6 +123,9 @@ final class PendingAwaitablePage
         ]);
 
         $context->addInitScript(InitScript::get());
+        foreach (static::$initScripts as $script) {
+            $context->addInitScript($script);
+        }
 
         $url = ComputeUrl::from($this->url);
 
