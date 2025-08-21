@@ -16,12 +16,12 @@ use Pest\Browser\Support\ComputeUrl;
  */
 final class PendingAwaitablePage
 {
+    public static array $initScripts = [];
+
     /**
      * The webpage instance that will be returned when the page is visited.
      */
     private ?AwaitableWebpage $waitablePage = null;
-
-    public static array $initScripts = [];
 
     /**
      * Creates a new pending awaitable page instance.
@@ -123,7 +123,7 @@ final class PendingAwaitablePage
         ]);
 
         $context->addInitScript(InitScript::get());
-        foreach (static::$initScripts as $script) {
+        foreach (self::$initScripts as $script) {
             $context->addInitScript($script);
         }
 

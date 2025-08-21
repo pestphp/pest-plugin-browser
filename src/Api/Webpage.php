@@ -33,6 +33,26 @@ final class Webpage
     }
 
     /**
+     * Dynamically handle calls to the class.
+     */
+    public function __call(string $name, array $arguments)
+    {
+        if (! self::hasExtend($name)) {
+            throw new BadMethodCallException(sprintf(
+                'Method %s::%s does not exist.', self::class, $name
+            ));
+        }
+
+        $macro = self::$extends[$name];
+
+        if ($macro instanceof Closure) {
+            $macro = $macro->bindTo($this, self::class);
+        }
+
+        return $macro(...$arguments);
+    }
+
+    /**
      * Dumps the current page's content and stops the execution.
      */
     public function dd(): never
@@ -112,25 +132,5 @@ final class Webpage
     private function guessLocator(string $selector, ?string $value = null): Locator
     {
         return (new GuessLocator($this->page))->for($selector, $value);
-    }
-
-    /**
-     * Dynamically handle calls to the class.
-     */
-    public function __call(string $name, array $arguments)
-    {
-        if (! static::hasExtend($name)) {
-            throw new BadMethodCallException(sprintf(
-                'Method %s::%s does not exist.', static::class, $name
-            ));
-        }
-
-        $macro = static::$extends[$name];
-
-        if ($macro instanceof Closure) {
-            $macro = $macro->bindTo($this, static::class);
-        }
-
-        return $macro(...$arguments);
     }
 }
