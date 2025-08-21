@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Api;
 
-use Illuminate\Support\Traits\Macroable;
-use Pest\Browser\Execution;
+use BadMethodCallException;
+use Closure;
 use Pest\Browser\Playwright\Locator;
 use Pest\Browser\Playwright\Page;
 use Pest\Browser\Support\GuessLocator;
+use Pest\Concerns\Extendable;
 
 final class Webpage
 {
@@ -19,7 +20,7 @@ final class Webpage
         Concerns\MakesElementAssertions,
         Concerns\MakesScreenshotAssertions,
         Concerns\MakesUrlAssertions,
-        Macroable;
+        Extendable;
 
     /**
      * The page instance.
@@ -111,5 +112,25 @@ final class Webpage
     private function guessLocator(string $selector, ?string $value = null): Locator
     {
         return (new GuessLocator($this->page))->for($selector, $value);
+    }
+
+    /**
+     * Dynamically handle calls to the class.
+     */
+    public function __call(string $name, array $arguments)
+    {
+        if (! static::hasExtend($name)) {
+            throw new BadMethodCallException(sprintf(
+                'Method %s::%s does not exist.', static::class, $name
+            ));
+        }
+
+        $macro = static::$extends[$name];
+
+        if ($macro instanceof Closure) {
+            $macro = $macro->bindTo($this, static::class);
+        }
+
+        return $macro(...$arguments);
     }
 }
