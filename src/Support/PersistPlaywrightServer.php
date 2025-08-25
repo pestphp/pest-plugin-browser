@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Support;
 
+use JsonException;
 use Pest\Plugins\Parallel;
 use RuntimeException;
 
@@ -47,7 +48,8 @@ final class PersistPlaywrightServer
 
     /**
      * @return array{ host: string, port: int|string }
-     * @throws \JsonException
+     *
+     * @throws JsonException
      */
     public static function persisted(): array
     {

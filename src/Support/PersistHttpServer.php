@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Support;
 
+use JsonException;
 use Pest\Plugins\Parallel;
 
 final class PersistHttpServer
@@ -58,7 +59,8 @@ final class PersistHttpServer
 
     /**
      * @return array{ 'host'?: ?string, 'bindAddress'?: ?string }
-     * @throws \JsonException
+     *
+     * @throws JsonException
      */
     public static function persisted(): array
     {
