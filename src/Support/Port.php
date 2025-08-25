@@ -33,7 +33,7 @@ final class Port
             $port = (int) $port;
         }
 
-        return is_int($port) && $port > 0 && $port < 65536;
+        return $port > 0 && $port < 65536;
     }
 
     private static function findPort(int $portToTry): int

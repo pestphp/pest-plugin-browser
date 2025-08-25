@@ -32,7 +32,7 @@ final readonly class AlreadyStartedPlaywrightServer implements PlaywrightServer
     public static function fromPersisted(): self
     {
         ['host' => $host, 'port' => $port] = PersistPlaywrightServer::persisted();
-
+        /** @phpstan-ignore-next-line */
         assert(is_string($host) && is_numeric($port), 'Invalid Playwright server data persisted.');
 
         return new self($host, (int) $port);

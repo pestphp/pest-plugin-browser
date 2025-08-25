@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Support;
 
-use JsonException;
 use Pest\Plugins\Parallel;
 
 final class PersistHttpServer
@@ -45,7 +44,7 @@ final class PersistHttpServer
         $data = array_filter([
             'host' => $host,
             'bindAddress' => $bindAddress,
-        ]);
+        ], fn (?string $value): bool => $value !== null);
         if ($data === []) {
             return;
         }
@@ -59,8 +58,7 @@ final class PersistHttpServer
 
     /**
      * @return array{ 'host'?: ?string, 'bindAddress'?: ?string }
-     *
-     * @throws JsonException
+     * @throws \JsonException
      */
     public static function persisted(): array
     {
@@ -68,8 +66,13 @@ final class PersistHttpServer
         if (! file_exists($path)) {
             return [];
         }
+        $data = file_get_contents($path);
+        if ($data === false) {
+            return [];
+        }
 
-        return json_decode(file_get_contents($path), true, 512, JSON_THROW_ON_ERROR);
+        /** @phpstan-ignore-next-line */
+        return json_decode($data, true, 512, JSON_THROW_ON_ERROR);
     }
 
     public static function wantsPersisted(): bool

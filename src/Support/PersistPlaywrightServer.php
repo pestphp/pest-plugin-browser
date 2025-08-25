@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Support;
 
-use JsonException;
 use Pest\Plugins\Parallel;
 use RuntimeException;
 
@@ -47,9 +46,8 @@ final class PersistPlaywrightServer
     }
 
     /**
-     * @return array{ 'host': string, 'port': int}
-     *
-     * @throws JsonException
+     * @return array{ host: string, port: int|string }
+     * @throws \JsonException
      */
     public static function persisted(): array
     {
@@ -59,6 +57,7 @@ final class PersistPlaywrightServer
             throw new RuntimeException('Could not read Playwright server data from file.');
         }
 
+        /** @phpstan-ignore-next-line */
         return json_decode($data, true, 512, JSON_THROW_ON_ERROR);
     }
 

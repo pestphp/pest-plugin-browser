@@ -63,7 +63,7 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
     /**
      * Handles the arguments passed to the plugin.
      *
-     * @param  array<int, string>  $arguments}
+     * @param  array<int, string>  $arguments
      */
     public function handleArguments(array $arguments): array
     {
@@ -165,6 +165,9 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
 
     /**
      * Handles the HTTP server arguments.
+     *
+     * @param  array<int, string>  $arguments
+     * @return array<int, string>
      */
     private function handleHttpServerArguments(array $arguments): array
     {
@@ -190,6 +193,9 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
 
     /**
      * Handles the Playwright server arguments.
+     *
+     * @param  array<int, string>  $arguments
+     * @return array<int, string>
      */
     private function handlePlaywrightServerArguments(array $arguments): array
     {
