@@ -1,0 +1,19 @@
+FROM php:8.4-cli-alpine
+
+RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS linux-headers && \
+    apk add --no-cache git && \
+    docker-php-ext-install pcntl mysqli pdo pdo_mysql sockets && \
+    pecl install xdebug && \
+    docker-php-ext-enable xdebug && \
+    apk del .build-deps
+    
+# XDebug port
+EXPOSE 9003
+# Pest HTTP Server
+EXPOSE 3080
+
+VOLUME ["/app"]
+
+WORKDIR /app
+
+ENTRYPOINT ["/bin/sh"]

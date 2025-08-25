@@ -8,9 +8,13 @@ use Error;
 use Pest\Browser\Enums\BrowserType;
 use Pest\Browser\Enums\ColorScheme;
 use Pest\Browser\Exceptions\BrowserNotSupportedException;
+use Pest\Browser\Exceptions\HttpServerConfigurationException;
 use Pest\Browser\Exceptions\OptionNotSupportedInParallelException;
 use Pest\Browser\Filters\UsesBrowserTestCaseMethodFilter;
 use Pest\Browser\Playwright\Playwright;
+use Pest\Browser\Support\PersistHttpServer;
+use Pest\Browser\Support\PersistPlaywrightServer;
+use Pest\Browser\Support\Port;
 use Pest\Contracts\Plugins\Bootable;
 use Pest\Contracts\Plugins\HandlesArguments;
 use Pest\Contracts\Plugins\Terminable;
@@ -93,6 +97,10 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
             $arguments = $this->popArgument('--light', $arguments);
         }
 
+        $arguments = $this->handleHttpServerArguments($arguments);
+
+        $arguments = $this->handlePlaywrightServerArguments($arguments);
+
         if ($this->hasArgument('--browser', $arguments)) {
             $index = array_search('--browser', $arguments, true);
 
@@ -153,6 +161,55 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
     private function in(): string
     {
         return TestSuite::getInstance()->rootPath.DIRECTORY_SEPARATOR.TestSuite::getInstance()->testPath;
+    }
+
+    /**
+     * Handles the HTTP server arguments.
+     */
+    private function handleHttpServerArguments(array $arguments): array
+    {
+        if (! Parallel::isWorker()) {
+            PersistHttpServer::cleanup();
+        }
+        foreach ($arguments as $key => $argument) {
+            if (str_starts_with($argument, '--http-host=')) {
+                $host = mb_substr($argument, mb_strlen('--http-host='));
+                PersistHttpServer::$host = $host;
+                unset($arguments[$key]);
+            }
+            if (str_starts_with($argument, '--http-bind=')) {
+                $bindAddress = mb_substr($argument, mb_strlen('--http-bind='));
+                PersistHttpServer::$bindAddress = $bindAddress;
+                unset($arguments[$key]);
+            }
+        }
+        PersistHttpServer::persistIfNeeded();
+
+        return $arguments;
+    }
+
+    /**
+     * Handles the Playwright server arguments.
+     */
+    private function handlePlaywrightServerArguments(array $arguments): array
+    {
+        foreach ($arguments as $key => $argument) {
+            if (str_starts_with($argument, '--playwright-host=')) {
+                $host = mb_substr($argument, mb_strlen('--playwright-host='));
+                PersistPlaywrightServer::$host = $host;
+                unset($arguments[$key]);
+            }
+            if (str_starts_with($argument, '--playwright-port=')) {
+                $port = mb_substr($argument, mb_strlen('--playwright-port='));
+                if (! Port::isValid($port)) {
+                    throw HttpServerConfigurationException::portIsNotValid($port);
+                }
+                PersistPlaywrightServer::$port = (int) $port;
+                unset($arguments[$key]);
+            }
+        }
+
+        return $arguments;
     }
 
     /**

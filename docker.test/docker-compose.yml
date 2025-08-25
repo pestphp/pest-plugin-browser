@@ -1,0 +1,31 @@
+services:
+  playwright:
+    build:
+      context: ./
+      dockerfile: Dockerfile.playwright
+    user: "1000:1000"
+    ports:
+      - "127.0.0.1:3000:3000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  pest:
+    hostname: pest
+    build:
+      context: ./
+      dockerfile: Dockerfile.pest
+    user: "1000:1000"
+    volumes:
+      - type: bind
+        source: ./../
+        target: /app
+    ports:
+      - "127.0.0.1:3080:3080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - playwright
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 192.168.171.0/24

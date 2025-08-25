@@ -14,6 +14,11 @@ use Throwable;
  */
 final class NullableHttpServer implements HttpServer
 {
+    public static function fromPersisted(int $port): self
+    {
+        return new self();
+    }
+
     /**
      * Rewrite the given URL to match the server's host and port.
      */

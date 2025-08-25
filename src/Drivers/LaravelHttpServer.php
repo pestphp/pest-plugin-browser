@@ -22,6 +22,7 @@ use Pest\Browser\Contracts\HttpServer;
 use Pest\Browser\Exceptions\ServerNotFoundException;
 use Pest\Browser\Execution;
 use Pest\Browser\GlobalState;
+use Pest\Browser\Support\PersistHttpServer;
 use Psr\Log\NullLogger;
 use Symfony\Component\Mime\MimeTypes;
 use Throwable;
@@ -54,6 +55,7 @@ final class LaravelHttpServer implements HttpServer
     public function __construct(
         public readonly string $host,
         public readonly int $port,
+        public readonly ?string $bindAddress = null,
     ) {
         //
     }
@@ -65,6 +67,16 @@ final class LaravelHttpServer implements HttpServer
     {
         // @codeCoverageIgnoreStart
         // $this->stop();
+    }
+
+    /**
+     * Create new instance from persisted data.
+     */
+    public static function fromPersisted(int $port): self
+    {
+        $persisted = PersistHttpServer::persisted();
+
+        return new self($persisted['host'] ?? '127.0.0.1', $port, $persisted['bindAddress'] ?? null);
     }
 
     /**
@@ -99,7 +111,8 @@ final class LaravelHttpServer implements HttpServer
 
         $this->socket = $server = SocketHttpServer::createForDirectAccess(new NullLogger());
 
-        $server->expose("{$this->host}:{$this->port}");
+        $address = $this->bindAddress ?? $this->host;
+        $server->expose("{$address}:{$this->port}");
         $server->start(
             new ClosureRequestHandler($this->handleRequest(...)),
             new DefaultErrorHandler(),
@@ -197,7 +210,8 @@ final class LaravelHttpServer implements HttpServer
     private function url(): string
     {
         if (! $this->socket instanceof AmpHttpServer) {
-            throw new ServerNotFoundException('The HTTP server is not running.');
+            $bindAddress = $this->bindAddress ?? $this->host.':'.$this->port;
+            throw new ServerNotFoundException("The HTTP server on {$bindAddress} is not running.");
         }
 
         return sprintf('http://%s:%d', $this->host, $this->port);

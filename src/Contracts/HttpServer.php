@@ -12,6 +12,11 @@ use Throwable;
 interface HttpServer
 {
     /**
+     * Creates a new server instance from persisted state.
+     */
+    public static function fromPersisted(int $port): self;
+
+    /**
      * Starts the server.
      */
     public function start(): void;

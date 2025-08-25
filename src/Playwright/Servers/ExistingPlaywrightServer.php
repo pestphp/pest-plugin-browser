@@ -12,7 +12,7 @@ use RuntimeException;
 /**
  * @internal
  */
-final readonly class AlreadyStartedPlaywrightServer implements PlaywrightServer
+final class ExistingPlaywrightServer implements PlaywrightServer
 {
     /**
      * Creates a new already started playwright server instance.
@@ -25,17 +25,24 @@ final readonly class AlreadyStartedPlaywrightServer implements PlaywrightServer
     }
 
     /**
-     * Creates a new instance of the Playwright server with the persisted host and port.
-     *
-     * @throws JsonException
+     * Creates a new instance of the Playwright server with the user-supplied host and port.
      */
-    public static function fromPersisted(): self
+    public static function fromExisting(): self
     {
-        ['host' => $host, 'port' => $port] = PersistPlaywrightServer::persisted();
 
-        assert(is_string($host) && is_numeric($port), 'Invalid Playwright server data persisted.');
+        if (! self::isValid()) {
+            throw new RuntimeException('Playwright server host and port must be set to use an existing server.');
+        }
 
-        return new self($host, (int) $port);
+        return new self(PersistPlaywrightServer::host(), PersistPlaywrightServer::port());
+    }
+
+    /**
+     * Checks if the existing Playwright server host and port are valid.
+     */
+    public static function isValid(): bool
+    {
+        return PersistPlaywrightServer::wantsExistingPlaywrightServer();
     }
 
     /**
@@ -45,17 +52,11 @@ final readonly class AlreadyStartedPlaywrightServer implements PlaywrightServer
      *
      * @throws JsonException
      */
-    public static function persist(string $host, int $port): void
+    public function persistSelf(): self
     {
-        PersistPlaywrightServer::persist($host, $port);
-    }
+        PersistPlaywrightServer::persist($this->host, $this->port);
 
-    /**
-     * Marks the Playwright server a stopped by removing the persisted state file.
-     */
-    public static function markAsStopped(): void
-    {
-        PersistPlaywrightServer::cleanup();
+        return $this;
     }
 
     /**
@@ -71,7 +72,7 @@ final readonly class AlreadyStartedPlaywrightServer implements PlaywrightServer
      */
     public function stop(): void
     {
-        //
+        PersistPlaywrightServer::cleanup();
     }
 
     /**

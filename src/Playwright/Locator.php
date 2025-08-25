@@ -8,6 +8,7 @@ use Generator;
 use Pest\Browser\Playwright\Concerns\InteractsWithPlaywright;
 use Pest\Browser\Support\Selector;
 use RuntimeException;
+use SplFileInfo;
 
 /**
  * @internal
@@ -651,10 +652,19 @@ final readonly class Locator
 
     /**
      * Set input files for a file input element.
+     * Using buffered payload for "remote" playwright server.
      */
     public function setInputFiles(string $path): void
     {
-        $params = ['localPaths' => [$path]];
+        $file = new SplFileInfo($path);
+        $params = [
+            'payloads' => [
+                [
+                    'name' => $file->getFilename(),
+                    'buffer' => file_get_contents($path),
+                ],
+            ],
+        ];
         $response = $this->sendMessage('setInputFiles', $params);
 
         $this->processVoidResponse($response);
