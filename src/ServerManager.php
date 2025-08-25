@@ -68,7 +68,7 @@ final class ServerManager
         }
 
         $host = PersistPlaywrightServer::host();
-        $port = PersistPlaywrightServer::port();
+        $port = Port::find(PersistPlaywrightServer::port());
 
         $this->playwright ??= PlaywrightNpmServer::create(
             PackageJsonDirectory::find(),
