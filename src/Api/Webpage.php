@@ -96,7 +96,15 @@ final readonly class Webpage
     }
 
     /**
-     * Gets the page instance.
+     * Gets the Playwright page instance.
+     */
+    public function getPlaywrightPage(): Page
+    {
+        return $this->page;
+    }
+
+    /**
+     * Gets input value.
      */
     public function value(string $selector): string
     {
