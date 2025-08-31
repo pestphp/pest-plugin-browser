@@ -5,14 +5,18 @@ declare(strict_types=1);
 use Pest\Browser\Configuration;
 use Pest\Browser\Playwright\Playwright;
 
-beforeEach(function () {
-    // Reset Playwright state before each test
+beforeEach(function (): void {
     Playwright::setLaunchArgs([]);
     Playwright::setHeadedLaunchArgs([]);
     Playwright::setHeadlessLaunchArgs([]);
+
+    $reflection = new ReflectionClass(Playwright::class);
+    $headlessProperty = $reflection->getProperty('headless');
+    $headlessProperty->setAccessible(true);
+    $headlessProperty->setValue(null, true);
 });
 
-test('can set custom launch arguments for all modes', function () {
+it('can set custom launch arguments for all modes', function (): void {
     $args = ['--custom-flag', '--another-flag'];
 
     Playwright::setLaunchArgs($args);
@@ -21,39 +25,31 @@ test('can set custom launch arguments for all modes', function () {
         ->toBe($args);
 });
 
-test('can set custom launch arguments for headed mode only', function () {
+it('can set custom launch arguments for headed mode only', function (): void {
     $headedArgs = ['--headed-flag'];
 
     Playwright::setHeadedLaunchArgs($headedArgs);
 
-    // In headless mode, should not include headed args
-    expect(Playwright::getEffectiveLaunchArgs())
-        ->toBe([]);
+    expect(Playwright::getEffectiveLaunchArgs())->toBe([]);
 
-    // Switch to headed mode
     Playwright::headed();
 
-    expect(Playwright::getEffectiveLaunchArgs())
-        ->toBe($headedArgs);
+    expect(Playwright::getEffectiveLaunchArgs())->toBe($headedArgs);
 });
 
-test('can set custom launch arguments for headless mode only', function () {
+it('can set custom launch arguments for headless mode only', function (): void {
     $headlessArgs = ['--headless-flag'];
 
     Playwright::setHeadlessLaunchArgs($headlessArgs);
 
-    // In headless mode (default), should include headless args
-    expect(Playwright::getEffectiveLaunchArgs())
-        ->toBe($headlessArgs);
+    expect(Playwright::getEffectiveLaunchArgs())->toBe($headlessArgs);
 
-    // Switch to headed mode
     Playwright::headed();
 
-    expect(Playwright::getEffectiveLaunchArgs())
-        ->toBe([]);
+    expect(Playwright::getEffectiveLaunchArgs())->toBe([]);
 });
 
-test('merges global and mode-specific arguments correctly', function () {
+it('merges global and mode-specific arguments correctly', function (): void {
     $globalArgs = ['--global-flag'];
     $headedArgs = ['--headed-flag'];
     $headlessArgs = ['--headless-flag'];
@@ -62,18 +58,14 @@ test('merges global and mode-specific arguments correctly', function () {
     Playwright::setHeadedLaunchArgs($headedArgs);
     Playwright::setHeadlessLaunchArgs($headlessArgs);
 
-    // In headless mode (default)
-    expect(Playwright::getEffectiveLaunchArgs())
-        ->toBe(['--global-flag', '--headless-flag']);
+    expect(Playwright::getEffectiveLaunchArgs())->toBe(['--global-flag', '--headless-flag']);
 
-    // Switch to headed mode
     Playwright::headed();
 
-    expect(Playwright::getEffectiveLaunchArgs())
-        ->toBe(['--global-flag', '--headed-flag']);
+    expect(Playwright::getEffectiveLaunchArgs())->toBe(['--global-flag', '--headed-flag']);
 });
 
-test('configuration withArgs method sets launch arguments', function () {
+it('configuration withArgs method sets launch arguments', function (): void {
     $args = ['--config-flag'];
 
     $config = new Configuration();
@@ -83,39 +75,33 @@ test('configuration withArgs method sets launch arguments', function () {
     expect(Playwright::getEffectiveLaunchArgs())->toBe($args);
 });
 
-test('configuration withHeadedArgs method sets headed launch arguments', function () {
+it('configuration withHeadedArgs method sets headed launch arguments', function (): void {
     $args = ['--headed-config-flag'];
 
     $config = new Configuration();
     $result = $config->withHeadedArgs($args);
 
     expect($result)->toBeInstanceOf(Configuration::class);
-
-    // Should not be active in headless mode
     expect(Playwright::getEffectiveLaunchArgs())->toBe([]);
 
-    // Should be active in headed mode
     Playwright::headed();
     expect(Playwright::getEffectiveLaunchArgs())->toBe($args);
 });
 
-test('configuration withHeadlessArgs method sets headless launch arguments', function () {
+it('configuration withHeadlessArgs method sets headless launch arguments', function (): void {
     $args = ['--headless-config-flag'];
 
     $config = new Configuration();
     $result = $config->withHeadlessArgs($args);
 
     expect($result)->toBeInstanceOf(Configuration::class);
-
-    // Should be active in headless mode (default)
     expect(Playwright::getEffectiveLaunchArgs())->toBe($args);
 
-    // Should not be active in headed mode
     Playwright::headed();
     expect(Playwright::getEffectiveLaunchArgs())->toBe([]);
 });
 
-test('configuration methods can be chained', function () {
+it('configuration methods can be chained', function (): void {
     $config = new Configuration();
 
     $result = $config
