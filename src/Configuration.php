@@ -124,4 +124,40 @@ final readonly class Configuration
 
         return $this;
     }
+
+    /**
+     * Set custom browser launch arguments for all modes.
+     *
+     * @param  array<string>  $args
+     */
+    public function withArgs(array $args): self
+    {
+        Playwright::setLaunchArgs($args);
+
+        return $this;
+    }
+
+    /**
+     * Set custom browser launch arguments for headed mode only.
+     *
+     * @param  array<string>  $args
+     */
+    public function withHeadedArgs(array $args): self
+    {
+        Playwright::setHeadedLaunchArgs($args);
+
+        return $this;
+    }
+
+    /**
+     * Set custom browser launch arguments for headless mode only.
+     *
+     * @param  array<string>  $args
+     */
+    public function withHeadlessArgs(array $args): self
+    {
+        Playwright::setHeadlessLaunchArgs($args);
+
+        return $this;
+    }
 }
