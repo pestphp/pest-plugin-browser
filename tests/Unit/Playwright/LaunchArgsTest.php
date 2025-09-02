@@ -12,7 +12,6 @@ beforeEach(function (): void {
 
     $reflection = new ReflectionClass(Playwright::class);
     $headlessProperty = $reflection->getProperty('headless');
-    $headlessProperty->setAccessible(true);
     $headlessProperty->setValue(null, true);
 });
 

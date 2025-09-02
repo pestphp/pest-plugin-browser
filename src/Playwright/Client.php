@@ -59,7 +59,7 @@ final class Client
 
             // Add custom launch arguments if configured
             $customArgs = Playwright::getEffectiveLaunchArgs();
-            if (! empty($customArgs)) {
+            if ($customArgs !== []) {
                 $launchOptions['args'] = $customArgs;
             }
 

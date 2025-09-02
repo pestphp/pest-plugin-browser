@@ -274,12 +274,10 @@ final class Playwright
         $args = self::$launchArgs;
 
         if (self::isHeadless()) {
-            $args = array_merge($args, self::$headlessLaunchArgs);
-        } else {
-            $args = array_merge($args, self::$headedLaunchArgs);
+            return array_merge($args, self::$headlessLaunchArgs);
         }
 
-        return $args;
+        return array_merge($args, self::$headedLaunchArgs);
     }
 
     /**
