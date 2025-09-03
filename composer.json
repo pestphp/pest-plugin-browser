@@ -19,7 +19,8 @@
         "amphp/websocket-client": "^2.0.2",
         "pestphp/pest": "^4.0.4",
         "pestphp/pest-plugin": "^4.0.0",
-        "symfony/process": "^7.3.3"
+        "symfony/process": "^7.3.3",
+        "ext-pcntl": "*"
     },
     "autoload": {
         "psr-4": {
@@ -38,7 +39,6 @@
         }
     },
     "require-dev": {
-        "ext-pcntl": "*",
         "ext-posix": "*",
         "livewire/livewire": "^3.6.4",
         "nunomaduro/collision": "^8.8.2",
