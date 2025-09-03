@@ -189,7 +189,9 @@ final class Playwright
      */
     public static function setExecutablePath(string $path): void
     {
-        self::$executablePath = rtrim($path, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR;
+        $separator = preg_quote(DIRECTORY_SEPARATOR, '/');
+
+        self::$executablePath = preg_replace('/['.$separator.'\/]+$/', '', $path).DIRECTORY_SEPARATOR;
     }
 
     /**
