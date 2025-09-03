@@ -8,6 +8,7 @@ use Pest\Browser\Contracts\HttpServer;
 use Pest\Browser\Contracts\PlaywrightServer;
 use Pest\Browser\Drivers\LaravelHttpServer;
 use Pest\Browser\Drivers\NullableHttpServer;
+use Pest\Browser\Playwright\Playwright;
 use Pest\Browser\Playwright\Servers\AlreadyStartedPlaywrightServer;
 use Pest\Browser\Playwright\Servers\PlaywrightNpmServer;
 use Pest\Browser\Support\PackageJsonDirectory;
@@ -62,7 +63,7 @@ final class ServerManager
 
         $this->playwright ??= PlaywrightNpmServer::create(
             PackageJsonDirectory::find(),
-            '.'.DIRECTORY_SEPARATOR.'node_modules'.DIRECTORY_SEPARATOR.'.bin'.DIRECTORY_SEPARATOR.'playwright run-server --host %s --port %d --mode launchServer',
+            Playwright::executeablePath().'playwright run-server --host %s --port %d --mode launchServer',
             self::DEFAULT_HOST,
             $port,
             'Listening on',

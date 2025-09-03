@@ -107,11 +107,29 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
             if (($browser = BrowserType::tryFrom($browser)) === null) {
                 throw new BrowserNotSupportedException(
                     'The specified browser type is not supported. Supported types are: '.
-                    implode(', ', array_map(fn (BrowserType $type): string => mb_strtolower($type->name), BrowserType::cases()))
+                        implode(', ', array_map(fn (BrowserType $type): string => mb_strtolower($type->name), BrowserType::cases()))
                 );
             }
 
             Playwright::setDefaultBrowserType($browser);
+
+            unset($arguments[$index], $arguments[$index + 1]);
+
+            $arguments = array_values($arguments);
+        }
+
+        if ($this->hasArgument('--playwright-path', $arguments)) {
+            $index = array_search('--playwright-path', $arguments, true);
+
+            if ($index === false || ! isset($arguments[$index + 1])) {
+                throw new BrowserNotSupportedException(
+                    'The "--playwright-path" argument requires a value. Usage: --playwright-path <path-to-playwright>.'
+                );
+            }
+
+            $path = $arguments[$index + 1];
+
+            Playwright::setExecutablePath($path);
 
             unset($arguments[$index], $arguments[$index + 1]);
 
