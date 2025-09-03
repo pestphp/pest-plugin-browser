@@ -9,6 +9,7 @@ use Pest\Browser\Enums\BrowserType;
 use Pest\Browser\Enums\Cities;
 use Pest\Browser\Enums\ColorScheme;
 use Pest\Browser\Enums\Device;
+use Pest\Browser\Page as BrowserPage;
 use Pest\Browser\Playwright\InitScript;
 use Pest\Browser\Playwright\Playwright;
 use Pest\Browser\Support\ComputeUrl;
@@ -31,7 +32,7 @@ final class PendingAwaitablePage
     public function __construct(
         private readonly BrowserType $browserType,
         private readonly Device $device,
-        private readonly string $url,
+        private readonly string|BrowserPage $url,
         private readonly array $options,
     ) {
         //
@@ -177,8 +178,8 @@ final class PendingAwaitablePage
         $url = ComputeUrl::from($this->url);
 
         return new AwaitableWebpage(
-            $context->newPage()->goto($url, $this->options),
-            $url,
+            $context->newPage()->setShorthandElements($this->url)->goto($url, $this->options),
+            $this->url,
         );
     }
 }

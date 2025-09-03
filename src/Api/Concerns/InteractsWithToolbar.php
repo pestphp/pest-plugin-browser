@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Pest\Browser\Api\Concerns;
 
 use Pest\Browser\Api\Webpage;
+use Pest\Browser\Page as BrowserPage;
 use Pest\Browser\Support\ComputeUrl;
 
 /**
@@ -27,8 +28,10 @@ trait InteractsWithToolbar
      *
      * @param  array<string, mixed>  $options
      */
-    public function navigate(string $url, array $options = []): self
+    public function navigate(string|BrowserPage $url, array $options = []): self
     {
+        $this->page->setShorthandElements($url);
+
         $url = ComputeUrl::from($url);
 
         $this->page->goto($url, $options);

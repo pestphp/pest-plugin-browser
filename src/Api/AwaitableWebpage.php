@@ -6,6 +6,7 @@ namespace Pest\Browser\Api;
 
 use Pest\Browser\Exceptions\BrowserExpectationFailedException;
 use Pest\Browser\Execution;
+use Pest\Browser\Page as BrowserPage;
 use Pest\Browser\Playwright\Page;
 use Pest\Browser\Playwright\Playwright;
 use Pest\Browser\ServerManager;
@@ -24,7 +25,7 @@ final readonly class AwaitableWebpage
      */
     public function __construct(
         private Page $page,
-        private string $initialUrl,
+        private string|BrowserPage $initialUrl,
         private array $nonAwaitableMethods = [
             'assertScreenshotMatches',
             'assertNoAccessibilityIssues',

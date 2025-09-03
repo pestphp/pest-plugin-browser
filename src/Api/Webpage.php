@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Api;
 
+use BadMethodCallException;
 use Pest\Browser\Execution;
+use Pest\Browser\Page as BrowserPage;
 use Pest\Browser\Playwright\Locator;
 use Pest\Browser\Playwright\Page;
 use Pest\Browser\Support\GuessLocator;
@@ -31,9 +33,30 @@ final class Webpage
      */
     public function __construct(
         private readonly Page $page,
-        private readonly string $initialUrl,
+        private readonly string|BrowserPage $initialUrl,
     ) {
         //
+    }
+
+    /**
+     * Dynamically call a method on the browser.
+     *
+     * @param  array<int, mixed>  $arguments
+     *
+     * @throws BadMethodCallException
+     */
+    public function __call(string $method, array $arguments): self
+    {
+        if ($this->initialUrl instanceof BrowserPage && method_exists($this->initialUrl, $method)) {
+            array_unshift($arguments, $this);
+
+            // @phpstan-ignore-next-line method.dynamicName
+            $this->initialUrl->{$method}(...$arguments);
+
+            return $this;
+        }
+
+        throw new BadMethodCallException("Call to undefined method [{$method}].");
     }
 
     /**
@@ -73,6 +96,18 @@ final class Webpage
     }
 
     /**
+     * Gets the page's initial URL.
+     */
+    public function initialUrl(): string
+    {
+        if ($this->initialUrl instanceof BrowserPage) {
+            return $this->initialUrl->url();
+        }
+
+        return $this->initialUrl;
+    }
+
+    /**
      * Submits the first form found on the page.
      */
     public function submit(): self
@@ -100,6 +135,8 @@ final class Webpage
 
     public function within(string $selector, callable $callback): self
     {
+        $selector = $this->resolveShorthandSelector($selector);
+
         $previousScope = $this->currentScope;
 
         $this->currentScope = $previousScope !== null ? $previousScope.' >> '.$selector : $selector;
@@ -118,6 +155,20 @@ final class Webpage
      */
     private function guessLocator(string $selector, ?string $value = null): Locator
     {
+        $selector = $this->resolveShorthandSelector($selector);
+
         return (new GuessLocator($this->page, $this->currentScope))->for($selector, $value);
+    }
+
+    /**
+     * Resolve the shorthand selector for the given page.
+     */
+    private function resolveShorthandSelector(string $selector): string
+    {
+        $shorthandElements = $this->page->shorthandElements();
+
+        return str_replace(
+            array_keys($shorthandElements), array_values($shorthandElements), $selector
+        );
     }
 }

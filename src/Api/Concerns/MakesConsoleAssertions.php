@@ -39,7 +39,7 @@ trait MakesConsoleAssertions
 
         expect($brokenImages)->toBeEmpty(sprintf(
             'Expected no broken images on the page initially with the url [%s], but found %s: %s',
-            $this->initialUrl,
+            $this->initialUrl(),
             count($brokenImages),
             implode(', ', $brokenImages),
         ));
@@ -64,7 +64,7 @@ trait MakesConsoleAssertions
 
         expect($consoleLogs)->toBeEmpty(sprintf(
             'Expected no console logs on the page initially with the url [%s], but found %s: %s',
-            $this->initialUrl,
+            $this->initialUrl(),
             count($consoleLogs),
             implode(', ', array_map(fn (array $log) => $log['message'], $consoleLogs)),
         ));
@@ -81,7 +81,7 @@ trait MakesConsoleAssertions
 
         expect($javaScriptErrors)->toBeEmpty(sprintf(
             'Expected no JavaScript errors on the page initially with the url [%s], but found %s: %s',
-            $this->initialUrl,
+            $this->initialUrl(),
             count($javaScriptErrors),
             implode(', ', array_map(fn (array $log) => $log['message'], $javaScriptErrors)),
         ));
