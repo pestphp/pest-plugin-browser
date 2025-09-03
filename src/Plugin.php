@@ -9,6 +9,7 @@ use Pest\Browser\Enums\BrowserType;
 use Pest\Browser\Enums\ColorScheme;
 use Pest\Browser\Exceptions\BrowserNotSupportedException;
 use Pest\Browser\Exceptions\OptionNotSupportedInParallelException;
+use Pest\Browser\Exceptions\PlaywrightPathException;
 use Pest\Browser\Filters\UsesBrowserTestCaseMethodFilter;
 use Pest\Browser\Playwright\Playwright;
 use Pest\Contracts\Plugins\Bootable;
@@ -122,7 +123,7 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
             $index = array_search('--playwright-path', $arguments, true);
 
             if ($index === false || ! isset($arguments[$index + 1])) {
-                throw new BrowserNotSupportedException(
+                throw new PlaywrightPathException(
                     'The "--playwright-path" argument requires a value. Usage: --playwright-path <path-to-playwright>.'
                 );
             }
