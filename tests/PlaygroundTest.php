@@ -14,7 +14,5 @@ test('example', function (): void {
         BLADE,
     ));
 
-    $response = visit('/');
-
-    $response->assertSee('hi nuno');
+    visit('/')->assertSee('nuno');
 });

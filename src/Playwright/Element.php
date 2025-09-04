@@ -119,9 +119,9 @@ final readonly class Element
      */
     public function contentFrame(): ?object
     {
-        $result = $this->processResultResponse($this->sendMessage('contentFrame'));
+        $frameGuid = $this->processFrameCreationResponse($this->sendMessage('contentFrame'));
 
-        return $result !== null ? (object) ['guid' => $result] : null;
+        return $frameGuid !== null ? (object) ['guid' => $frameGuid] : null;
     }
 
     /**
@@ -129,8 +129,8 @@ final readonly class Element
      */
     public function ownerFrame(): ?object
     {
-        $result = $this->processResultResponse($this->sendMessage('ownerFrame'));
+        $frameGuid = $this->processFrameCreationResponse($this->sendMessage('ownerFrame'));
 
-        return $result !== null ? (object) ['guid' => $result] : null;
+        return $frameGuid !== null ? (object) ['guid' => $frameGuid] : null;
     }
 }

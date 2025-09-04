@@ -208,3 +208,43 @@ it('escapes special characters in name option', function (): void {
 
     expect($selector)->toBe('internal:role=button[name="Button \"with\" quotes\\\\backslashes"i]');
 });
+
+it('properly detects explicit selectors', function (): void {
+    expect(Selector::isExplicit('#test'))->toBeTrue()
+        ->and(Selector::isExplicit('.test'))->toBeTrue()
+        ->and(Selector::isExplicit('[test]'))->toBeTrue()
+        ->and(Selector::isExplicit('[name*="test"]'))->toBeTrue()
+        ->and(Selector::isExplicit('[name^="test"]'))->toBeTrue()
+        ->and(Selector::isExplicit('[name$="test"]'))->toBeTrue()
+        ->and(Selector::isExplicit('button[name="test"]'))->toBeTrue()
+
+        // CSS combinators
+        ->and(Selector::isExplicit('div > p'))->toBeTrue()
+        ->and(Selector::isExplicit('h1 + p'))->toBeTrue()
+        ->and(Selector::isExplicit('h1 ~ p'))->toBeTrue()
+
+        // Pseudo-classes and pseudo-elements
+        ->and(Selector::isExplicit('a:hover'))->toBeTrue()
+        ->and(Selector::isExplicit('p::first-line'))->toBeTrue()
+        ->and(Selector::isExplicit('input:nth-child(2n)'))->toBeTrue()
+
+        // Universal selector and other special chars
+        ->and(Selector::isExplicit('*'))->toBeTrue()
+        ->and(Selector::isExplicit('input|text'))->toBeTrue()
+
+        // Selector lists
+        ->and(Selector::isExplicit('a, b'))->toBeTrue()
+
+        // Internal selectors
+        ->and(Selector::isExplicit('internal:test'))->toBeTrue()
+
+        // Plain text should be false
+        ->and(Selector::isExplicit('test'))->toBeFalse()
+        ->and(Selector::isExplicit('Click Me Button'))->toBeFalse()
+        ->and(Selector::isExplicit('Submit Form'))->toBeFalse();
+});
+
+it('properly detects data-test selectors', function (): void {
+    expect(Selector::isDataTest('@test'))->toBeTrue()
+        ->and(Selector::isDataTest('test'))->toBeFalse();
+});

@@ -31,3 +31,23 @@ it('may clear the field before typing', function (): void {
 
     expect($page->value('#name'))->toBe('John Doe');
 });
+
+it('may type text slowly in an input field', function (): void {
+    Route::get('/', fn (): string => '<input id="name" name="name" type="text">');
+
+    $page = visit('/');
+
+    $page->typeSlowly('#name', 'John Doe');
+
+    expect($page->value('#name'))->toBe('John Doe');
+});
+
+it('may type text slowly in an input field with a custom delay', function (): void {
+    Route::get('/', fn (): string => '<input id="name" name="name" type="text">');
+
+    $page = visit('/');
+
+    $page->typeSlowly('#name', 'John Doe', 100);
+
+    expect($page->value('#name'))->toBe('John Doe');
+});

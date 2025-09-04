@@ -10,6 +10,7 @@ use Pest\Browser\Playwright\Page;
 use Pest\Browser\Playwright\Playwright;
 use Pest\Browser\ServerManager;
 use PHPUnit\Framework\ExpectationFailedException;
+use Throwable;
 
 /**
  * @mixin Webpage
@@ -26,6 +27,7 @@ final readonly class AwaitableWebpage
         private string $initialUrl,
         private array $nonAwaitableMethods = [
             'assertScreenshotMatches',
+            'assertNoAccessibilityIssues',
         ],
     ) {
         //
@@ -56,7 +58,13 @@ final readonly class AwaitableWebpage
         } catch (ExpectationFailedException $e) {
             ServerManager::instance()->http()->throwLastThrowableIfNeeded();
 
-            throw BrowserExpectationFailedException::from($this->page, $e);
+            try {
+                $browserException = BrowserExpectationFailedException::from($this->page, $e);
+            } catch (Throwable) { // @phpstan-ignore-line
+                throw $e;
+            }
+
+            throw $browserException;
         }
 
         ServerManager::instance()->http()->throwLastThrowableIfNeeded();

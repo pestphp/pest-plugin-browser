@@ -50,6 +50,11 @@ final class Playwright
     private static int $timeout = 5_000;
 
     /**
+     * The default userAgent.
+     */
+    private static ?string $userAgent = null;
+
+    /**
      * Get a browser factory for the given browser type.
      */
     public static function browser(BrowserType $browserType): BrowserFactory
@@ -119,6 +124,14 @@ final class Playwright
     public static function timeout(): int
     {
         return self::$timeout;
+    }
+
+    /**
+     * Set the default userAgent.
+     */
+    public static function setUserAgent(string $userAgent): void
+    {
+        self::$userAgent = $userAgent;
     }
 
     /**
@@ -238,6 +251,7 @@ final class Playwright
                     $message['params']['guid'],
                     $name,
                     self::$headless,
+                    self::$userAgent
                 );
             }
         }

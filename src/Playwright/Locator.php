@@ -719,9 +719,25 @@ final readonly class Locator
      */
     public function frameLocator(string $selector): self
     {
-        // This would typically return a FrameLocator, but for simplicity
-        // we'll return a regular locator pointing to the frame content
-        return $this->locator($selector);
+        $directLocator = new self($this->frameGuid, $selector, $this->strictMode);
+        $contentFrame = null;
+
+        try {
+            $contentFrame = $directLocator->contentFrame();
+        } catch (RuntimeException) {
+            // Not a direct iframe, continue to search within the container
+        }
+
+        if ($contentFrame !== null) {
+            return $directLocator;
+        }
+
+        $containerLocator = new self($this->frameGuid, $selector, $this->strictMode);
+        $frameLocator = $containerLocator->locator('iframe');
+
+        $frameLocator->waitFor();
+
+        return $frameLocator;
     }
 
     /**

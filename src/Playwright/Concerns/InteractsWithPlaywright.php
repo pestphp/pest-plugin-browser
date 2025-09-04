@@ -178,4 +178,20 @@ trait InteractsWithPlaywright
 
         return '';
     }
+
+    /**
+     * Process response to handle Frame result messages.
+     * Returns frame GUID if a Frame object was returned.
+     */
+    private function processFrameCreationResponse(Generator $response): ?string
+    {
+        /** @var array{result?: array{frame?: array{guid?: string}}} $message */
+        foreach ($response as $message) {
+            if (isset($message['result']['frame']['guid'])) {
+                return $message['result']['frame']['guid'];
+            }
+        }
+
+        return null;
+    }
 }

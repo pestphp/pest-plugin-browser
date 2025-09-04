@@ -305,6 +305,33 @@ final class Page
     }
 
     /**
+     * Sets the viewport size and resizes the page.
+     */
+    public function setViewportSize(int $width, int $height): self
+    {
+        $viewportSize = ['viewportSize' => ['width' => $width, 'height' => $height]];
+
+        $response = $this->sendMessage('setViewportSize', $viewportSize);
+
+        $this->processVoidResponse($response);
+
+        return $this;
+    }
+
+    /**
+     * Returns the viewport size.
+     *
+     * @return array{width: int, height: int}
+     */
+    public function viewportSize(): array
+    {
+        /** @var array{width: int, height: int} $result */
+        $result = $this->evaluate('() => ({ width: window.innerWidth, height: window.innerHeight })');
+
+        return $result;
+    }
+
+    /**
      * Sets the content of the page.
      */
     public function setContent(string $html): self
@@ -423,6 +450,26 @@ final class Page
         /** @var array<int, array{message: string}> $consoleLogs */
 
         return $consoleLogs;
+    }
+
+    /**
+     * Get the broken images from the page, if any.
+     *
+     * @return array<int, string>
+     */
+    public function brokenImages(): array
+    {
+        $brokenImages = $this->evaluate(<<<'JS'
+            () => {
+                return Array.from(document.images)
+                    .filter(img => img.complete && img.naturalWidth === 0)
+                    .map(img => img.src);
+            }
+            JS);
+
+        /** @var array<int, string> $brokenImages */
+        return $brokenImages;
+
     }
 
     /**
@@ -581,6 +628,8 @@ final class Page
             'screenshot',
             'waitForLoadState',
             'waitForURL',
+            'setViewportSize',
+            'viewportSize',
         ];
 
         return in_array($method, $pageLevelOperations, true);

@@ -17,9 +17,19 @@ final class Selector
             }
         }
 
-        $s = ',';
+        if (str_ends_with($selector, '[]')) {
+            return false;
+        }
 
-        return str_contains($selector, $s);
+        $cssSpecialChars = ['[', ']', '#', '.', '>', '+', '~', ':', '*', '|', '^', ',', '=', ',', '(', ')'];
+
+        foreach ($cssSpecialChars as $cssSpecialChar) {
+            if (str_contains($selector, $cssSpecialChar)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

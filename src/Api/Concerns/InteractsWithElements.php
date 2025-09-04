@@ -68,6 +68,17 @@ trait InteractsWithElements
     }
 
     /**
+     * Type the given value slowly in the given field.
+     */
+    public function typeSlowly(string $field, string $value, int $delay = 100): Webpage
+    {
+        $options = ['delay' => $delay];
+        $this->guessLocator($field)->type($value, $options);
+
+        return $this;
+    }
+
+    /**
      * Fills the given value in the given field.
      */
     public function fill(string $field, string $value): Webpage

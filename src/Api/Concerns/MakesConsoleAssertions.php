@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Api\Concerns;
 
+use InvalidArgumentException;
 use Pest\Browser\Api\Webpage;
-use Pest\Browser\Enums\Impact;
-use Pest\Browser\Exceptions\AccessibilityNotInstalledException;
+use Pest\Browser\Enums\AccessibilityIssueLevel;
+use Pest\Browser\Playwright\Playwright;
 use Pest\Browser\Support\AccessibilityFormatter;
 
 /**
@@ -25,6 +26,32 @@ trait MakesConsoleAssertions
         $this->assertNoJavaScriptErrors();
 
         return $this;
+    }
+
+    /**
+     * Asserts there are no broken images on the page.
+     */
+    public function assertNoBrokenImages(): Webpage
+    {
+        $this->page->waitForLoadState('load');
+
+        $brokenImages = $this->page->brokenImages();
+
+        expect($brokenImages)->toBeEmpty(sprintf(
+            "Expected no broken images on the page initially with the url [{$this->initialUrl}], but found %s: %s",
+            count($brokenImages),
+            implode(', ', $brokenImages),
+        ));
+
+        return $this;
+    }
+
+    /**
+     * Asserts there are no missing images on the page.
+     */
+    public function assertNoMissingImages(): Webpage
+    {
+        return $this->assertNoBrokenImages();
     }
 
     /**
@@ -62,26 +89,32 @@ trait MakesConsoleAssertions
     /**
      * Asserts the accessibility of the page.
      */
-    public function assertAccessibility(Impact $impact = Impact::Minor): Webpage
+    public function assertNoAccessibilityIssues(int $level = 1): Webpage
     {
-        /** @var bool $hasAccessibility */
-        $hasAccessibility = $this->page->evaluate("window.hasOwnProperty('axe')");
+        $this->page->waitForLoadState('networkidle');
+        $this->page->waitForFunction('document.readyState === "complete"');
 
-        if (! $hasAccessibility) {
-            throw new AccessibilityNotInstalledException();
+        $level = AccessibilityIssueLevel::tryFromLevel($level);
+
+        if (! $level instanceof AccessibilityIssueLevel) {
+            throw new InvalidArgumentException(
+                'The accessibility issue level must be between [0] (critical) and [3] (minor).',
+            );
         }
 
         /** @var Violations|null $violations */
-        $violations = $this->page->evaluate('async () => ((await window.axe.run()).violations)');
+        $violations = Playwright::usingTimeout(5_000, fn () => $this->page->evaluate('async () => ((await window.axe.run()).violations)'));
+
         if (! is_array($violations)) {
             $violations = [];
         }
 
-        $violations = array_filter($violations, function (array $violation) use ($impact): bool {
+        $violations = array_filter($violations, function (array $violation) use ($level): bool {
             $violationImpact = $violation['impact'] ?? null;
-            $violationRank = is_string($violationImpact) ? Impact::from($violationImpact)->rank() : -1;
 
-            return $violationRank >= $impact->rank();
+            $violationRank = is_string($violationImpact) ? AccessibilityIssueLevel::from($violationImpact)->level() : -1;
+
+            return $violationRank <= $level->level();
         });
 
         $report = AccessibilityFormatter::format($violations);

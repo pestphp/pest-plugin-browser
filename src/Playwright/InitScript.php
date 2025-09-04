@@ -14,7 +14,13 @@ final class InitScript
      */
     public static function get(): string
     {
-        return <<<'JS'
+        $axe = (string) file_get_contents(
+            dirname(__DIR__, 2).'/resources/js/axe.min.js'
+        );
+
+        return <<<JS
+            $axe
+
             window.__pestBrowser = {
                 jsErrors: [],
                 consoleLogs: []

@@ -18,6 +18,7 @@ use Illuminate\Foundation\Testing\Concerns\WithoutExceptionHandlingHandler;
 use Illuminate\Http\Request;
 use Illuminate\Routing\UrlGenerator;
 use Illuminate\Support\Uri;
+use Pest\Browser\Configuration;
 use Pest\Browser\Contracts\HttpServer;
 use Pest\Browser\Exceptions\ServerNotFoundException;
 use Pest\Browser\Execution;
@@ -268,6 +269,10 @@ final class LaravelHttpServer implements HttpServer
         );
 
         $symfonyRequest->headers->add($request->getHeaders());
+
+        if (isset(Configuration::$hostname)) {
+            $symfonyRequest->headers->set('Host', sprintf('%s:%d', Configuration::$hostname, $this->port));
+        }
 
         $debug = config('app.debug');
 

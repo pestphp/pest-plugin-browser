@@ -61,3 +61,26 @@ it('may press an input button', function (): void {
 
     expect($page->text('#result'))->toBe('Input Button Pressed');
 });
+
+it('can press elements via exact match css selectors', function (string $selector): void {
+    Route::get('/', fn (): string => '
+        <form>
+            <form>
+            <button type="button" value="Click Me" name="test" onclick="document.getElementById(\'result\').textContent = \'Button Pressed\'">
+            <div id="result"></div>
+        </form>
+        </form>
+    ');
+
+    $page = visit('/');
+
+    $page->press($selector);
+
+    expect($page->text('#result'))->toBe('Button Pressed');
+})->with([
+    '[name]',
+    '[name*="test"]',
+    '[name^="test"]',
+    '[name$="test"]',
+    'button[name="test"]',
+]);
