@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Pest\Browser\ServerManager;
 use Illuminate\Support\Facades\Route;
+use Pest\Browser\ServerManager;
 
 it('rewrites the URLs on JS files', function (): void {
     @file_put_contents(
