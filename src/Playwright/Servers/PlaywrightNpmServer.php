@@ -77,7 +77,7 @@ final class PlaywrightNpmServer implements PlaywrightServer
         $this->systemProcess->start();
 
         $this->systemProcess->waitUntil(
-            fn(string $type, string $output): bool => str_contains($output, $this->until)
+            fn (string $type, string $output): bool => str_contains($output, $this->until)
         );
 
         if ($this->isRunning() === false) {
@@ -150,7 +150,7 @@ final class PlaywrightNpmServer implements PlaywrightServer
     private function ensurePlaywrightIsInstalledAndVersionIsSupported(): void
     {
         $process = SystemProcess::fromShellCommandline(
-            '.' . Playwright::executeablePath() . 'playwright run-server --version',
+            '.'.Playwright::executeablePath().'playwright run-server --version',
             $this->baseDirectory,
         );
 
