@@ -20,8 +20,7 @@ use RuntimeException;
  */
 final class Page
 {
-    use Concerns\InteractsWithKeyboard,
-        Concerns\InteractsWithPlaywright;
+    use Concerns\InteractsWithPlaywright;
 
     /**
      * Whether the page has been closed.
