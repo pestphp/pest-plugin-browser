@@ -47,7 +47,7 @@ final class Playwright
     /**
      * The path to the Playwright executable.
      */
-    private static string $executablePath = DIRECTORY_SEPARATOR . 'node_modules' . DIRECTORY_SEPARATOR . '.bin' . DIRECTORY_SEPARATOR;
+    private static string $executablePath = DIRECTORY_SEPARATOR.'node_modules'.DIRECTORY_SEPARATOR.'.bin'.DIRECTORY_SEPARATOR;
 
     /**
      * The timeout in milliseconds.
@@ -191,7 +191,7 @@ final class Playwright
     {
         $separator = preg_quote(DIRECTORY_SEPARATOR, '/');
 
-        self::$executablePath = preg_replace('/[' . $separator . '\/]+$/', '', $path) . DIRECTORY_SEPARATOR;
+        self::$executablePath = preg_replace('/['.$separator.'\/]+$/', '', $path).DIRECTORY_SEPARATOR;
     }
 
     /**
