@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Pest\Browser\Playwright;
 
 use Generator;
+use Illuminate\Support\Str;
 use Pest\Browser\Execution;
 use Pest\Browser\Support\ImageDiffView;
 use Pest\Browser\Support\JavaScriptSerializer;
@@ -66,6 +67,21 @@ final class Page
     }
 
     /**
+     * Evaluates a JavaScript expression in the page context.
+     */
+    public function evaluate(string $pageFunction, mixed $arg = null): mixed
+    {
+        $params = [
+            'expression' => $pageFunction,
+            'arg' => JavaScriptSerializer::serializeArgument($arg),
+        ];
+
+        $response = $this->sendMessage('evaluateExpression', $params);
+
+        return $this->processResultResponse($response);
+    }
+
+    /**
      * Performs the given callback in unstrict mode.
      *
      * @template TReturn
@@ -122,6 +138,14 @@ final class Page
     }
 
     /**
+     * Create a locator for the specified selector.
+     */
+    public function locator(string $selector): Locator
+    {
+        return new Locator($this->frameGuid, $selector, $this->strictLocators);
+    }
+
+    /**
      * Finds all elements matching the specified selector.
      *
      * @return Element[]
@@ -143,14 +167,6 @@ final class Page
         }
 
         return $elements;
-    }
-
-    /**
-     * Create a locator for the specified selector.
-     */
-    public function locator(string $selector): Locator
-    {
-        return new Locator($this->frameGuid, $selector, $this->strictLocators);
     }
 
     /**
@@ -343,21 +359,6 @@ final class Page
     }
 
     /**
-     * Evaluates a JavaScript expression in the page context.
-     */
-    public function evaluate(string $pageFunction, mixed $arg = null): mixed
-    {
-        $params = [
-            'expression' => $pageFunction,
-            'arg' => JavaScriptSerializer::serializeArgument($arg),
-        ];
-
-        $response = $this->sendMessage('evaluateExpression', $params);
-
-        return $this->processResultResponse($response);
-    }
-
-    /**
      * Evaluates a JavaScript expression and returns a JSHandle.
      */
     public function evaluateHandle(string $pageFunction, mixed $arg = null): JSHandle
@@ -425,6 +426,17 @@ final class Page
     }
 
     /**
+     * Make screenshot of a specific element.
+     */
+    public function screenshotElement(string $selector, ?string $filename = null): string
+    {
+        $locator = $this->locator($selector);
+        $binary = $locator->screenshot();
+
+        return Screenshot::save($binary, $filename);
+    }
+
+    /**
      * Make screenshot of the page.
      */
     public function screenshot(bool $fullPage = true, ?string $filename = null): ?string
@@ -434,17 +446,6 @@ final class Page
         if ($binary === null) {
             return null;
         }
-
-        return Screenshot::save($binary, $filename);
-    }
-
-    /**
-     * Make screenshot of a specific element.
-     */
-    public function screenshotElement(string $selector, ?string $filename = null): string
-    {
-        $locator = $this->locator($selector);
-        $binary = $locator->screenshot();
 
         return Screenshot::save($binary, $filename);
     }
@@ -464,6 +465,31 @@ final class Page
     }
 
     /**
+     * Get the cookies from the page, if any.
+     *
+     * @return array<string, string>
+     */
+    public function cookies(): array
+    {
+        $cookieString = $this->evaluate('document.cookie || []');
+
+        if (blank($cookieString)) {
+            return [];
+        }
+
+        /** @var array<string, string> $cookies */
+        $cookies = Str::of(is_string($cookieString) ? $cookieString : '')
+            ->explode(';')
+            ->mapWithKeys(function (string $cookie): array {
+                $value = explode('=', $cookie);
+
+                return [Str::trim($value[0]) => Str::trim($value[1])];
+            })->toArray();
+
+        return $cookies;
+    }
+
+    /**
      * Get the broken images from the page, if any.
      *
      * @return array<int, string>
@@ -476,7 +502,8 @@ final class Page
                     .filter(img => img.complete && img.naturalWidth === 0)
                     .map(img => img.src);
             }
-            JS);
+            JS
+        );
 
         /** @var array<int, string> $brokenImages */
         return $brokenImages;
@@ -592,27 +619,6 @@ final class Page
     }
 
     /**
-     * Screenshots the page and returns the binary data.
-     */
-    private function screenshotBinary(bool $fullPage = true): ?string
-    {
-        $response = Client::instance()->execute(
-            $this->guid,
-            'screenshot',
-            $this->screenshotOptions($fullPage)
-        );
-
-        /** @var array{result: array{binary: string|null}} $message */
-        foreach ($response as $message) {
-            if (isset($message['result']['binary'])) {
-                return $message['result']['binary'];
-            }
-        }
-
-        return null;
-    }
-
-    /**
      * Send a message to the frame (for frame-related operations)
      *
      * @param  array<string, mixed>  $params
@@ -646,6 +652,27 @@ final class Page
         ];
 
         return in_array($method, $pageLevelOperations, true);
+    }
+
+    /**
+     * Screenshots the page and returns the binary data.
+     */
+    private function screenshotBinary(bool $fullPage = true): ?string
+    {
+        $response = Client::instance()->execute(
+            $this->guid,
+            'screenshot',
+            $this->screenshotOptions($fullPage)
+        );
+
+        /** @var array{result: array{binary: string|null}} $message */
+        foreach ($response as $message) {
+            if (isset($message['result']['binary'])) {
+                return $message['result']['binary'];
+            }
+        }
+
+        return null;
     }
 
     /**
