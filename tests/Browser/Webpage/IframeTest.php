@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
+use Pest\Browser\Api\AwaitableWebpage;
 use Pest\Browser\Api\Webpage;
 
 it('can interact with iframe content using withinFrame', function (): void {
@@ -38,7 +39,7 @@ it('can interact with iframe content using withinFrame', function (): void {
     $page = visit('/');
     $page->assertSee('Main Page');
 
-    $page->withinFrame('.iframe-container', function (Webpage $frame): void {
+    $page->withinFrame('.iframe-container', function (AwaitableWebpage $frame): void {
         $frame->assertSee('Inside Iframe')
             ->type('frame-input', 'Hello iframe')
             ->click('frame-button');

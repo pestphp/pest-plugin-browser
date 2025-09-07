@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Api\Concerns;
 
+use Pest\Browser\Api\AwaitableWebpage;
 use Pest\Browser\Api\Webpage;
 use Pest\Browser\Playwright\Page;
 
@@ -39,7 +40,7 @@ trait InteractsWithFrames
             $contentFrameObj->guid,
         );
 
-        $iframeWebpage = new Webpage($iframePage, $this->url());
+        $iframeWebpage = new AwaitableWebpage($iframePage, $this->url());
 
         $callback($iframeWebpage);
 
