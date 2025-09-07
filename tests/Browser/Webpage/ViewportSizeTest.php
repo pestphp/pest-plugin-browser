@@ -37,8 +37,9 @@ it('may get viewport size', function (): void {
 
     $page->resize(800, 1200);
 
-    $viewportSize = $page->getViewportSize();
+    // use javascript to get the viewport size
+    $viewportSize = $page->script('() => ({ width: window.innerWidth, height: window.innerHeight })');
 
-    expect($viewportSize)->toHaveKey('width', 800);
-    expect($viewportSize)->toHaveKey('height', 1200);
+    expect($viewportSize['width'])->toBe(800)
+        ->and($viewportSize['height'])->toBe(1200);
 });

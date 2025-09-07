@@ -75,6 +75,7 @@ trait InteractsWithElements
     public function typeSlowly(string $field, string $value, int $delay = 100): Webpage
     {
         $options = ['delay' => $delay];
+
         $this->guessLocator($field)->type($value, $options);
 
         return $this;

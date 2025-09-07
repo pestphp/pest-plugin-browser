@@ -15,14 +15,4 @@ trait InteractsWithViewPort
 
         return $this;
     }
-
-    /**
-     * Returns the viewport size.
-     *
-     * @return array{width: int, height: int}
-     */
-    public function getViewportSize(): array
-    {
-        return $this->page->viewportSize();
-    }
 }
