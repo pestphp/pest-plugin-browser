@@ -472,10 +472,6 @@ final class Page
     {
         $cookieString = $this->evaluate('document.cookie || []');
 
-        if (empty($cookieString)) {
-            return [];
-        }
-
         /** @var array<string, string> $cookies */
         $cookies = [];
         $cookiePairs = explode(';', is_string($cookieString) ? $cookieString : '');
