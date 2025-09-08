@@ -16,7 +16,7 @@ trait InteractsWithFrames
     /**
      * Runs the given callback within the context of the specified iframe.
      */
-    public function withinFrame(string $selector, callable $callback): Webpage
+    public function withinFrame(string $selector, callable $callback): self
     {
         $this->page->waitForLoadState('networkidle');
 
