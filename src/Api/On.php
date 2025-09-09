@@ -6,6 +6,7 @@ namespace Pest\Browser\Api;
 
 use Pest\Browser\Enums\BrowserType;
 use Pest\Browser\Enums\Device;
+use Pest\Browser\Page as BrowserPage;
 
 /**
  * @mixin PendingAwaitablePage
@@ -20,7 +21,7 @@ final readonly class On
     public function __construct(
         private BrowserType $browserType,
         private Device $device,
-        private string $url,
+        private string|BrowserPage $url,
         private array $options,
     ) {
         //

@@ -6,6 +6,7 @@ namespace Pest\Browser\Playwright;
 
 use Generator;
 use Pest\Browser\Execution;
+use Pest\Browser\Page as BrowserPage;
 use Pest\Browser\Support\ImageDiffView;
 use Pest\Browser\Support\JavaScriptSerializer;
 use Pest\Browser\Support\Screenshot;
@@ -21,6 +22,13 @@ use RuntimeException;
 final class Page
 {
     use Concerns\InteractsWithPlaywright;
+
+    /**
+     * Set the elements the resolver should use as shortcuts.
+     *
+     * @var array<string, string>
+     */
+    private array $shorthandElements = [];
 
     /**
      * Whether the page has been closed.
@@ -589,6 +597,33 @@ final class Page
     public function isClosed(): bool
     {
         return $this->closed;
+    }
+
+    /**
+     * Set the page elements the resolver should use as shortcuts.
+     */
+    public function setShorthandElements(string|BrowserPage $url): self
+    {
+        if ($url instanceof BrowserPage) {
+            $elements = array_merge($url::siteElements(), $url->elements());
+
+            /** @var array<string, string> $sortedElements */
+            $sortedElements = collect($elements)->sortByDesc(fn (string $element, string $key): int => mb_strlen($key))->toArray();
+
+            $this->shorthandElements = $sortedElements;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Get the shorthand elements of page.
+     *
+     * @return array<string, string>
+     */
+    public function shorthandElements(): array
+    {
+        return $this->shorthandElements;
     }
 
     /**

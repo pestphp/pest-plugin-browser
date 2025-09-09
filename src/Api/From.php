@@ -8,6 +8,7 @@ use InvalidArgumentException;
 use Pest\Browser\Enums\BrowserType;
 use Pest\Browser\Enums\City;
 use Pest\Browser\Enums\Device;
+use Pest\Browser\Page as BrowserPage;
 
 /**
  * @mixin PendingAwaitablePage
@@ -22,7 +23,7 @@ final readonly class From
     public function __construct(
         private BrowserType $browserType,
         private Device $device,
-        private string $url,
+        private string|BrowserPage $url,
         private array $options,
     ) {
         //
