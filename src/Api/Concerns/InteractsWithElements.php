@@ -24,6 +24,18 @@ trait InteractsWithElements
     }
 
     /**
+     * Double click the link with the given text.
+     *
+     * @param  array<string, mixed>  $options
+     */
+    public function doubleClick(string $text, array $options = []): Webpage
+    {
+        $this->guessLocator($text)->dblclick($options);
+
+        return $this;
+    }
+
+    /**
      * Get the text of the element matching the given selector.
      */
     public function text(string $selector): ?string

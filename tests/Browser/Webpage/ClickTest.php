@@ -93,3 +93,69 @@ test('click may accept options', function (): void {
     $page->click('#button', options: ['clickCount' => 2]);
     $page->assertSeeIn('#result', 'Option-2 clicked');
 });
+
+it('can double click an element', function (): void {
+    Route::get('/', fn (): string => '
+    <p id="result"></p>
+    <button
+        id="button"
+        ondblclick="document.getElementById(\'result\').textContent = \'Double Clicked\'"
+    >
+        Double Click Me
+    </button>');
+
+    $page = visit('/');
+
+    $page->doubleClick('#button');
+    $page->assertSeeIn('#result', 'Double Clicked');
+});
+
+it('can double click an element with text selector', function (): void {
+    Route::get('/', fn (): string => '
+    <p id="result"></p>
+    <div
+        ondblclick="document.getElementById(\'result\').textContent = \'Double Clicked\'"
+    >
+        Double Click Me
+    </div>');
+
+    $page = visit('/');
+
+    $page->doubleClick('Double Click Me');
+    $page->assertSeeIn('#result', 'Double Clicked');
+});
+
+it('can double click on different element types', function (string $element): void {
+    Route::get('/', fn (): string => "
+        <p id=\"result\"></p>
+        $element
+    ");
+
+    $page = visit('/');
+
+    $page->doubleClick('#clickable');
+    $page->assertSeeIn('#result', 'Double Clicked');
+})->with([
+    '<button id="clickable" ondblclick="document.getElementById(\'result\').textContent = \'Double Clicked\'"></button>',
+    '<div id="clickable" ondblclick="document.getElementById(\'result\').textContent = \'Double Clicked\'">Button</div>',
+    '<input type="button" id="clickable" ondblclick="document.getElementById(\'result\').textContent = \'Double Clicked\'"></input>',
+    '<input type="submit" id="clickable" ondblclick="document.getElementById(\'result\').textContent = \'Double Clicked\'"></input>',
+    '<input type="reset" id="clickable" ondblclick="document.getElementById(\'result\').textContent = \'Double Clicked\'"></input>',
+    '<input type="checkbox" id="clickable" ondblclick="document.getElementById(\'result\').textContent = \'Double Clicked\'"></input>',
+    '<input type="radio" id="clickable" ondblclick="document.getElementById(\'result\').textContent = \'Double Clicked\'"></input>',
+    '<a id="clickable" href="#" ondblclick="document.getElementById(\'result\').textContent = \'Double Clicked\'">Button</a>',
+]);
+
+it('can double click to select text content', function (): void {
+    Route::get('/', fn (): string => '
+        <p id="selectable" onmouseup="document.getElementById(\'result\').textContent = window.getSelection().toString();">
+            This is some selectable text content that can be selected
+        </p>
+        <p id="result"></p>
+    ');
+
+    $page = visit('/');
+
+    $page->doubleClick('#selectable');
+    $page->assertSeeIn('#result', 'selected');
+});
