@@ -11,6 +11,20 @@ use Pest\Browser\Enums\Device;
 
 /**
  * @mixin PendingAwaitablePage
+ *
+ * @method amsterdam(): PendingAwaitablePage
+ * @method berlin(): PendingAwaitablePage
+ * @method chicago(): PendingAwaitablePage
+ * @method houston(): PendingAwaitablePage
+ * @method london(): PendingAwaitablePage
+ * @method losAngeles(): PendingAwaitablePage
+ * @method miami(): PendingAwaitablePage
+ * @method newYork(): PendingAwaitablePage
+ * @method paris(): PendingAwaitablePage
+ * @method tokyo(): PendingAwaitablePage
+ * @method toronto(): PendingAwaitablePage
+ * @method sanFrancisco(): PendingAwaitablePage
+ * @method sydney(): PendingAwaitablePage
  */
 final readonly class From
 {
