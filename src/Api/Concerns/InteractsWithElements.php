@@ -100,7 +100,7 @@ trait InteractsWithElements
     /**
      * Right-click the element matching the given selector.
      */
-    public function rightClick(string $text): Webpage
+    public function rightClick(string $text): self
     {
         $this->guessLocator($text)->click([
             'button' => 'right',

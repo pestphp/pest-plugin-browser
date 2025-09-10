@@ -16,7 +16,7 @@ trait MakesElementAssertions
     /**
      * Assert that the page title matches the given text.
      */
-    public function assertTitle(string|int|float $title): Webpage
+    public function assertTitle(string|int|float $title): self
     {
         $title = (string) $title;
 
@@ -28,7 +28,7 @@ trait MakesElementAssertions
     /**
      * Assert that the page title contains the given text.
      */
-    public function assertTitleContains(string|int|float $title): Webpage
+    public function assertTitleContains(string|int|float $title): self
     {
         $title = (string) $title;
 
@@ -42,7 +42,7 @@ trait MakesElementAssertions
     /**
      * Assert that the given text is present on the page.
      */
-    public function assertSee(string|int|float $text): Webpage
+    public function assertSee(string|int|float $text): self
     {
         $text = (string) $text;
 
@@ -66,7 +66,7 @@ trait MakesElementAssertions
     /**
      * Assert that the given text is not present on the page.
      */
-    public function assertDontSee(string|int|float $text): Webpage
+    public function assertDontSee(string|int|float $text): self
     {
         $text = (string) $text;
 
@@ -90,7 +90,7 @@ trait MakesElementAssertions
     /**
      * Assert that the given text is present within the selector.
      */
-    public function assertSeeIn(string $selector, string|int|float $text): Webpage
+    public function assertSeeIn(string $selector, string|int|float $text): self
     {
         $text = (string) $text;
 
@@ -104,7 +104,7 @@ trait MakesElementAssertions
     /**
      * Assert that the given text is not present within the selector.
      */
-    public function assertDontSeeIn(string $selector, string|int|float $text): Webpage
+    public function assertDontSeeIn(string $selector, string|int|float $text): self
     {
         $text = (string) $text;
 
@@ -118,7 +118,7 @@ trait MakesElementAssertions
     /**
      * Assert that any text is present within the selector.
      */
-    public function assertSeeAnythingIn(string $selector): Webpage
+    public function assertSeeAnythingIn(string $selector): self
     {
         $text = $this->guessLocator($selector)->textContent();
 
@@ -130,7 +130,7 @@ trait MakesElementAssertions
     /**
      * Assert that no text is present within the selector.
      */
-    public function assertSeeNothingIn(string $selector): Webpage
+    public function assertSeeNothingIn(string $selector): self
     {
         $text = $this->guessLocator($selector)->textContent();
 
@@ -142,7 +142,7 @@ trait MakesElementAssertions
     /**
      * Assert that a given element is present a given amount of times.
      */
-    public function assertCount(string $selector, int $expected): Webpage
+    public function assertCount(string $selector, int $expected): self
     {
         $count = $this->guessLocator($selector)->count();
         expect($count)->toBe($expected, "Expected to find {$expected} elements matching [{$selector}] on the page initially with the url [{$this->initialUrl}], but found {$count}.");
@@ -153,7 +153,7 @@ trait MakesElementAssertions
     /**
      * Assert that the given JavaScript expression evaluates to the given value.
      */
-    public function assertScript(string $expression, mixed $expected = true): Webpage
+    public function assertScript(string $expression, mixed $expected = true): self
     {
         if (! Str::contains($expression, ['===', '!==', '==', '!=', '>', '<', '>=', '<=', '&&', '||']) && ! Str::startsWith($expression, 'return ') && ! Str::startsWith($expression, 'function')) {
             $expression = "function() { return {$expression}; }";
@@ -190,7 +190,7 @@ trait MakesElementAssertions
     /**
      * Assert that the given source code is present on the page.
      */
-    public function assertSourceHas(string $code): Webpage
+    public function assertSourceHas(string $code): self
     {
         $content = $this->page->content();
         $message = "Expected page source to contain [{$code}] on the page initially with the url [{$this->initialUrl}], but it was not found.";
@@ -202,7 +202,7 @@ trait MakesElementAssertions
     /**
      * Assert that the given source code is not present on the page.
      */
-    public function assertSourceMissing(string $code): Webpage
+    public function assertSourceMissing(string $code): self
     {
         $content = $this->page->content();
         $message = "Expected page source not to contain [{$code}] on the page initially with the url [{$this->initialUrl}], but it was found.";
@@ -214,7 +214,7 @@ trait MakesElementAssertions
     /**
      * Assert that the given link is present on the page.
      */
-    public function assertSeeLink(string $link): Webpage
+    public function assertSeeLink(string $link): self
     {
         $locator = $this->guessLocator($link);
 
@@ -226,7 +226,7 @@ trait MakesElementAssertions
     /**
      * Assert that the given link is not present on the page.
      */
-    public function assertDontSeeLink(string $link): Webpage
+    public function assertDontSeeLink(string $link): self
     {
         $locator = $this->guessLocator($link);
 
@@ -238,7 +238,7 @@ trait MakesElementAssertions
     /**
      * Assert that the given checkbox is checked.
      */
-    public function assertChecked(string $field, string|int|float|null $value = null): Webpage
+    public function assertChecked(string $field, string|int|float|null $value = null): self
     {
         $value = $value !== null ? (string) $value : null;
 
@@ -251,7 +251,7 @@ trait MakesElementAssertions
     /**
      * Assert that the given checkbox is not checked.
      */
-    public function assertNotChecked(string $field, string|int|float|null $value = null): Webpage
+    public function assertNotChecked(string $field, string|int|float|null $value = null): self
     {
         $value = $value !== null ? (string) $value : null;
 
@@ -264,7 +264,7 @@ trait MakesElementAssertions
     /**
      * Assert that the given checkbox is in an indeterminate state.
      */
-    public function assertIndeterminate(string $field, string|int|float|null $value = null): Webpage
+    public function assertIndeterminate(string $field, string|int|float|null $value = null): self
     {
         $value = $value !== null ? (string) $value : null;
 
@@ -289,7 +289,7 @@ trait MakesElementAssertions
     /**
      * Assert that the given radio field is selected.
      */
-    public function assertRadioSelected(string $field, string|int|float $value): Webpage
+    public function assertRadioSelected(string $field, string|int|float $value): self
     {
         $value = (string) $value;
 
@@ -301,7 +301,7 @@ trait MakesElementAssertions
     /**
      * Assert that the given radio field is not selected.
      */
-    public function assertRadioNotSelected(string $field, string|int|float|null $value = null): Webpage
+    public function assertRadioNotSelected(string $field, string|int|float|null $value = null): self
     {
         $value = $value !== null ? (string) $value : null;
 
@@ -332,7 +332,7 @@ trait MakesElementAssertions
     /**
      * Assert that the given dropdown has the given value selected.
      */
-    public function assertSelected(string $field, string|int|float $value): Webpage
+    public function assertSelected(string $field, string|int|float $value): self
     {
         $value = (string) $value;
 
@@ -347,7 +347,7 @@ trait MakesElementAssertions
     /**
      * Assert that the given dropdown does not have the given value selected.
      */
-    public function assertNotSelected(string $field, string|int|float $value): Webpage
+    public function assertNotSelected(string $field, string|int|float $value): self
     {
         $value = (string) $value;
 
@@ -362,7 +362,7 @@ trait MakesElementAssertions
     /**
      * Assert that the element matching the given selector has the given value.
      */
-    public function assertValue(string $field, string|int|float $value): Webpage
+    public function assertValue(string $field, string|int|float $value): self
     {
         $value = (string) $value;
 
@@ -376,7 +376,7 @@ trait MakesElementAssertions
     /**
      * Assert that the element matching the given selector does not have the given value.
      */
-    public function assertValueIsNot(string $selector, string|int|float $value): Webpage
+    public function assertValueIsNot(string $selector, string|int|float $value): self
     {
         $value = (string) $value;
 
@@ -389,7 +389,7 @@ trait MakesElementAssertions
     /**
      * Assert that the element matching the given selector has the given value in the provided attribute.
      */
-    public function assertAttribute(string $selector, string $attribute, string|int|float $value): Webpage
+    public function assertAttribute(string $selector, string $attribute, string|int|float $value): self
     {
         $value = (string) $value;
 
@@ -402,7 +402,7 @@ trait MakesElementAssertions
     /**
      * Assert that the element matching the given selector is missing the provided attribute.
      */
-    public function assertAttributeMissing(string $selector, string $attribute): Webpage
+    public function assertAttributeMissing(string $selector, string $attribute): self
     {
         $actual = $this->guessLocator($selector)->getAttribute($attribute);
         expect($actual)->toBeNull("Expected element [{$selector}] not to have attribute [{$attribute}] on the page initially with the url [{$this->initialUrl}], but it had value [{$actual}].");
@@ -413,7 +413,7 @@ trait MakesElementAssertions
     /**
      * Assert that the element matching the given selector contains the given value in the provided attribute.
      */
-    public function assertAttributeContains(string $selector, string $attribute, string|int|float $value): Webpage
+    public function assertAttributeContains(string $selector, string $attribute, string|int|float $value): self
     {
         $value = (string) $value;
 
@@ -430,7 +430,7 @@ trait MakesElementAssertions
     /**
      * Assert that the element matching the given selector does not contain the given value in the provided attribute.
      */
-    public function assertAttributeDoesntContain(string $selector, string $attribute, string|int|float $value): Webpage
+    public function assertAttributeDoesntContain(string $selector, string $attribute, string|int|float $value): self
     {
         $value = (string) $value;
 
@@ -449,7 +449,7 @@ trait MakesElementAssertions
     /**
      * Assert that the element matching the given selector has the given value in the provided aria attribute.
      */
-    public function assertAriaAttribute(string $selector, string $attribute, string|int|float $value): Webpage
+    public function assertAriaAttribute(string $selector, string $attribute, string|int|float $value): self
     {
         $value = (string) $value;
 
@@ -459,7 +459,7 @@ trait MakesElementAssertions
     /**
      * Assert that the element matching the given selector has the given value in the provided data attribute.
      */
-    public function assertDataAttribute(string $selector, string $attribute, string|int|float $value): Webpage
+    public function assertDataAttribute(string $selector, string $attribute, string|int|float $value): self
     {
         $value = (string) $value;
 
@@ -469,7 +469,7 @@ trait MakesElementAssertions
     /**
      * Assert that the element matching the given selector is visible.
      */
-    public function assertVisible(string $selector): Webpage
+    public function assertVisible(string $selector): self
     {
         $locator = $this->guessLocator($selector);
 
@@ -481,7 +481,7 @@ trait MakesElementAssertions
     /**
      * Assert that the element matching the given selector is present.
      */
-    public function assertPresent(string $selector): Webpage
+    public function assertPresent(string $selector): self
     {
         $count = $this->guessLocator($selector)->count();
         expect($count)->toBeGreaterThan(0, "Expected element [{$selector}] to be present in the DOM on the page initially with the url [{$this->initialUrl}], but it was not found.");
@@ -492,7 +492,7 @@ trait MakesElementAssertions
     /**
      * Assert that the element matching the given selector is not present in the source.
      */
-    public function assertNotPresent(string $selector): Webpage
+    public function assertNotPresent(string $selector): self
     {
         $count = $this->guessLocator($selector)->count();
         expect($count)->toBe(0, "Expected element [{$selector}] not to be present in the DOM on the page initially with the url [{$this->initialUrl}], but it was found.");
@@ -503,7 +503,7 @@ trait MakesElementAssertions
     /**
      * Assert that the element matching the given selector is not visible.
      */
-    public function assertMissing(string $selector): Webpage
+    public function assertMissing(string $selector): self
     {
         $locator = $this->guessLocator($selector);
 
@@ -515,7 +515,7 @@ trait MakesElementAssertions
     /**
      * Assert that the given field is enabled.
      */
-    public function assertEnabled(string $field): Webpage
+    public function assertEnabled(string $field): self
     {
         expect($this->guessLocator($field)->isEnabled())->toBeTrue("Expected field [{$field}] to be enabled on the page initially with the url [{$this->initialUrl}], but it was disabled.");
 
@@ -525,7 +525,7 @@ trait MakesElementAssertions
     /**
      * Assert that the given field is disabled.
      */
-    public function assertDisabled(string $field): Webpage
+    public function assertDisabled(string $field): self
     {
         expect($this->guessLocator($field)->isDisabled())->toBeTrue("Expected field [{$field}] to be disabled on the page initially with the url [{$this->initialUrl}], but it was enabled.");
 
@@ -535,7 +535,7 @@ trait MakesElementAssertions
     /**
      * Assert that the given button is enabled.
      */
-    public function assertButtonEnabled(string $button): Webpage
+    public function assertButtonEnabled(string $button): self
     {
         $selector = $this->guessLocator($button);
 
@@ -547,7 +547,7 @@ trait MakesElementAssertions
     /**
      * Assert that the given button is disabled.
      */
-    public function assertButtonDisabled(string $button): Webpage
+    public function assertButtonDisabled(string $button): self
     {
         $selector = $this->guessLocator($button);
 
@@ -561,7 +561,7 @@ trait MakesElementAssertions
      *
      * @deprecated Use `assertSee` instead.
      */
-    public function waitForText(string|int|float $text): Webpage
+    public function waitForText(string|int|float $text): self
     {
         $text = (string) $text;
 
