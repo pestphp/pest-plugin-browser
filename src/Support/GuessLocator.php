@@ -18,6 +18,7 @@ final readonly class GuessLocator
      */
     public function __construct(
         private Page $page,
+        private ?string $scope = null,
     ) {
         //
     }
