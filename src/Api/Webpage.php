@@ -96,6 +96,18 @@ final readonly class Webpage
     }
 
     /**
+     * Limits the scope of subsequent interactions to within a specific element.
+     */
+    public function within(string $selector, callable $callback): self
+    {
+        $scopedWebpage = new ScopedWebpage($this->page, $this->initialUrl, $selector);
+
+        $callback($scopedWebpage);
+
+        return $this;
+    }
+
+    /**
      * Gets the locator for the given selector.
      */
     private function guessLocator(string $selector, ?string $value = null): Locator
