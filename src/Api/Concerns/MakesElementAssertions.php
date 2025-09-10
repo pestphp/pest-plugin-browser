@@ -46,9 +46,7 @@ trait MakesElementAssertions
     {
         $text = (string) $text;
 
-        $locator = $this->page->unstrict(
-            fn () => $this->page->getByText($text),
-        );
+        $locator = $this->getTextLocator($text);
 
         foreach ($locator->all() as $element) {
             if ($element->isVisible()) {
@@ -70,9 +68,7 @@ trait MakesElementAssertions
     {
         $text = (string) $text;
 
-        $locator = $this->page->unstrict(
-            fn () => $this->page->getByText($text),
-        );
+        $locator = $this->getTextLocator($text);
 
         foreach ($locator->all() as $element) {
             if ($element->isVisible()) {

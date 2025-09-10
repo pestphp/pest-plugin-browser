@@ -102,4 +102,14 @@ final readonly class Webpage
     {
         return (new GuessLocator($this->page))->for($selector, $value);
     }
+
+    /**
+     * Gets the locator for the given text.
+     */
+    private function getTextLocator(string $text): Locator
+    {
+        return $this->page->unstrict(
+            fn (): Locator => $this->page->getByText($text),
+        );
+    }
 }
