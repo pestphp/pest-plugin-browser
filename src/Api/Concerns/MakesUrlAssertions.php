@@ -15,7 +15,7 @@ trait MakesUrlAssertions
     /**
      * Assert that the current URL (without the query string) matches the given string.
      */
-    public function assertUrlIs(string $url): self
+    public function assertUrlIs(string $url): Webpage
     {
         $pattern = str_replace('\*', '.*', preg_quote($url, '/'));
 
@@ -42,7 +42,7 @@ trait MakesUrlAssertions
     /**
      * Assert that the current URL scheme matches the given scheme.
      */
-    public function assertSchemeIs(string $scheme): self
+    public function assertSchemeIs(string $scheme): Webpage
     {
         $pattern = str_replace('\*', '.*', preg_quote($scheme, '/'));
 
@@ -57,7 +57,7 @@ trait MakesUrlAssertions
     /**
      * Assert that the current URL scheme does not match the given scheme.
      */
-    public function assertSchemeIsNot(string $scheme): self
+    public function assertSchemeIsNot(string $scheme): Webpage
     {
         $actual = parse_url($this->page->url(), PHP_URL_SCHEME) ?? '';
 
@@ -70,7 +70,7 @@ trait MakesUrlAssertions
     /**
      * Assert that the current URL host matches the given host.
      */
-    public function assertHostIs(string $host): self
+    public function assertHostIs(string $host): Webpage
     {
         $pattern = str_replace('\*', '.*', preg_quote($host, '/'));
 
@@ -85,7 +85,7 @@ trait MakesUrlAssertions
     /**
      * Assert that the current URL host does not match the given host.
      */
-    public function assertHostIsNot(string $host): self
+    public function assertHostIsNot(string $host): Webpage
     {
         $actual = parse_url($this->page->url(), PHP_URL_HOST) ?? '';
 
@@ -98,7 +98,7 @@ trait MakesUrlAssertions
     /**
      * Assert that the current URL port matches the given port.
      */
-    public function assertPortIs(string $port): self
+    public function assertPortIs(string $port): Webpage
     {
         $pattern = str_replace('\*', '.*', preg_quote($port, '/'));
 
@@ -120,7 +120,7 @@ trait MakesUrlAssertions
     /**
      * Assert that the current URL port does not match the given port.
      */
-    public function assertPortIsNot(string $port): self
+    public function assertPortIsNot(string $port): Webpage
     {
         $actual = (string) (parse_url($this->page->url(), PHP_URL_PORT) ?? '80');
 
@@ -133,7 +133,7 @@ trait MakesUrlAssertions
     /**
      * Assert that the current URL path begins with the given path.
      */
-    public function assertPathBeginsWith(string $path): self
+    public function assertPathBeginsWith(string $path): Webpage
     {
         /** @var non-empty-string $actualPath */
         $actualPath = parse_url($this->page->url(), PHP_URL_PATH) ?? '';
@@ -152,7 +152,7 @@ trait MakesUrlAssertions
      *
      * @param  array<string, mixed>  $parameters
      */
-    public function assertRoute(string $route, array $parameters = []): self
+    public function assertRoute(string $route, array $parameters = []): Webpage
     {
         if (function_exists('route') === false) {
             throw new RuntimeException('The [route] function is not available. Ensure you are using a framework that provides this function.');
@@ -164,7 +164,7 @@ trait MakesUrlAssertions
     /**
      * Assert that the current URL path ends with the given path.
      */
-    public function assertPathEndsWith(string $path): self
+    public function assertPathEndsWith(string $path): Webpage
     {
         $actualPath = parse_url($this->page->url(), PHP_URL_PATH) ?? '';
 
@@ -180,7 +180,7 @@ trait MakesUrlAssertions
     /**
      * Assert that the current URL path contains the given path.
      */
-    public function assertPathContains(string $path): self
+    public function assertPathContains(string $path): Webpage
     {
         $actualPath = parse_url($this->page->url(), PHP_URL_PATH) ?? '';
 
@@ -195,7 +195,7 @@ trait MakesUrlAssertions
     /**
      * Assert that the current path matches the given path.
      */
-    public function assertPathIs(string $path): self
+    public function assertPathIs(string $path): Webpage
     {
         $pattern = str_replace('\*', '.*', preg_quote($path, '/'));
 
@@ -210,7 +210,7 @@ trait MakesUrlAssertions
     /**
      * Assert that the current path does not match the given path.
      */
-    public function assertPathIsNot(string $path): self
+    public function assertPathIsNot(string $path): Webpage
     {
         $actualPath = parse_url($this->page->url(), PHP_URL_PATH) ?? '';
 
@@ -223,7 +223,7 @@ trait MakesUrlAssertions
     /**
      * Assert that the given query string parameter is present and has a given value.
      */
-    public function assertQueryStringHas(string $name, ?string $value = null): self
+    public function assertQueryStringHas(string $name, ?string $value = null): Webpage
     {
         $output = $this->assertHasQueryStringParameter($name);
 
@@ -242,7 +242,7 @@ trait MakesUrlAssertions
     /**
      * Assert that the given query string parameter is missing.
      */
-    public function assertQueryStringMissing(string $name): self
+    public function assertQueryStringMissing(string $name): Webpage
     {
         $parsedUrl = parse_url($this->page->url());
 
@@ -263,7 +263,7 @@ trait MakesUrlAssertions
     /**
      * Assert that the URL's current hash fragment matches the given fragment.
      */
-    public function assertFragmentIs(string $fragment): self
+    public function assertFragmentIs(string $fragment): Webpage
     {
         $href = $this->page->evaluate('window.location.href');
 
@@ -286,7 +286,7 @@ trait MakesUrlAssertions
     /**
      * Assert that the URL's current hash fragment begins with the given fragment.
      */
-    public function assertFragmentBeginsWith(string $fragment): self
+    public function assertFragmentBeginsWith(string $fragment): Webpage
     {
         $href = $this->page->evaluate('window.location.href');
 
@@ -306,7 +306,7 @@ trait MakesUrlAssertions
     /**
      * Assert that the URL's current hash fragment does not match the given fragment.
      */
-    public function assertFragmentIsNot(string $fragment): self
+    public function assertFragmentIsNot(string $fragment): Webpage
     {
         $href = $this->page->evaluate('window.location.href');
 

@@ -19,8 +19,7 @@ final readonly class ScopedWebpage
         Concerns\InteractsWithViewPort,
         Concerns\MakesConsoleAssertions,
         Concerns\MakesElementAssertions,
-        Concerns\MakesScreenshotAssertions,
-        Concerns\MakesUrlAssertions;
+        Concerns\MakesScreenshotAssertions;
 
     public function __construct(
         private Page $page,
