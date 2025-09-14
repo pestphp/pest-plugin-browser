@@ -57,7 +57,6 @@ final class Client
                 'bypassCSP' => true,
             ];
 
-            // Add custom launch arguments if configured
             $customArgs = Playwright::getEffectiveLaunchArgs();
             if ($customArgs !== []) {
                 $launchOptions['args'] = $customArgs;
