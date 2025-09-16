@@ -96,6 +96,16 @@ final readonly class Webpage
     }
 
     /**
+     * Call the given Closure with this instance then return the instance.
+    **/
+    public function tap(callable $callback): self
+    {
+        $callback($this);
+
+        return $this;
+    }
+
+    /**
      * Gets the locator for the given selector.
      */
     private function guessLocator(string $selector, ?string $value = null): Locator
