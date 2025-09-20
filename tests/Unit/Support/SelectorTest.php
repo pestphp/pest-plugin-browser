@@ -242,7 +242,7 @@ it('properly detects explicit selectors', function (): void {
         ->and(Selector::isExplicit('test'))->toBeFalse()
         ->and(Selector::isExplicit('Click Me Button'))->toBeFalse()
         ->and(Selector::isExplicit('Submit Form'))->toBeFalse()
-        ->and(Selector::isExplicit('Mr. Nuno Maduro'))->toToFalse();
+        ->and(Selector::isExplicit('Mr. Nuno Maduro'))->toBeFalse();
 });
 
 it('properly detects data-test selectors', function (): void {
