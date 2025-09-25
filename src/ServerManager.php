@@ -64,21 +64,23 @@ final class ServerManager
             return AlreadyStartedPlaywrightServer::fromPersisted();
         }
 
-        $port = Port::find();
-        $host = Playwright::host() ?? self::DEFAULT_HOST;
+        if (! $this->playwright instanceof PlaywrightServer) {
+            $port = Port::find();
+            $host = Playwright::host() ?? self::DEFAULT_HOST;
 
-        $this->playwright ??= PlaywrightNpmServer::create(
-            PackageJsonDirectory::find(),
-            '.'.DIRECTORY_SEPARATOR.'node_modules'.DIRECTORY_SEPARATOR.'.bin'.DIRECTORY_SEPARATOR.'playwright run-server --host %s --port %d --mode launchServer',
-            $host,
-            $port,
-            'Listening on',
-        );
+            $this->playwright = PlaywrightNpmServer::create(
+                PackageJsonDirectory::find(),
+                '.'.DIRECTORY_SEPARATOR.'node_modules'.DIRECTORY_SEPARATOR.'.bin'.DIRECTORY_SEPARATOR.'playwright run-server --host %s --port %d --mode launchServer',
+                $host,
+                $port,
+                'Listening on',
+            );
 
-        AlreadyStartedPlaywrightServer::persist(
-            $host,
-            $port,
-        );
+            AlreadyStartedPlaywrightServer::persist(
+                $host,
+                $port,
+            );
+        }
 
         return $this->playwright;
     }
