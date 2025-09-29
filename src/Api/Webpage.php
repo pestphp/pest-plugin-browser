@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Pest\Browser\Api;
 
 use Pest\Browser\Execution;
-use Pest\Browser\Playwright\Locator;
 use Pest\Browser\Playwright\Page;
+use Pest\Browser\Playwright\Clock;
+use Pest\Browser\Playwright\Locator;
 use Pest\Browser\Support\GuessLocator;
 
 final readonly class Webpage
@@ -101,5 +102,14 @@ final readonly class Webpage
     private function guessLocator(string $selector, ?string $value = null): Locator
     {
         return (new GuessLocator($this->page))->for($selector, $value);
+    }
+
+    /**
+     * Get the clock instance for controlling time in tests.
+     * The clock is installed for the entire BrowserContext.
+     */
+    public function clock(): Clock
+    {
+        return $this->page->clock();
     }
 }
