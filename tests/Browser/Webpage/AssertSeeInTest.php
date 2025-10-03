@@ -35,3 +35,11 @@ it('may fail when asserting text is not in a selector but it is', function (): v
 
     $page->assertDontSeeIn('#content', 'Hello World');
 })->throws(ExpectationFailedException::class);
+
+it('may assert text is in a selector when contains multiple', function (): void {
+    Route::get('/', fn (): string => '<div data-test="content"><span>Hello</span><span>Hello</span><span>Hello</span></div>');
+
+    $page = visit('/');
+
+    $page->assertSeeIn('@content', 'Hello');
+});

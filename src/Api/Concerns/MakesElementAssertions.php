@@ -96,7 +96,13 @@ trait MakesElementAssertions
 
         $locator = $this->guessLocator($selector);
 
-        expect($locator->getByText($text)->isVisible())->toBeTrue("Expected to see text [{$text}] within element [{$selector}] on the page initially with the url [{$this->initialUrl}], but it was not found or not visible.");
+        $entries = $this->page->unstrict(fn () => $locator->getByText($text));
+
+        expect($entries->count())->toBeGreaterThan(0, "Expected to see text [{$text}] within element [{$selector}] on the page initially with the url [{$this->initialUrl}], but it was not found.");
+
+        foreach ($entries->all() as $entry) {
+            expect($entry->isVisible())->toBeTrue("Expected to see text [{$text}] within element [{$selector}] on the page initially with the url [{$this->initialUrl}], but it was not found or not visible.");
+        }
 
         return $this;
     }
