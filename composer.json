@@ -17,9 +17,9 @@
         "amphp/amp": "^3.1.1",
         "amphp/http-server": "^3.4.3",
         "amphp/websocket-client": "^2.0.2",
-        "pestphp/pest": "^4.0.4",
+        "pestphp/pest": "^4.1.0",
         "pestphp/pest-plugin": "^4.0.0",
-        "symfony/process": "^7.3.3"
+        "symfony/process": "^7.3.4"
     },
     "autoload": {
         "psr-4": {
