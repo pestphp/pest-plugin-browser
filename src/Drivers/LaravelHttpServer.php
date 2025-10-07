@@ -16,15 +16,19 @@ use Amp\Http\Server\SocketHttpServer;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Illuminate\Foundation\Testing\Concerns\WithoutExceptionHandlingHandler;
+use Illuminate\Http\Concerns\InteractsWithInput;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Routing\UrlGenerator;
 use Illuminate\Support\Uri;
 use Pest\Browser\Contracts\HttpServer;
 use Pest\Browser\Exceptions\ServerNotFoundException;
 use Pest\Browser\Execution;
 use Pest\Browser\GlobalState;
+use Pest\Browser\Http\RequestBodyParser;
 use Pest\Browser\Playwright\Playwright;
 use Psr\Log\NullLogger;
+use Symfony\Component\HttpFoundation\File\UploadedFile as SymfonyUploadedFile;
 use Symfony\Component\Mime\MimeTypes;
 use Throwable;
 
@@ -51,13 +55,18 @@ final class LaravelHttpServer implements HttpServer
     private ?Throwable $lastThrowable = null;
 
     /**
+     * A body parser for url-encoded and multipart requests
+     */
+    private RequestBodyParser $requestBodyParser;
+
+    /**
      * Creates a new laravel http server instance.
      */
     public function __construct(
         public readonly string $host,
         public readonly int $port,
     ) {
-        //
+        $this->requestBodyParser = new RequestBodyParser();
     }
 
     /**
@@ -237,13 +246,9 @@ final class LaravelHttpServer implements HttpServer
 
         $kernel = app()->make(HttpKernel::class);
 
-        $contentType = $request->getHeader('content-type') ?? '';
         $method = mb_strtoupper($request->getMethod());
         $rawBody = (string) $request->getBody();
-        $parameters = [];
-        if ($method !== 'GET' && str_starts_with(mb_strtolower($contentType), 'application/x-www-form-urlencoded')) {
-            parse_str($rawBody, $parameters);
-        }
+        [$parameters, $files] = $this->requestBodyParser->parseForm($request, $rawBody);
         $cookies = array_map(fn (RequestCookie $cookie): string => urldecode($cookie->getValue()), $request->getCookies());
         $cookies = array_merge($cookies, test()->prepareCookiesForRequest()); // @phpstan-ignore-line
         /** @var array<string, string> $serverVariables */
@@ -254,7 +259,7 @@ final class LaravelHttpServer implements HttpServer
             $method,
             $parameters,
             $cookies,
-            [], // @TODO files...
+            $this->convertUploadedFiles($files),
             $serverVariables,
             $rawBody
         );
@@ -310,6 +315,24 @@ final class LaravelHttpServer implements HttpServer
             $response->headers->all(), // @phpstan-ignore-line
             $content,
         );
+    }
+
+    /**
+     * Taken from Laravel because we can't manipulate the test flag
+     *
+     * @param  array<SymfonyUploadedFile[]|SymfonyUploadedFile>  $files
+     * @return array<UploadedFile[]|UploadedFile>
+     *
+     * @see InteractsWithInput
+     */
+    private function convertUploadedFiles(array $files): array
+    {
+        // @phpstan-ignore-next-line
+        return array_map(function (array|SymfonyUploadedFile $file) {
+            return is_array($file)
+                ? $this->convertUploadedFiles($file)
+                : UploadedFile::createFromBase($file, true);
+        }, $files);
     }
 
     /**
