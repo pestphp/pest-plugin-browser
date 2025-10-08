@@ -222,7 +222,6 @@ final class MultipartParser
     private function parseUploadedFile(string $filename, ?string $contentType, string $contents): ?UploadedFile
     {
         $size = strlen($contents);
-        $tempFileName = tempnam(sys_get_temp_dir(), 'PHP_UPLOAD_FILE_');
 
         // no file selected (zero size and empty filename)
         if ($size === 0 && $filename === '') {
@@ -232,7 +231,7 @@ final class MultipartParser
             }
 
             return new UploadedFile(
-                $tempFileName,
+                '',
                 $filename,
                 $contentType,
                 UPLOAD_ERR_NO_FILE,
@@ -248,7 +247,7 @@ final class MultipartParser
         // file exceeds "upload_max_filesize" ini setting
         if ($size > $this->uploadMaxFilesize) {
             return new UploadedFile(
-                $tempFileName,
+                '',
                 $filename,
                 $contentType,
                 UPLOAD_ERR_INI_SIZE,
@@ -259,7 +258,7 @@ final class MultipartParser
         // file exceeds MAX_FILE_SIZE value
         if ($this->maxFileSize !== null && $size > $this->maxFileSize) {
             return new UploadedFile(
-                $tempFileName,
+                '',
                 $filename,
                 $contentType,
                 UPLOAD_ERR_FORM_SIZE,
@@ -267,6 +266,7 @@ final class MultipartParser
             );
         }
 
+        $tempFileName = tempnam(sys_get_temp_dir(), 'php');
         file_put_contents($tempFileName, $contents);
 
         return new UploadedFile(
