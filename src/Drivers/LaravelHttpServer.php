@@ -16,7 +16,6 @@ use Amp\Http\Server\SocketHttpServer;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Illuminate\Foundation\Testing\Concerns\WithoutExceptionHandlingHandler;
-use Illuminate\Http\Concerns\InteractsWithInput;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Routing\UrlGenerator;
@@ -28,7 +27,6 @@ use Pest\Browser\GlobalState;
 use Pest\Browser\Http\RequestBodyParser;
 use Pest\Browser\Playwright\Playwright;
 use Psr\Log\NullLogger;
-use Symfony\Component\HttpFoundation\File\UploadedFile as SymfonyUploadedFile;
 use Symfony\Component\Mime\MimeTypes;
 use Throwable;
 
@@ -318,20 +316,22 @@ final class LaravelHttpServer implements HttpServer
     }
 
     /**
-     * Taken from Laravel because we can't manipulate the test flag
-     *
-     * @param  array<SymfonyUploadedFile[]|SymfonyUploadedFile>  $files
-     * @return array<UploadedFile[]|UploadedFile>
-     *
-     * @see InteractsWithInput
+     * Convert the array to a Laravel file, to keep the test flag.
+     * If the file is empty, we return the original array, so Laravel
+     * would convert it to a null.
      */
+    // @phpstan-ignore-next-line
     private function convertUploadedFiles(array $files): array
     {
         // @phpstan-ignore-next-line
-        return array_map(function (array|SymfonyUploadedFile $file) {
-            return is_array($file)
+        return array_map(function (array $file) {
+            if (isset($file['error']) && $file['error'] === UPLOAD_ERR_NO_FILE) {
+                return $file;
+            }
+
+            return array_is_list($file)
                 ? $this->convertUploadedFiles($file)
-                : UploadedFile::createFromBase($file, true);
+                : new UploadedFile($file['tmp_name'], $file['name'], $file['type'], $file['error'], true);
         }, $files);
     }
 

@@ -71,6 +71,7 @@ it('parse a URL-encoded body', function (): void {
 });
 
 it('parse a multipart body with files', function (): void {
+    Route::get('favicon.ico', static fn (): string => '');
     Route::get('/', static fn (): string => "
         <html>
         <head></head>
@@ -79,8 +80,14 @@ it('parse a multipart body with files', function (): void {
                 <label for='name'>Your name</label>
                 <input id='name' type='text' name='name'>
 
-                <label for='file'>Your file</label>
-                <input id='file' type='file' name='file'>
+                <label for='file1'>Your text file</label>
+                <input id='file1' type='file' name='file1'>
+
+                <label for='file2'>Your binary file</label>
+                <input id='file2' type='file' name='file2'>
+
+                <label for='file3'>Your empty file</label>
+                <input id='file3' type='file' name='file3'>
 
                 <button type='submit'>Send</button>
             </form>
@@ -92,7 +99,9 @@ it('parse a multipart body with files', function (): void {
         <head></head>
         <body>
             <h1>Hello {$request->post('name')}</h1>
-            <p>Uploaded file: {$request->file('file')->getClientOriginalName()}</p>
+            <p>Text file: {$request->file('file1')?->getClientOriginalName()}</p>
+            <p>Binary file: {$request->file('file2')?->getClientOriginalName()}</p>
+            <p>Empty file: {$request->file('file3')?->getClientOriginalName()}</p>
         </body>
         </html>
     ");
@@ -101,11 +110,14 @@ it('parse a multipart body with files', function (): void {
     $page->assertSee('Your name');
 
     $page->fill('Your name', 'World');
-    $page->attach('Your file', fixture('lorem-ipsum.txt'));
+    $page->attach('Your text file', fixture('lorem-ipsum.txt'));
+    $page->attach('Your binary file', fixture('example.pdf'));
     $page->submit();
 
     $page->assertSee('Hello World');
-    $page->assertSee('Uploaded file: lorem-ipsum.txt');
+    $page->assertSee('Text file: lorem-ipsum.txt');
+    $page->assertSee('Binary file: example.pdf');
+    $page->assertSee('Empty file: ');
 });
 
 it('parse a multipart body with nested fields', function (): void {

@@ -6,7 +6,6 @@ namespace Pest\Browser\Http;
 
 use Amp\Http\Server\Request as AmpRequest;
 use InvalidArgumentException;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 /**
  * Derived work from the MultipartParser in ReactPHP.
@@ -19,7 +18,7 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 final class MultipartParser
 {
     /**
-     * @var array{"$_POST": array<array-key, mixed[]|string>, "$_FILES": array<array-key, UploadedFile[]|UploadedFile>}
+     * @var array{"$_POST": array<array-key, mixed[]|string>, "$_FILES": array<array-key, array{tmp_file: string, error: int, name: string, type: string, size: int}[]|array{tmp_file: string, error: int, name: string, type: string, size: int}>}
      */
     private array $superglobals = ['$_POST' => [], '$_FILES' => []];
 
@@ -88,7 +87,7 @@ final class MultipartParser
     }
 
     /**
-     * @return array{array<mixed[]|string>, array<UploadedFile[]|UploadedFile>}
+     * @return array{array<mixed[]|string>, array<array{tmp_file: string, error: int, name: string, type: string, size: int}[]|array{tmp_file: string, error: int, name: string, type: string, size: int}>}
      */
     public function parse(AmpRequest $request, string $body): array
     {
@@ -219,8 +218,12 @@ final class MultipartParser
         );
     }
 
-    private function parseUploadedFile(string $filename, ?string $contentType, string $contents): ?UploadedFile
+    /**
+     * @return array{tmp_file: string, error: int, name: string, type: string, size: int}|null
+     */
+    private function parseUploadedFile(string $filename, ?string $contentType, string $contents): ?array
     {
+        $contentType ??= 'application/octet-stream';
         $size = strlen($contents);
 
         // no file selected (zero size and empty filename)
@@ -230,13 +233,13 @@ final class MultipartParser
                 return null;
             }
 
-            return new UploadedFile(
-                '',
-                $filename,
-                $contentType,
-                UPLOAD_ERR_NO_FILE,
-                true,
-            );
+            return [
+                'tmp_name' => '',
+                'error' => UPLOAD_ERR_NO_FILE,
+                'name' => $filename,
+                'type' => $contentType,
+                'size' => $size,
+            ];
         }
 
         // ignore excessive number of file uploads
@@ -246,36 +249,36 @@ final class MultipartParser
 
         // file exceeds "upload_max_filesize" ini setting
         if ($size > $this->uploadMaxFilesize) {
-            return new UploadedFile(
-                '',
-                $filename,
-                $contentType,
-                UPLOAD_ERR_INI_SIZE,
-                true,
-            );
+            return [
+                'tmp_name' => '',
+                'error' => UPLOAD_ERR_INI_SIZE,
+                'name' => $filename,
+                'type' => $contentType,
+                'size' => $size,
+            ];
         }
 
         // file exceeds MAX_FILE_SIZE value
         if ($this->maxFileSize !== null && $size > $this->maxFileSize) {
-            return new UploadedFile(
-                '',
-                $filename,
-                $contentType,
-                UPLOAD_ERR_FORM_SIZE,
-                true,
-            );
+            return [
+                'tmp_name' => '',
+                'error' => UPLOAD_ERR_FORM_SIZE,
+                'name' => $filename,
+                'type' => $contentType,
+                'size' => $size,
+            ];
         }
 
         $tempFileName = tempnam(sys_get_temp_dir(), 'php');
         file_put_contents($tempFileName, $contents);
 
-        return new UploadedFile(
-            $tempFileName,
-            $filename,
-            $contentType,
-            UPLOAD_ERR_OK,
-            true,
-        );
+        return [
+            'tmp_name' => $tempFileName,
+            'error' => UPLOAD_ERR_OK,
+            'name' => $filename,
+            'type' => $contentType,
+            'size' => $size,
+        ];
     }
 
     private function parsePost(string $name, string $value): void
