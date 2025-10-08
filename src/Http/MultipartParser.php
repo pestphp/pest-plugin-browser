@@ -120,8 +120,8 @@ final class MultipartParser
             return (int) $size;
         }
 
-        $suffix = mb_strtoupper(mb_substr($size, -1));
-        $strippedSize = mb_substr($size, 0, -1);
+        $suffix = strtoupper(substr($size, -1));
+        $strippedSize = substr($size, 0, -1);
 
         if (! is_numeric($strippedSize)) {
             throw new InvalidArgumentException("$size is not a valid ini size");
@@ -149,22 +149,22 @@ final class MultipartParser
 
     private function parseBody(string $boundary, string $buffer): void
     {
-        $len = mb_strlen($boundary);
+        $len = strlen($boundary);
 
         // ignore everything before initial boundary (SHOULD be empty)
-        $this->cursor = mb_strpos($buffer, $boundary."\r\n");
+        $this->cursor = strpos($buffer, $boundary."\r\n");
 
         while ($this->cursor !== false) {
             // search following boundary (preceded by newline)
             // ignore last if not followed by boundary (SHOULD end with "--")
             $this->cursor += $len + 2;
-            $end = mb_strpos($buffer, "\r\n".$boundary, $this->cursor);
+            $end = strpos($buffer, "\r\n".$boundary, $this->cursor);
             if ($end === false) {
                 break;
             }
 
             // parse one part and continue searching for next
-            $this->parsePart(mb_substr($buffer, $this->cursor, $end - $this->cursor));
+            $this->parsePart(substr($buffer, $this->cursor, $end - $this->cursor));
             $this->cursor = $end;
 
             if (++$this->multipartBodyPartCount > $this->maxMultipartBodyParts) {
@@ -175,13 +175,13 @@ final class MultipartParser
 
     private function parsePart(string $chunk): void
     {
-        $pos = mb_strpos($chunk, "\r\n\r\n");
+        $pos = strpos($chunk, "\r\n\r\n");
         if ($pos === false) {
             return;
         }
 
-        $headers = $this->parseHeaders(mb_substr($chunk, 0, $pos));
-        $body = mb_substr($chunk, $pos + 4);
+        $headers = $this->parseHeaders(substr($chunk, 0, $pos));
+        $body = substr($chunk, $pos + 4);
 
         if (! isset($headers['content-disposition'])) {
             return;
@@ -221,7 +221,7 @@ final class MultipartParser
 
     private function parseUploadedFile(string $filename, ?string $contentType, string $contents): ?UploadedFile
     {
-        $size = mb_strlen($contents);
+        $size = strlen($contents);
         $tempFileName = tempnam(sys_get_temp_dir(), 'PHP_UPLOAD_FILE_');
 
         // no file selected (zero size and empty filename)
@@ -291,7 +291,7 @@ final class MultipartParser
             $value
         );
 
-        if (mb_strtoupper($name) === 'MAX_FILE_SIZE') {
+        if (strtoupper($name) === 'MAX_FILE_SIZE') {
             $this->maxFileSize = (int) $value;
 
             if ($this->maxFileSize === 0) {
@@ -307,13 +307,13 @@ final class MultipartParser
     {
         $headers = [];
 
-        foreach (explode("\r\n", mb_trim($header)) as $line) {
+        foreach (explode("\r\n", trim($header)) as $line) {
             $parts = explode(':', $line, 2);
             if (! isset($parts[1])) {
                 continue;
             }
 
-            $key = mb_strtolower(mb_trim($parts[0]));
+            $key = strtolower(trim($parts[0]));
             $values = explode(';', $parts[1]);
             $values = array_map('trim', $values);
             $headers[$key] = $values;
@@ -357,7 +357,7 @@ final class MultipartParser
             return $postFields;
         }
 
-        $chunkKey = mb_rtrim($chunks[0], ']');
+        $chunkKey = rtrim($chunks[0], ']');
         $parent = &$postFields;
         for ($i = 1; isset($chunks[$i]); $i++) {
             $previousChunkKey = $chunkKey;
@@ -378,7 +378,7 @@ final class MultipartParser
                 $parent = &$parent[$previousChunkKey];
             }
 
-            $chunkKey = mb_rtrim($chunks[$i], ']');
+            $chunkKey = rtrim($chunks[$i], ']');
         }
 
         if ($chunkKey === '') {

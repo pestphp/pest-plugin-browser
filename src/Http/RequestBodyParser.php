@@ -26,7 +26,7 @@ final class RequestBodyParser
      */
     public function parseForm(AmpRequest $request, string $body): array
     {
-        $type = mb_strtolower($request->getHeader('Content-Type') ?? '');
+        $type = strtolower($request->getHeader('Content-Type') ?? '');
         [$type] = explode(';', $type);
 
         if ($type === 'application/x-www-form-urlencoded') {
