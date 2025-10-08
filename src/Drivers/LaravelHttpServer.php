@@ -325,13 +325,15 @@ final class LaravelHttpServer implements HttpServer
     {
         // @phpstan-ignore-next-line
         return array_map(function (array $file) {
-            if (isset($file['error']) && $file['error'] === UPLOAD_ERR_NO_FILE) {
-                return $file;
+            if (isset($file['error'])) {
+                if ($file['error'] === UPLOAD_ERR_NO_FILE) {
+                    return $file;
+                }
+
+                return new UploadedFile($file['tmp_name'], $file['name'], $file['type'], $file['error'], true);
             }
 
-            return array_is_list($file)
-                ? $this->convertUploadedFiles($file)
-                : new UploadedFile($file['tmp_name'], $file['name'], $file['type'], $file['error'], true);
+            return $this->convertUploadedFiles($file);
         }, $files);
     }
 
