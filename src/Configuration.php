@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Pest\Browser;
 
+use Pest\Browser\Contracts\HttpServer;
 use Pest\Browser\Enums\BrowserType;
 use Pest\Browser\Enums\ColorScheme;
 use Pest\Browser\Playwright\Playwright;
@@ -111,6 +112,18 @@ final readonly class Configuration
     public function diff(): self
     {
         Playwright::setShouldDiffOnScreenshotAssertions();
+
+        return $this;
+    }
+
+    /**
+     * Sets the browsers http server class.
+     *
+     * @param  class-string<HttpServer>  $class
+     */
+    public function httpServer(string $class): self
+    {
+        ServerManager::setHttpServerClass($class);
 
         return $this;
     }

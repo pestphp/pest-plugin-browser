@@ -42,11 +42,28 @@ final class ServerManager
     private ?HttpServer $http = null;
 
     /**
+     * The HTTP server class.
+     *
+     * @param  class-string<HttpServer>  $class
+     */
+    private static ?string $httpServerClass = null;
+
+    /**
      * Gets the singleton instance of the server manager.
      */
     public static function instance(): self
     {
         return self::$instance ??= new self();
+    }
+
+    /**
+     * Sets the browsers http server class.
+     *
+     * @param  class-string<HttpServer>  $class
+     */
+    public static function setHttpServerClass(string $class): void
+    {
+        self::$httpServerClass = $class;
     }
 
     /**
@@ -81,8 +98,11 @@ final class ServerManager
      */
     public function http(): HttpServer
     {
-        return $this->http ??= match (function_exists('app_path')) {
-            true => new LaravelHttpServer(
+        $httpServer = self::$httpServerClass !== null ? new self::$httpServerClass(self::DEFAULT_HOST, Port::find()) : null;
+
+        return $this->http ??= match (true) {
+            $httpServer instanceof HttpServer => $httpServer,
+            function_exists('app_path') => new LaravelHttpServer(
                 self::DEFAULT_HOST,
                 Port::find(),
             ),

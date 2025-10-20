@@ -12,17 +12,15 @@ use Amp\Http\Server\Request as AmpRequest;
 use Amp\Http\Server\RequestHandler\ClosureRequestHandler;
 use Amp\Http\Server\Response;
 use Amp\Http\Server\SocketHttpServer;
-use Illuminate\Contracts\Debug\ExceptionHandler;
-use Illuminate\Contracts\Http\Kernel as HttpKernel;
-use Illuminate\Foundation\Testing\Concerns\WithoutExceptionHandlingHandler;
-use Illuminate\Http\Request;
-use Illuminate\Routing\UrlGenerator;
-use Illuminate\Support\Uri;
+use Exception;
 use Pest\Browser\Contracts\HttpServer;
 use Pest\Browser\Exceptions\ServerNotFoundException;
 use Pest\Browser\Execution;
 use Pest\Browser\GlobalState;
 use Psr\Log\NullLogger;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\KernelInterface;
+use Symfony\Component\HttpKernel\TerminableInterface;
 use Symfony\Component\Mime\MimeTypes;
 use Throwable;
 
@@ -49,7 +47,7 @@ final class SymfonyHttpServer implements HttpServer
     private ?Throwable $lastThrowable = null;
 
     /**
-     * Creates a new laravel http server instance.
+     * Creates a new Symfony http server instance.
      */
     public function __construct(
         public readonly string $host,
@@ -79,13 +77,11 @@ final class SymfonyHttpServer implements HttpServer
         }
 
         $parts = parse_url($url);
-        $queryParameters = [];
         $path = $parts['path'] ?? '/';
-        parse_str($parts['query'] ?? '', $queryParameters);
+        $query = $parts['query'] ?? '';
+        $fragment = $parts['fragment'] ?? '';
 
-        return (string) Uri::of($this->url())
-            ->withPath($path)
-            ->withQuery($queryParameters);
+        return $this->url().$path.($query !== '' ? '?'.$query : '').($fragment !== '' ? '#'.$fragment : '');
     }
 
     /**
@@ -146,22 +142,8 @@ final class SymfonyHttpServer implements HttpServer
     {
         $this->start();
 
-        $url = $this->url();
-
-        config(['app.url' => $url]);
-
-        config(['cors.paths' => ['*']]);
-
-        if (app()->bound('url')) {
-            $urlGenerator = app('url');
-
-            assert($urlGenerator instanceof UrlGenerator);
-
-            $this->setOriginalAssetUrl($urlGenerator->asset(''));
-
-            $urlGenerator->useOrigin($url);
-            $urlGenerator->useAssetOrigin($url);
-            $urlGenerator->forceScheme('http');
+        if (is_string($_ENV['DEFAULT_URI'] ?? null)) {
+            $this->setOriginalAssetUrl($_ENV['DEFAULT_URI']);
         }
     }
 
@@ -184,11 +166,7 @@ final class SymfonyHttpServer implements HttpServer
             return;
         }
 
-        $exceptionHandler = app(ExceptionHandler::class);
-
-        if ($exceptionHandler instanceof WithoutExceptionHandlingHandler) {
-            throw $this->lastThrowable;
-        }
+        throw $this->lastThrowable;
     }
 
     /**
@@ -222,18 +200,20 @@ final class SymfonyHttpServer implements HttpServer
             Execution::instance()->tick();
         }
 
-        $uri = $request->getUri();
-        $path = in_array($uri->getPath(), ['', '0'], true) ? '/' : $uri->getPath();
-        $query = $uri->getQuery() ?? ''; // @phpstan-ignore-line
-        $fullPath = $path.($query !== '' ? '?'.$query : '');
-        $absoluteUrl = mb_rtrim($this->url(), '/').$fullPath;
-
-        $filepath = public_path($path);
+        $publicPath = getcwd().DIRECTORY_SEPARATOR.(is_string($_ENV['PUBLIC_PATH'] ?? null) ? $_ENV['PUBLIC_PATH'] : 'public');
+        $filepath = $publicPath.$request->getUri()->getPath();
         if (file_exists($filepath) && ! is_dir($filepath)) {
             return $this->asset($filepath);
         }
 
-        $kernel = app()->make(HttpKernel::class);
+        $kernelClass = is_string($_ENV['KERNEL_CLASS'] ?? null) ? $_ENV['KERNEL_CLASS'] : 'App\Kernel';
+        if (class_exists($kernelClass) === false) {
+            $this->lastThrowable = new Exception('You must define the test kernel class environment variable: KERNEL_CLASS.');
+
+            throw $this->lastThrowable;
+        }
+        /** @var KernelInterface&TerminableInterface $kernel */
+        $kernel = new $kernelClass($_ENV['APP_ENV'], (bool) $_ENV['APP_DEBUG']);
 
         $contentType = $request->getHeader('content-type') ?? '';
         $method = mb_strtoupper($request->getMethod());
@@ -244,7 +224,7 @@ final class SymfonyHttpServer implements HttpServer
         }
 
         $symfonyRequest = Request::create(
-            $absoluteUrl,
+            (string) $request->getUri(),
             $method,
             $parameters,
             $request->getCookies(),
@@ -255,21 +235,15 @@ final class SymfonyHttpServer implements HttpServer
 
         $symfonyRequest->headers->add($request->getHeaders());
 
-        $debug = config('app.debug');
-
         try {
-            config(['app.debug' => false]);
-
-            $response = $kernel->handle($laravelRequest = Request::createFromBase($symfonyRequest));
+            $response = $kernel->handle($symfonyRequest);
         } catch (Throwable $e) {
             $this->lastThrowable = $e;
 
             throw $e;
-        } finally {
-            config(['app.debug' => $debug]);
         }
 
-        $kernel->terminate($laravelRequest, $response);
+        $kernel->terminate($symfonyRequest, $response);
 
         if (property_exists($response, 'exception') && $response->exception !== null) {
             assert($response->exception instanceof Throwable);
@@ -312,7 +286,7 @@ final class SymfonyHttpServer implements HttpServer
 
         $contentType = $contentType[0] ?? 'application/octet-stream';
 
-        if (str_ends_with($filepath, '.js')) {
+        if (str_ends_with($filepath, '.js') || str_ends_with($filepath, '.css')) {
             $temporaryStream = fopen('php://temp', 'r+');
             assert($temporaryStream !== false, 'Failed to open temporary stream.');
 
