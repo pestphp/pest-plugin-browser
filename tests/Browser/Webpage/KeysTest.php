@@ -32,3 +32,19 @@ it('may send multiple keys to an element', function (): void {
 
     expect($page->value('input'))->toBe('abc');
 });
+
+it('writes uppercase while holding shift', function (): void {
+    Route::get('/', fn (): string => '
+        <input id="input" type="text">
+    ');
+
+    $page = visit('/');
+
+    $page->keys('#input', ['KeyA', 'KeyB', 'KeyC']);
+    $page->withKeyDown('Shift', function () use ($page): void {
+        $page->keys('#input', ['KeyD', 'KeyE', 'KeyF']);
+    });
+    $page->keys('#input', ['KeyG', 'KeyH', 'KeyI']);
+
+    expect($page->value('input'))->toBe('abcDEFghi');
+});

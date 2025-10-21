@@ -35,4 +35,24 @@ trait InteractsWithToolbar
 
         return $this;
     }
+
+    /**
+     * Navigates to the next page in the history.
+     */
+    public function forward(): self
+    {
+        $this->page->forward();
+
+        return $this;
+    }
+
+    /**
+     * Navigates to the previous page in the history.
+     */
+    public function back(): self
+    {
+        $this->page->back();
+
+        return $this;
+    }
 }

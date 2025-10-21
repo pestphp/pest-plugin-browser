@@ -14,7 +14,7 @@ trait InteractsWithElements
     /**
      * Click the link with the given text.
      */
-    public function click(string $text): Webpage
+    public function click(string $text): self
     {
         $this->guessLocator($text)->click();
 
@@ -44,7 +44,7 @@ trait InteractsWithElements
      *
      * @param  array<int, string>  $keys
      */
-    public function keys(string $selector, array|string $keys): Webpage
+    public function keys(string $selector, array|string $keys): self
     {
         $keys = is_array($keys) ? $keys : [$keys];
 
@@ -60,7 +60,7 @@ trait InteractsWithElements
     /**
      * Type the given value in the given field.
      */
-    public function type(string $field, string $value): Webpage
+    public function type(string $field, string $value): self
     {
         $this->guessLocator($field)->fill($value);
 
@@ -68,9 +68,21 @@ trait InteractsWithElements
     }
 
     /**
+     * Type the given value slowly in the given field.
+     */
+    public function typeSlowly(string $field, string $value, int $delay = 100): self
+    {
+        $options = ['delay' => $delay];
+
+        $this->guessLocator($field)->type($value, $options);
+
+        return $this;
+    }
+
+    /**
      * Fills the given value in the given field.
      */
-    public function fill(string $field, string $value): Webpage
+    public function fill(string $field, string $value): self
     {
         return $this->type($field, $value);
     }
@@ -78,9 +90,21 @@ trait InteractsWithElements
     /**
      * Hovers over the element matching the given selector.
      */
-    public function hover(string $selector): Webpage
+    public function hover(string $selector): self
     {
         $this->guessLocator($selector)->hover();
+
+        return $this;
+    }
+
+    /**
+     * Right-click the element matching the given selector.
+     */
+    public function rightClick(string $text): Webpage
+    {
+        $this->guessLocator($text)->click([
+            'button' => 'right',
+        ]);
 
         return $this;
     }
@@ -90,7 +114,7 @@ trait InteractsWithElements
      *
      * @param  array<int, string|int>|string|int  $option
      */
-    public function select(string $field, array|string|int $option): Webpage
+    public function select(string $field, array|string|int $option): self
     {
         $this->guessLocator($field)->selectOption($option);
 
@@ -100,7 +124,7 @@ trait InteractsWithElements
     /**
      * Type the given value in the given field without clearing it.
      */
-    public function append(string $field, string $value): Webpage
+    public function append(string $field, string $value): self
     {
         $locator = $this->guessLocator($field);
 
@@ -114,7 +138,7 @@ trait InteractsWithElements
     /**
      * Clear the given field.
      */
-    public function clear(string $field): Webpage
+    public function clear(string $field): self
     {
         $this->guessLocator($field)->clear();
 
@@ -124,7 +148,7 @@ trait InteractsWithElements
     /**
      * Select the given value of a radio button field.
      */
-    public function radio(string $field, string $value): Webpage
+    public function radio(string $field, string $value): self
     {
         $this->guessLocator($field, $value)->click();
 
@@ -134,7 +158,7 @@ trait InteractsWithElements
     /**
      * Check the given checkbox.
      */
-    public function check(string $field, ?string $value = null): Webpage
+    public function check(string $field, ?string $value = null): self
     {
         $this->guessLocator($field, $value)->check();
 
@@ -144,7 +168,7 @@ trait InteractsWithElements
     /**
      * Uncheck the given checkbox.
      */
-    public function uncheck(string $field, ?string $value = null): Webpage
+    public function uncheck(string $field, ?string $value = null): self
     {
         $this->guessLocator($field, $value)->uncheck();
 
@@ -154,7 +178,7 @@ trait InteractsWithElements
     /**
      * Attach the given file to the field.
      */
-    public function attach(string $field, string $path): Webpage
+    public function attach(string $field, string $path): self
     {
         $this->guessLocator($field)->setInputFiles($path);
 
@@ -164,33 +188,44 @@ trait InteractsWithElements
     /**
      * Press the button with the given text or name.
      */
-    public function press(string $button): Webpage
+    public function press(string $button): self
     {
-        $this->guessLocator($button)->click();
-
-        return $this;
+        return $this->click($button);
     }
 
     /**
      * Press the button with the given text or name.
      */
-    public function pressAndWaitFor(string $button, int|float $seconds = 1): Webpage
+    public function pressAndWaitFor(string $button, int|float $seconds = 1): self
     {
-        $locator = $this->guessLocator($button);
-        $locator->click();
-
-        return $this->wait($seconds);
+        return $this->press($button)->wait($seconds);
     }
 
     /**
      * Drag an element to another element using selectors.
      */
-    public function drag(string $from, string $to): Webpage
+    public function drag(string $from, string $to): self
     {
         $fromLocator = $this->guessLocator($from);
         $toLocator = $this->guessLocator($to);
 
         $fromLocator->dragTo($toLocator);
+
+        return $this;
+    }
+
+    /**
+     * Hold down key while running callback
+     */
+    public function withKeyDown(string $key, callable $callback): self
+    {
+        $this->page->keyDown($key);
+
+        try {
+            $callback($this);
+        } finally {
+            $this->page->keyUp($key);
+        }
 
         return $this;
     }

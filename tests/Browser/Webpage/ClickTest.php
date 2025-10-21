@@ -52,3 +52,24 @@ it('may click a link with an id selector', function (): void {
 
     $page->assertSee('About Page');
 });
+
+it('can click elements via exact match css selectors', function (string $selector): void {
+    Route::get('/', fn (): string => '
+        <form>
+            <button type="button" value="Click Me" name="test" onclick="document.getElementById(\'result\').textContent = \'Button Clicked\'">
+            <div id="result"></div>
+        </form>
+    ');
+
+    $page = visit('/');
+
+    $page->click($selector);
+
+    expect($page->text('#result'))->toBe('Button Clicked');
+})->with([
+    '[name]',
+    '[name*="test"]',
+    '[name^="test"]',
+    '[name$="test"]',
+    'button[name="test"]',
+]);

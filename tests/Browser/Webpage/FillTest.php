@@ -31,3 +31,22 @@ it('may clear the field before typing', function (): void {
 
     expect($page->value('#name'))->toBe('John Doe');
 });
+
+it('can fill an input with exact match css selectors', function (string $selector): void {
+    Route::get('/', fn (): string => '
+        <form>
+            <input type="text" name="username" id="username" value="Initial Value">
+        </form>
+    ');
+
+    $page = visit('/');
+
+    $page->fill($selector, 'New Username');
+    expect($page->value('#username'))->toBe('New Username');
+})->with([
+    '[name]',
+    '[name*="username"]',
+    '[name^="username"]',
+    '[name$="username"]',
+    'input[name="username"]',
+]);

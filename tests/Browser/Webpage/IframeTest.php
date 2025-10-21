@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
-use Pest\Browser\Api\Webpage;
+use Pest\Browser\Api\AwaitableWebpage;
 
 it('can interact with iframe content using withinFrame', function (): void {
     $iframeContent = <<<'HTML'
@@ -38,7 +38,7 @@ it('can interact with iframe content using withinFrame', function (): void {
     $page = visit('/');
     $page->assertSee('Main Page');
 
-    $page->withinFrame('.iframe-container', function (Webpage $frame): void {
+    $page->withinFrame('.iframe-container', function (AwaitableWebpage $frame): void {
         $frame->assertSee('Inside Iframe')
             ->type('frame-input', 'Hello iframe')
             ->click('frame-button');
@@ -85,7 +85,7 @@ it('can interact with iframe that uses JavaScript', function (): void {
     $page = visit('/');
     $page->assertSee('Main Page');
 
-    $page->withinFrame('.iframe-wrapper', function (Webpage $frame): void {
+    $page->withinFrame('.iframe-wrapper', function (AwaitableWebpage $frame): void {
         $frame->assertSee('Inside Iframe')
             ->type('frame-input', 'Hello from JavaScript')
             ->click('frame-button')
@@ -115,7 +115,7 @@ it('can interact with iframe from external URL content', function (): void {
     visit('/')
         ->assertSee('Cross-Origin Iframe Behavior Test')
         ->wait(1)
-        ->withinFrame('.iframe-container', function (Webpage $frame): void {
+        ->withinFrame('.iframe-container', function (AwaitableWebpage $frame): void {
             $frame->assertSee('Example Domain');
         });
 });
@@ -146,11 +146,11 @@ it('can interact with two iframes from external URL content', function (): void 
     $page = visit('/')
         ->assertSee('Cross-Origin Iframe Behavior Test');
 
-    $page->withinFrame('.iframe-container', function (Webpage $frame): void {
+    $page->withinFrame('.iframe-container', function (AwaitableWebpage $frame): void {
         $frame->assertSee('Example Domain');
     });
 
-    $page->withinFrame('.another-iframe-container', function (Webpage $frame): void {
+    $page->withinFrame('.another-iframe-container', function (AwaitableWebpage $frame): void {
         $frame->assertSee('Example Domain');
     });
 });

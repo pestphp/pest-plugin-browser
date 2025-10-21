@@ -4,44 +4,46 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Api\Concerns;
 
+use Pest\Browser\Api\AwaitableWebpage;
 use Pest\Browser\Api\Webpage;
 use Pest\Browser\Playwright\Page;
-use RuntimeException;
 
 /**
  * @mixin Webpage
  */
 trait InteractsWithFrames
 {
-    public function withinFrame(string $selector, callable $callback): Webpage
+    /**
+     * Runs the given callback within the context of the specified iframe.
+     */
+    public function withinFrame(string $selector, callable $callback): self
     {
         $this->page->waitForLoadState('networkidle');
 
-        $iframeLocator = $this->guessLocator($selector)->frameLocator($selector);
+        $locator = $this->guessLocator($selector)->frameLocator($selector);
+        $locator->waitFor(['state' => 'attached']);
 
-        $iframeLocator->waitFor(['state' => 'attached']);
+        $contentFrameObj = $locator->contentFrame();
 
-        $contentFrameObj = $iframeLocator->contentFrame();
+        expect($contentFrameObj)->not->toBeNull("Expected to find iframe on the page initially with the url [{$this->initialUrl}] using the selector [{$selector}], but it was not found.");
 
-        if ($contentFrameObj !== null) {
-            assert(
-                property_exists($contentFrameObj, 'guid') && is_string($contentFrameObj->guid),
-                'Expected contentFrame to have string guid property',
-            );
+        assert($contentFrameObj !== null);
 
-            $iframePage = new Page(
-                $this->page->context(),
-                $contentFrameObj->guid,
-                $contentFrameObj->guid,
-            );
+        assert(
+            property_exists($contentFrameObj, 'guid') && is_string($contentFrameObj->guid),
+            'Expected contentFrame to have string guid property',
+        );
 
-            $iframeWebpage = new Webpage($iframePage, $this->url());
+        $iframePage = new Page(
+            $this->page->context(),
+            $contentFrameObj->guid,
+            $contentFrameObj->guid,
+        );
 
-            $callback($iframeWebpage);
+        $iframeWebpage = new AwaitableWebpage($iframePage, $this->url());
 
-            return $this;
-        }
+        $callback($iframeWebpage);
 
-        throw new RuntimeException("Unable to access iframe content with selector: {$selector}. The Playwright server may not support iframe operations for this setup.");
+        return $this;
     }
 }

@@ -86,6 +86,16 @@ final readonly class Configuration
     }
 
     /**
+     * Sets the browsers userAgent.
+     */
+    public function userAgent(string $userAgent): self
+    {
+        Playwright::setUserAgent($userAgent);
+
+        return $this;
+    }
+
+    /**
      * Enables debug mode for assertions.
      */
     public function debug(): self

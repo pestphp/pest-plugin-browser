@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
 
-test('can set geolocation', function (): void {
+test('may set geolocation', function (): void {
     Route::get('/', fn (): string => '
         <html>
         <head></head>

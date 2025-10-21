@@ -5,14 +5,14 @@ declare(strict_types=1);
 it('may press a button with text', function (): void {
     Route::get('/', fn (): string => '
         <form>
-            <button data-test="my-button" type="button" id="submit-btn" onclick="document.getElementById(\'result\').textContent = \'Button Pressed\'">Submit</button>
+            <button type="button" id="submit-btn" onclick="document.getElementById(\'result\').textContent = \'Button Pressed\'">Submit</button>
             <div id="result"></div>
         </form>
     ');
 
     $page = visit('/');
 
-    $page->press('@my-button');
+    $page->press('Submit');
 
     expect($page->text('#result'))->toBe('Button Pressed');
 });
@@ -32,17 +32,17 @@ it('may press a button with a name', function (): void {
     expect($page->text('#result'))->toBe('Button Pressed');
 });
 
-it('may press a button with an id', function (): void {
+it('may press a button with data test attribute', function (): void {
     Route::get('/', fn (): string => '
         <form>
-            <button type="button" id="submit-btn" onclick="document.getElementById(\'result\').textContent = \'Button Pressed\'">Submit</button>
+            <button data-test="my-button" type="button" id="submit-btn" onclick="document.getElementById(\'result\').textContent = \'Button Pressed\'">Submit</button>
             <div id="result"></div>
         </form>
     ');
 
     $page = visit('/');
 
-    $page->press('submit-btn');
+    $page->press('@my-button');
 
     expect($page->text('#result'))->toBe('Button Pressed');
 });
@@ -58,6 +58,36 @@ it('may press an input button', function (): void {
     $page = visit('/');
 
     $page->press('Click Me');
+
+    expect($page->text('#result'))->toBe('Input Button Pressed');
+});
+
+it('may press an input button by name', function (): void {
+    Route::get('/', fn (): string => '
+        <form>
+            <input type="button" name="input-button" value="Click Me" onclick="document.getElementById(\'result\').textContent = \'Input Button Pressed\'">
+            <div id="result"></div>
+        </form>
+    ');
+
+    $page = visit('/');
+
+    $page->press('input-button');
+
+    expect($page->text('#result'))->toBe('Input Button Pressed');
+});
+
+it('may press an input button by data test attribute', function (): void {
+    Route::get('/', fn (): string => '
+        <form>
+            <input type="button" data-test="my-button" value="Click Me" onclick="document.getElementById(\'result\').textContent = \'Input Button Pressed\'">
+            <div id="result"></div>
+        </form>
+    ');
+
+    $page = visit('/');
+
+    $page->press('@my-button');
 
     expect($page->text('#result'))->toBe('Input Button Pressed');
 });

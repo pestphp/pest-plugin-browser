@@ -71,6 +71,19 @@ final class PendingAwaitablePage
     }
 
     /**
+     * Allows you to set a different locale, timezone, and location for the page.
+     */
+    public function from(): From
+    {
+        return new From(
+            $this->browserType,
+            $this->device,
+            $this->url,
+            $this->options,
+        );
+    }
+
+    /**
      * Allows you to set a different device for the page.
      */
     public function on(): On
@@ -95,6 +108,17 @@ final class PendingAwaitablePage
     }
 
     /**
+     * Sets the userAgent for the page.
+     */
+    public function withUserAgent(string $userAgent): self
+    {
+        return new self($this->browserType, $this->device, $this->url, [
+            'userAgent' => $userAgent,
+            ...$this->options,
+        ]);
+    }
+
+    /**
      * Sets the timezone for the page.
      */
     public function withTimezone(string $timezone): self
@@ -110,8 +134,10 @@ final class PendingAwaitablePage
      */
     public function geolocation(float $latitude, float $longitude): self
     {
+        $geolocation = ['latitude' => $latitude, 'longitude' => $longitude];
+
         return new self($this->browserType, $this->device, $this->url, [
-            'geolocation' => ['latitude' => $latitude, 'longitude' => $longitude],
+            'geolocation' => $geolocation,
             'permissions' => ['geolocation'],
             ...$this->options,
         ]);

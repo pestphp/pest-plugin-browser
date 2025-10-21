@@ -27,7 +27,7 @@ it('may visit a page', function (string $method): void {
 
     $page->assertSee('Experience elegance across every device.')
         ->assertScreenshotMatches();
-})->with($methods)->skipOnCI();
+})->with($methods)->onlyOnMac()->skipOnCI();
 
 it('may visit a page in light/dark mode', function (ColorScheme $scheme): void {
     Route::get('/', fn (): string => '
@@ -71,7 +71,7 @@ it('may visit a page in light/dark mode', function (ColorScheme $scheme): void {
     };
 
     $page->assertScreenshotMatches();
-})->with(ColorScheme::cases())->skipOnCI();
+})->with(ColorScheme::cases())->onlyOnMac()->skipOnCI();
 
 it('may visit a page with custom locale and timezone', function (): void {
     Route::get('/', fn (): string => '
@@ -95,9 +95,25 @@ it('may visit a page with custom locale and timezone', function (): void {
     expect($timezone)->toBe('Europe/Paris');
 });
 
-it('may visit external URLs', function (): void {
-    $page = visit('https://laravel.com');
+it('may visit a page with a custom userAgent', function (): void {
+    Route::get('/', fn (): string => '
+        <html>
+        <head></head>
+        <body>
+            <h1>User Agent Test</h1>
+        </body>
+        </html>
+    ');
 
-    $page->assertSee('Laravel')
-        ->assertDontSee('Symfony');
+    $page = visit('/')
+        ->withUserAgent('Pest-Browser');
+
+    $userAgent = $page->script('navigator.userAgent');
+    expect($userAgent)->toBe('Pest-Browser');
+});
+
+it('may visit external URLs', function (): void {
+    $page = visit('https://example.com');
+
+    $page->assertSee('Example Domain');
 });

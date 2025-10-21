@@ -15,6 +15,24 @@ use Pest\Browser\Support\JavaScriptSerializer;
 trait InteractsWithPlaywright
 {
     /**
+     * Start holding down key
+     */
+    public function keyDown(string $key): void
+    {
+        $response = $this->sendMessage('keyboardDown', ['key' => $key]);
+        $this->processVoidResponse($response);
+    }
+
+    /**
+     * Let go of key
+     */
+    public function keyUp(string $key): void
+    {
+        $response = $this->sendMessage('keyboardUp', ['key' => $key]);
+        $this->processVoidResponse($response);
+    }
+
+    /**
      * Send a message to the server via the channel
      *
      * @param  array<string, mixed>  $params

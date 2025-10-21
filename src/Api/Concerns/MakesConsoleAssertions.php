@@ -29,6 +29,33 @@ trait MakesConsoleAssertions
     }
 
     /**
+     * Asserts there are no broken images on the page.
+     */
+    public function assertNoBrokenImages(): Webpage
+    {
+        $this->page->waitForLoadState('load');
+
+        $brokenImages = $this->page->brokenImages();
+
+        expect($brokenImages)->toBeEmpty(sprintf(
+            'Expected no broken images on the page initially with the url [%s], but found %s: %s',
+            $this->initialUrl,
+            count($brokenImages),
+            implode(', ', $brokenImages),
+        ));
+
+        return $this;
+    }
+
+    /**
+     * Asserts there are no missing images on the page.
+     */
+    public function assertNoMissingImages(): Webpage
+    {
+        return $this->assertNoBrokenImages();
+    }
+
+    /**
      * Asserts there are no console logs on the page.
      */
     public function assertNoConsoleLogs(): Webpage
@@ -36,7 +63,8 @@ trait MakesConsoleAssertions
         $consoleLogs = $this->page->consoleLogs();
 
         expect($consoleLogs)->toBeEmpty(sprintf(
-            "Expected no console logs on the page initially with the url [{$this->initialUrl}], but found %s: %s",
+            'Expected no console logs on the page initially with the url [%s], but found %s: %s',
+            $this->initialUrl,
             count($consoleLogs),
             implode(', ', array_map(fn (array $log) => $log['message'], $consoleLogs)),
         ));
@@ -52,7 +80,8 @@ trait MakesConsoleAssertions
         $javaScriptErrors = $this->page->javaScriptErrors();
 
         expect($javaScriptErrors)->toBeEmpty(sprintf(
-            "Expected no JavaScript errors on the page initially with the url [{$this->initialUrl}], but found %s: %s",
+            'Expected no JavaScript errors on the page initially with the url [%s], but found %s: %s',
+            $this->initialUrl,
             count($javaScriptErrors),
             implode(', ', array_map(fn (array $log) => $log['message'], $javaScriptErrors)),
         ));
