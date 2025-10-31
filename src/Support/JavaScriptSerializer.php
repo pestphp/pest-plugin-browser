@@ -148,7 +148,7 @@ final class JavaScriptSerializer
 
         // Handle arrays
         if (isset($value['a'])) {
-            return array_map(fn (mixed $item): mixed => self::parseValue($item), $value['a']);
+            return array_map(self::parseValue(...), $value['a']);
         }
 
         // Handle objects
