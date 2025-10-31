@@ -200,6 +200,19 @@ trait MakesElementAssertions
     }
 
     /**
+     * Assert that the given source code is present within the selector.
+     */
+    public function assertSourceInHas(string $selector, string $code): Webpage
+    {
+        $locator = $this->guessLocator($selector);
+        $html = $locator->innerHTML();
+        $message = "Expected page source to contain [{$code}] on the page initially with the url [{$this->initialUrl}], but it was not found.";
+        expect(str_contains($html, $code))->toBeTrue($message);
+
+        return $this;
+    }
+
+    /**
      * Assert that the given source code is not present on the page.
      */
     public function assertSourceMissing(string $code): Webpage
@@ -207,6 +220,19 @@ trait MakesElementAssertions
         $content = $this->page->content();
         $message = "Expected page source not to contain [{$code}] on the page initially with the url [{$this->initialUrl}], but it was found.";
         expect(str_contains($content, $code))->toBeFalse($message);
+
+        return $this;
+    }
+
+    /**
+     * Assert that the given source code is not present within the selector.
+     */
+    public function assertSourceInMissing(string $selector, string $code): Webpage
+    {
+        $locator = $this->guessLocator($selector);
+        $html = $locator->innerHTML();
+        $message = "Expected page source not to contain [{$code}] on the page initially with the url [{$this->initialUrl}], but it was found.";
+        expect(str_contains($html, $code))->toBeFalse($message);
 
         return $this;
     }
