@@ -130,7 +130,7 @@ trait InteractsWithElements
 
         $currentValue = $locator->inputValue();
 
-        $locator->fill($currentValue . $value);
+        $locator->fill($currentValue.$value);
 
         return $this;
     }

@@ -5,8 +5,8 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Route;
 
 it('may click a link', function (): void {
-    Route::get('/', fn(): string => '<a href="/about">About Us</a>');
-    Route::get('/about', fn(): string => 'About Page');
+    Route::get('/', fn (): string => '<a href="/about">About Us</a>');
+    Route::get('/about', fn (): string => 'About Page');
 
     $page = visit('/');
     $page->assertUrlIs(url('/'));
@@ -17,8 +17,8 @@ it('may click a link', function (): void {
 });
 
 it('may click a link double type', function (): void {
-    Route::get('/', fn(): string => '<a href="/about">About Us</a>');
-    Route::get('/about', fn(): string => 'About Page');
+    Route::get('/', fn (): string => '<a href="/about">About Us</a>');
+    Route::get('/about', fn (): string => 'About Page');
 
     $page = visit('/');
     $page->assertUrlIs(url('/'));
@@ -29,7 +29,7 @@ it('may click a link double type', function (): void {
 });
 
 it('may click a javascript link that takes a few miliseconds to redirect', function (): void {
-    Route::get('/', fn(): string => '
+    Route::get('/', fn (): string => '
         <a href="/about" id="about-link">Really</a>
 
         <button id="click-about">Click About</button>
@@ -43,7 +43,7 @@ it('may click a javascript link that takes a few miliseconds to redirect', funct
         </script>
     ');
 
-    Route::get('/about', fn(): string => 'About Page');
+    Route::get('/about', fn (): string => 'About Page');
 
     $page = visit('/');
     $page->assertUrlIs(url('/'));
@@ -55,8 +55,8 @@ it('may click a javascript link that takes a few miliseconds to redirect', funct
 });
 
 it('may click a link with an id selector', function (): void {
-    Route::get('/', fn(): string => '<a id="about-link" href="/about">About Us</a>');
-    Route::get('/about', fn(): string => 'About Page');
+    Route::get('/', fn (): string => '<a id="about-link" href="/about">About Us</a>');
+    Route::get('/about', fn (): string => 'About Page');
 
     $page = visit('/');
 
@@ -66,7 +66,7 @@ it('may click a link with an id selector', function (): void {
 });
 
 it('can click elements via exact match css selectors', function (string $selector): void {
-    Route::get('/', fn(): string => '
+    Route::get('/', fn (): string => '
         <form>
             <button type="button" value="Click Me" name="test" onclick="document.getElementById(\'result\').textContent = \'Button Clicked\'">
             <div id="result"></div>
