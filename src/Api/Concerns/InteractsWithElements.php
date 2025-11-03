@@ -14,9 +14,9 @@ trait InteractsWithElements
     /**
      * Click the link with the given text.
      */
-    public function click(string $text): self
+    public function click(string $text, ?array $options = null): self
     {
-        $this->guessLocator($text)->click();
+        $this->guessLocator($text)->click($options);
 
         return $this;
     }
@@ -130,7 +130,7 @@ trait InteractsWithElements
 
         $currentValue = $locator->inputValue();
 
-        $locator->fill($currentValue.$value);
+        $locator->fill($currentValue . $value);
 
         return $this;
     }
