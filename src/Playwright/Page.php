@@ -254,14 +254,13 @@ final class Page
     {
         $params = [
             'expression' => $content,
+            'isFunction' => true,
             'arg' => JavaScriptSerializer::serializeArgument($arg),
         ];
 
-        Client::instance()->execute(
-            $this->guid,
-            'waitForFunction',
-            $params
-        );
+        $response = $this->sendMessage('waitForFunction', $params);
+
+        $this->processVoidResponse($response);
 
         return $this;
     }
