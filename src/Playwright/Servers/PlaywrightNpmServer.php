@@ -47,7 +47,11 @@ final class PlaywrightNpmServer implements PlaywrightServer
     public static function create(string $baseDirectory, string $command, string $host, int $port, string $until): self
     {
         return new self(
-            $baseDirectory, $command, $host, $port, $until
+            $baseDirectory,
+            $command,
+            $host,
+            $port,
+            $until
         );
     }
 
@@ -122,14 +126,17 @@ final class PlaywrightNpmServer implements PlaywrightServer
     {
         if (! $this->isRunning()) {
             throw new RuntimeException(
-                sprintf('The process with arguments [%s] is not running or has stopped unexpectedly.', json_encode([
-                    'baseDirectory' => $this->baseDirectory,
-                    'command' => $this->command,
-                    'host' => $this->host,
-                    'port' => $this->port,
-                    'until' => $this->until,
-                ]),
-                ));
+                sprintf(
+                    'The process with arguments [%s] is not running or has stopped unexpectedly.',
+                    json_encode([
+                        'baseDirectory' => $this->baseDirectory,
+                        'command' => $this->command,
+                        'host' => $this->host,
+                        'port' => $this->port,
+                        'until' => $this->until,
+                    ]),
+                )
+            );
         }
 
         return sprintf('%s:%d', $this->host, $this->port);
@@ -143,7 +150,7 @@ final class PlaywrightNpmServer implements PlaywrightServer
     private function ensurePlaywrightIsInstalledAndVersionIsSupported(): void
     {
         $process = SystemProcess::fromShellCommandline(
-            '.'.DIRECTORY_SEPARATOR.'node_modules'.DIRECTORY_SEPARATOR.'.bin'.DIRECTORY_SEPARATOR.'playwright run-server --version',
+            '.'.Playwright::executeablePath().'playwright run-server --version',
             $this->baseDirectory,
         );
 

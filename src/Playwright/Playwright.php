@@ -45,6 +45,11 @@ final class Playwright
     private static ColorScheme $defaultColorScheme = ColorScheme::LIGHT;
 
     /**
+     * The path to the Playwright executable.
+     */
+    private static string $executablePath = DIRECTORY_SEPARATOR.'node_modules'.DIRECTORY_SEPARATOR.'.bin'.DIRECTORY_SEPARATOR;
+
+    /**
      * The timeout in milliseconds.
      */
     private static int $timeout = 5_000;
@@ -190,6 +195,24 @@ final class Playwright
     public static function defaultBrowserType(): BrowserType
     {
         return self::$defaultBrowserType;
+    }
+
+    /**
+     * Sets the path to the Playwright executable.
+     */
+    public static function setExecutablePath(string $path): void
+    {
+        $separator = preg_quote(DIRECTORY_SEPARATOR, '/');
+
+        self::$executablePath = preg_replace('/['.$separator.'\/]+$/', '', $path).DIRECTORY_SEPARATOR;
+    }
+
+    /**
+     * Get the path to the Playwright executable.
+     */
+    public static function executeablePath(): string
+    {
+        return self::$executablePath;
     }
 
     /**
