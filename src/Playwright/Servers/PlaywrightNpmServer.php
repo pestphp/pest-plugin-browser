@@ -60,11 +60,11 @@ final class PlaywrightNpmServer implements PlaywrightServer
             return;
         }
 
-        $this->systemProcess = SystemProcess::fromShellCommandline(sprintf(
+        $this->systemProcess = new SystemProcess(explode(' ', sprintf(
             $this->command,
             $this->host,
             $this->port,
-        ), $this->baseDirectory, [
+        )), $this->baseDirectory, [
             'APP_URL' => sprintf('http://%s:%d', $this->host, $this->port),
         ]);
 
