@@ -15,9 +15,8 @@ it('can visit non-subdomain routes with subdomain host browser testing', functio
         </html>
     ');
 
-    pest()->browser()->withHost('app.localhost');
-
     visit('/app-test')
+        ->withHost('app.localhost')
         ->assertSee('Welcome to NON Subdomain')
         ->assertSeeIn('#content', 'This is the non subdomain content')
         ->assertTitle('Non Subdomain');
@@ -33,9 +32,8 @@ it('works with Laravel subdomain style', function (): void {
         ]);
     });
 
-    pest()->browser()->withHost('api.localhost');
-
     visit('/api/health')
+        ->withHost('api.localhost')
         ->assertSee('"status":"ok"')
         ->assertSee('"subdomain":"api"')
         ->assertSee('"host":"api.localhost"');

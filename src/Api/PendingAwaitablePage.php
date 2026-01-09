@@ -119,6 +119,16 @@ final class PendingAwaitablePage
     }
 
     /**
+     * Sets the host for the server.
+     */
+    public function withHost(string $host): self
+    {
+        Playwright::setHost($host);
+
+        return new self($this->browserType, $this->device, $this->url, $this->options);
+    }
+
+    /**
      * Sets the timezone for the page.
      */
     public function withTimezone(string $timezone): self
