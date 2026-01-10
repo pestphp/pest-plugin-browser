@@ -6,6 +6,8 @@ namespace Pest\Browser\Playwright;
 
 use Amp\Websocket\Client\WebsocketConnection;
 use Generator;
+use Pest\Browser\Api\DownloadCollector;
+use Pest\Browser\Api\PendingDownload;
 use Pest\Browser\Exceptions\PlaywrightOutdatedException;
 use PHPUnit\Framework\ExpectationFailedException;
 
@@ -30,6 +32,20 @@ final class Client
      * Default timeout for requests in milliseconds.
      */
     private int $timeout = 5_000;
+
+    /**
+     * Pending downloads awaiting resolution, keyed by page GUID.
+     *
+     * @var array<string, PendingDownload>
+     */
+    private array $pendingDownloads = [];
+
+    /**
+     * Download collectors for capturing multiple downloads, keyed by page GUID.
+     *
+     * @var array<string, DownloadCollector>
+     */
+    private array $downloadCollectors = [];
 
     /**
      * Returns the current client instance.
@@ -87,26 +103,17 @@ final class Client
         $this->websocketConnection->sendText($requestJson);
 
         while (true) {
-            $responseJson = $this->fetch($this->websocketConnection);
-            /** @var array{id: string|null, params: array{add: string|null}, error: array{error: array{message: string|null}}} $response */
-            $response = json_decode($responseJson, true);
+            $responseJson = $this->fetch($this->connection());
 
-            if (isset($response['error']['error']['message'])) {
-                $message = $response['error']['error']['message'];
+            /** @var array{id?: string, method?: string, guid?: string, params?: array<string, mixed>, result?: array<string, mixed>, error?: array{error?: array{message?: string}}} $response */
+            $response = (array) json_decode($responseJson, true);
 
-                if (str_contains($message, 'Playwright was just installed or updated')) {
-                    throw new PlaywrightOutdatedException();
-                }
-
-                throw new ExpectationFailedException($message);
-            }
+            $this->handleError($response);
+            $this->handleDownload($response);
 
             yield $response;
 
-            if (
-                (isset($response['id']) && $response['id'] === $requestId)
-                || (isset($params['waitUntil']) && isset($response['params']['add']) && $params['waitUntil'] === $response['params']['add'])
-            ) {
+            if ($this->isResponseComplete($response, $requestId, $params)) {
                 break;
             }
         }
@@ -126,6 +133,109 @@ final class Client
     public function timeout(): int
     {
         return $this->timeout;
+    }
+
+    /**
+     * Registers a pending download for the given page.
+     */
+    public function expectDownload(string $pageGuid, PendingDownload $download): void
+    {
+        $this->pendingDownloads[$pageGuid] = $download;
+    }
+
+    /**
+     * Starts collecting downloads for the given page.
+     */
+    public function startCollectingDownloads(string $pageGuid, DownloadCollector $collector): void
+    {
+        $this->downloadCollectors[$pageGuid] = $collector;
+    }
+
+    /**
+     * Stops collecting downloads for the given page.
+     */
+    public function stopCollectingDownloads(string $pageGuid): void
+    {
+        unset($this->downloadCollectors[$pageGuid]);
+    }
+
+    /**
+     * Handles error responses from Playwright.
+     *
+     * @param  array<string, mixed>  $response
+     */
+    private function handleError(array $response): void
+    {
+        $error = $response['error'] ?? null;
+        $errorInner = is_array($error) ? ($error['error'] ?? null) : null;
+        $errorMessage = is_array($errorInner) ? ($errorInner['message'] ?? null) : null;
+
+        if (! is_string($errorMessage)) {
+            return;
+        }
+
+        if (str_contains($errorMessage, 'Playwright was just installed or updated')) {
+            throw new PlaywrightOutdatedException();
+        }
+
+        throw new ExpectationFailedException($errorMessage);
+    }
+
+    /**
+     * Handles download events from Playwright.
+     *
+     * @param  array<string, mixed>  $response
+     */
+    private function handleDownload(array $response): void
+    {
+        $event = DownloadEvent::fromResponse($response);
+
+        if ($event === null) {
+            return;
+        }
+
+        $collector = $this->downloadCollectors[$event->pageGuid] ?? null;
+
+        if ($collector !== null) {
+            $collector->add($event->url, $event->suggestedFilename, $event->artifactGuid);
+
+            return;
+        }
+
+        $download = $this->pendingDownloads[$event->pageGuid] ?? null;
+
+        if ($download !== null) {
+            $download->resolve($event->url, $event->suggestedFilename, $event->artifactGuid);
+            unset($this->pendingDownloads[$event->pageGuid]);
+        }
+    }
+
+    /**
+     * Determines if the response completes the current request.
+     *
+     * @param  array<string, mixed>  $response
+     * @param  array<string, mixed>  $params
+     */
+    private function isResponseComplete(array $response, string $requestId, array $params): bool
+    {
+        if (isset($response['id']) && $response['id'] === $requestId) {
+            return true;
+        }
+
+        $responseParams = $response['params'] ?? null;
+        $responseParamsAdd = is_array($responseParams) ? ($responseParams['add'] ?? null) : null;
+
+        return isset($params['waitUntil']) && $params['waitUntil'] === $responseParamsAdd;
+    }
+
+    /**
+     * Returns the active WebSocket connection.
+     */
+    private function connection(): WebsocketConnection
+    {
+        assert($this->websocketConnection instanceof WebsocketConnection);
+
+        return $this->websocketConnection;
     }
 
     /**

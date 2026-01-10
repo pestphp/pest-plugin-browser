@@ -12,6 +12,7 @@ use Pest\Browser\Support\GuessLocator;
 final readonly class Webpage
 {
     use Concerns\HasWaitCapabilities,
+        Concerns\InteractsWithDownloads,
         Concerns\InteractsWithElements,
         Concerns\InteractsWithFrames,
         Concerns\InteractsWithScreen,

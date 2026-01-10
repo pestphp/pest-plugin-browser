@@ -28,6 +28,8 @@ final readonly class AwaitableWebpage
         private array $nonAwaitableMethods = [
             'assertScreenshotMatches',
             'assertNoAccessibilityIssues',
+            'expectDownload',
+            'expectDownloads',
         ],
     ) {
         //

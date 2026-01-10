@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Pest\Browser\Playwright;
 
 use Generator;
+use Pest\Browser\Api\DownloadCollector;
+use Pest\Browser\Api\PendingDownload;
 use Pest\Browser\Execution;
 use Pest\Browser\Support\ImageDiffView;
 use Pest\Browser\Support\JavaScriptSerializer;
@@ -564,6 +566,26 @@ final class Page
                 EOT,
             );
         }
+    }
+
+    /**
+     * Creates a pending download that will capture the next download event.
+     */
+    public function pendingDownload(): PendingDownload
+    {
+        $download = new PendingDownload($this);
+
+        Client::instance()->expectDownload($this->guid, $download);
+
+        return $download;
+    }
+
+    /**
+     * Creates a download collector for this page.
+     */
+    public function downloadCollector(): DownloadCollector
+    {
+        return new DownloadCollector($this, $this->guid);
     }
 
     /**
