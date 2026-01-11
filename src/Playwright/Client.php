@@ -190,7 +190,7 @@ final class Client
     {
         $event = DownloadEvent::fromResponse($response);
 
-        if ($event === null) {
+        if (! $event instanceof DownloadEvent) {
             return;
         }
 
