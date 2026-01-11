@@ -203,9 +203,9 @@ it('saves multiple downloads with collection methods', function (): void {
         count: 2
     );
 
-    $paths = $downloads->map(fn ($d) => tap(tempPath($test, '.txt'), fn (string $p): Pest\Browser\Api\PendingDownload => $d->saveAs($p)));
+    $paths = $downloads->map(fn ($d) => tap(tempPath($test, '.txt'), fn ($p) => $d->saveAs($p)));
 
-    $paths->each(fn ($path): Pest\Mixins\Expectation => expect(file_exists($path))->toBeTrue());
+    $paths->each(fn ($path) => expect(file_exists($path))->toBeTrue());
 });
 
 // Helpers
