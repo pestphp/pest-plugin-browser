@@ -87,18 +87,7 @@ final class PendingDownload
      */
     public function path(): string
     {
-        $this->ensureResolved();
-
-        foreach ($this->artifact('pathAfterFinished') as $message) {
-            $result = $message['result'] ?? [];
-            $value = is_array($result) ? ($result['value'] ?? null) : null;
-
-            if (is_string($value)) {
-                return $value;
-            }
-        }
-
-        return '';
+        return $this->artifactValue('pathAfterFinished') ?? '';
     }
 
     /**
@@ -114,19 +103,7 @@ final class PendingDownload
      */
     public function failure(): ?string
     {
-        $this->ensureResolved();
-
-        foreach ($this->artifact('failure') as $message) {
-            $result = $message['result'] ?? [];
-
-            if (is_array($result) && array_key_exists('value', $result)) {
-                $value = $result['value'];
-
-                return is_string($value) ? $value : null;
-            }
-        }
-
-        return null;
+        return $this->artifactValue('failure');
     }
 
     /**
@@ -195,6 +172,25 @@ final class PendingDownload
         expect($this->isSuccessful())->toBeFalse();
 
         return $this;
+    }
+
+    /**
+     * Executes a method on the download artifact and extracts the result value.
+     */
+    private function artifactValue(string $method): ?string
+    {
+        $this->ensureResolved();
+
+        foreach ($this->artifact($method) as $message) {
+            $result = $message['result'] ?? [];
+            $value = is_array($result) ? ($result['value'] ?? null) : null;
+
+            if (is_string($value) || $value === null) {
+                return $value;
+            }
+        }
+
+        return null;
     }
 
     /**
