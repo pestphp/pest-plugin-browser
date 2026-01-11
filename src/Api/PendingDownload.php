@@ -55,7 +55,7 @@ final class PendingDownload
      */
     public function url(): string
     {
-        $this->wait();
+        $this->ensureResolved();
 
         return (string) $this->url;
     }
@@ -65,7 +65,7 @@ final class PendingDownload
      */
     public function suggestedFilename(): string
     {
-        $this->wait();
+        $this->ensureResolved();
 
         return (string) $this->suggestedFilename;
     }
@@ -75,7 +75,7 @@ final class PendingDownload
      */
     public function saveAs(string $path): self
     {
-        $this->wait();
+        $this->ensureResolved();
 
         iterator_to_array($this->artifact('saveAs', ['path' => $path]));
 
@@ -87,7 +87,7 @@ final class PendingDownload
      */
     public function path(): string
     {
-        $this->wait();
+        $this->ensureResolved();
 
         foreach ($this->artifact('pathAfterFinished') as $message) {
             $result = $message['result'] ?? [];
@@ -114,7 +114,7 @@ final class PendingDownload
      */
     public function failure(): ?string
     {
-        $this->wait();
+        $this->ensureResolved();
 
         foreach ($this->artifact('failure') as $message) {
             $result = $message['result'] ?? [];
@@ -211,9 +211,9 @@ final class PendingDownload
     }
 
     /**
-     * Waits for the download to be resolved.
+     * Ensures the download has been resolved.
      */
-    private function wait(): void
+    private function ensureResolved(): void
     {
         if ($this->artifactGuid !== null) {
             return;

@@ -69,23 +69,16 @@ final class DownloadCollector
     private function waitForCount(int $count): void
     {
         Execution::instance()->waitForExpectation(function () use ($count): void {
-            if (count($this->downloads) < $count) {
+            $actual = count($this->downloads);
+
+            if ($actual !== $count) {
                 throw BrowserExpectationFailedException::from(
                     $this->page,
                     new ExpectationFailedException(
-                        sprintf('Expected %d downloads, but only %d received', $count, count($this->downloads))
+                        sprintf('Expected %d downloads, but %d received', $count, $actual)
                     ),
                 );
             }
         });
-
-        if (count($this->downloads) > $count) {
-            throw BrowserExpectationFailedException::from(
-                $this->page,
-                new ExpectationFailedException(
-                    sprintf('Expected %d downloads, but %d received', $count, count($this->downloads))
-                ),
-            );
-        }
     }
 }
