@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Pest\Browser\Api\Concerns;
 
 use Illuminate\Support\Collection;
-use Pest\Browser\Api\PendingDownload;
+use Pest\Browser\Api\Download;
 
 trait InteractsWithDownloads
 {
@@ -14,7 +14,7 @@ trait InteractsWithDownloads
      *
      * @param  callable(self): void  $callback
      */
-    public function expectDownload(callable $callback): PendingDownload
+    public function expectDownload(callable $callback): Download
     {
         $download = $this->page->pendingDownload();
 
@@ -27,7 +27,7 @@ trait InteractsWithDownloads
      * Executes a callback and captures all downloads it triggers.
      *
      * @param  callable(self): void  $callback
-     * @return Collection<int, PendingDownload>
+     * @return Collection<int, Download>
      */
     public function expectDownloads(callable $callback, ?int $count = null): Collection
     {

@@ -11,10 +11,7 @@ use Pest\Browser\Playwright\Client;
 use Pest\Browser\Playwright\Page;
 use PHPUnit\Framework\ExpectationFailedException;
 
-/**
- * @internal
- */
-final class PendingDownload
+final class Download
 {
     /**
      * The download URL.
@@ -32,7 +29,7 @@ final class PendingDownload
     private ?string $artifactGuid = null;
 
     /**
-     * Creates a new pending download instance.
+     * Creates a new download instance.
      */
     public function __construct(
         private readonly Page $page,

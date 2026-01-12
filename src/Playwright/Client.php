@@ -6,8 +6,8 @@ namespace Pest\Browser\Playwright;
 
 use Amp\Websocket\Client\WebsocketConnection;
 use Generator;
+use Pest\Browser\Api\Download;
 use Pest\Browser\Api\DownloadCollector;
-use Pest\Browser\Api\PendingDownload;
 use Pest\Browser\Exceptions\PlaywrightOutdatedException;
 use PHPUnit\Framework\ExpectationFailedException;
 
@@ -36,7 +36,7 @@ final class Client
     /**
      * Pending downloads awaiting resolution, keyed by page GUID.
      *
-     * @var array<string, PendingDownload>
+     * @var array<string, Download>
      */
     private array $pendingDownloads = [];
 
@@ -138,7 +138,7 @@ final class Client
     /**
      * Registers a pending download for the given page.
      */
-    public function expectDownload(string $pageGuid, PendingDownload $download): void
+    public function expectDownload(string $pageGuid, Download $download): void
     {
         $this->pendingDownloads[$pageGuid] = $download;
     }

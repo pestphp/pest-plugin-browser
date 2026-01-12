@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
-use Pest\Browser\Api\PendingDownload;
+use Pest\Browser\Api\Download;
 use Pest\Browser\Api\Webpage;
 use Pest\Expectation;
 use PHPUnit\Framework\ExpectationFailedException;
@@ -205,7 +205,7 @@ it('saves multiple downloads with collection methods', function (): void {
         count: 2
     );
 
-    $paths = $downloads->map(fn ($d) => tap(tempPath($test, '.txt'), fn (string $p): PendingDownload => $d->saveAs($p)));
+    $paths = $downloads->map(fn ($d) => tap(tempPath($test, '.txt'), fn (string $p): Download => $d->saveAs($p)));
 
     $paths->each(fn (string $path): Expectation => expect(file_exists($path))->toBeTrue());
 });

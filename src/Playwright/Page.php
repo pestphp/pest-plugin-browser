@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Pest\Browser\Playwright;
 
 use Generator;
+use Pest\Browser\Api\Download;
 use Pest\Browser\Api\DownloadCollector;
-use Pest\Browser\Api\PendingDownload;
 use Pest\Browser\Execution;
 use Pest\Browser\Support\ImageDiffView;
 use Pest\Browser\Support\JavaScriptSerializer;
@@ -569,11 +569,11 @@ final class Page
     }
 
     /**
-     * Creates a pending download that will capture the next download event.
+     * Creates a download that will capture the next download event.
      */
-    public function pendingDownload(): PendingDownload
+    public function pendingDownload(): Download
     {
-        $download = new PendingDownload($this);
+        $download = new Download($this);
 
         Client::instance()->expectDownload($this->guid, $download);
 

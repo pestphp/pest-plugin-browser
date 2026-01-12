@@ -18,7 +18,7 @@ final class DownloadCollector
     /**
      * The collected downloads.
      *
-     * @var array<int, PendingDownload>
+     * @var array<int, Download>
      */
     private array $downloads = [];
 
@@ -36,7 +36,7 @@ final class DownloadCollector
      */
     public function add(string $url, string $suggestedFilename, string $artifactGuid): void
     {
-        $download = new PendingDownload($this->page);
+        $download = new Download($this->page);
         $download->resolve($url, $suggestedFilename, $artifactGuid);
         $this->downloads[] = $download;
     }
@@ -44,7 +44,7 @@ final class DownloadCollector
     /**
      * Returns the collected downloads, optionally waiting for an expected count.
      *
-     * @return array<int, PendingDownload>
+     * @return array<int, Download>
      */
     public function all(?int $count = null): array
     {
