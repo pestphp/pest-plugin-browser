@@ -8,6 +8,7 @@ use Amp\Websocket\Client\WebsocketConnection;
 use Generator;
 use Pest\Browser\Exceptions\PlaywrightOutdatedException;
 use PHPUnit\Framework\ExpectationFailedException;
+use RuntimeException;
 
 use function Amp\Websocket\Client\connect;
 
@@ -75,6 +76,9 @@ final class Client
         assert($this->websocketConnection instanceof WebsocketConnection, 'WebSocket client is not connected.');
 
         $requestId = uniqid();
+        $startTime = hrtime(true);
+        $operationTimeout = $params['timeout'] ?? $this->timeout;
+        $maxWaitTimeNs = $operationTimeout * 1_000_000; // Convert ms to ns
 
         $requestJson = (string) json_encode([
             'id' => $requestId,
@@ -87,9 +91,32 @@ final class Client
         $this->websocketConnection->sendText($requestJson);
 
         while (true) {
+            // Check for timeout to prevent infinite loops
+            $elapsed = hrtime(true) - $startTime;
+            if ($elapsed > $maxWaitTimeNs) {
+                throw new RuntimeException(
+                    "Playwright operation '$method' timed out after ".round($elapsed / 1_000_000_000, 2).' seconds'
+                );
+            }
+
             $responseJson = $this->fetch($this->websocketConnection);
-            /** @var array{id: string|null, params: array{add: string|null}, error: array{error: array{message: string|null}}} $response */
+
+            // Handle null/empty responses (WebSocket connection lost)
+            if ($responseJson === null || $responseJson === '') {
+                throw new RuntimeException(
+                    "WebSocket connection lost while executing '$method' on '$guid'"
+                );
+            }
+
+            /** @var array{id: string|null, params: array{add: string|null}, error: array{error: array{message: string|null}}}|null $response */
             $response = json_decode($responseJson, true);
+
+            // Handle JSON decode failure
+            if ($response === null) {
+                throw new RuntimeException(
+                    'Invalid JSON response from Playwright server: '.substr($responseJson, 0, 100)
+                );
+            }
 
             if (isset($response['error']['error']['message'])) {
                 $message = $response['error']['error']['message'];
@@ -130,9 +157,17 @@ final class Client
 
     /**
      * Fetches the response from the Playwright server.
+     *
+     * Returns null if the WebSocket connection is closed.
      */
-    private function fetch(WebsocketConnection $client): string
+    private function fetch(WebsocketConnection $client): ?string
     {
-        return (string) $client->receive()?->read();
+        $message = $client->receive();
+
+        if ($message === null) {
+            return null; // Connection closed
+        }
+
+        return $message->read();
     }
 }

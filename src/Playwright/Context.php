@@ -102,4 +102,67 @@ final class Context
 
         return $this;
     }
+
+    /**
+     * Gets the storage state (cookies, localStorage, sessionStorage).
+     *
+     * @return array{cookies: array<array{name: string, value: string, domain: string, path: string, expires: float, httpOnly: bool, secure: bool, sameSite: string}>, origins: array<array{origin: string, localStorage: array<array{name: string, value: string}>}>}
+     */
+    public function storageState(): array
+    {
+        $response = $this->sendMessage('storageState');
+
+        /** @var array{result: array{cookies: array, origins: array}} $message */
+        foreach ($response as $message) {
+            if (isset($message['result'])) {
+                return $message['result'];
+            }
+        }
+
+        return ['cookies' => [], 'origins' => []];
+    }
+
+    /**
+     * Adds cookies into this browser context.
+     *
+     * @param  array<array{name: string, value: string, domain?: string, path?: string, expires?: float, httpOnly?: bool, secure?: bool, sameSite?: string}>  $cookies
+     */
+    public function addCookies(array $cookies): self
+    {
+        $response = $this->sendMessage('addCookies', ['cookies' => $cookies]);
+        $this->processVoidResponse($response);
+
+        return $this;
+    }
+
+    /**
+     * Gets all cookies in this browser context.
+     *
+     * @param  array<string>  $urls  Optional URLs to filter cookies
+     * @return array<array{name: string, value: string, domain: string, path: string, expires: float, httpOnly: bool, secure: bool, sameSite: string}>
+     */
+    public function cookies(array $urls = []): array
+    {
+        $response = $this->sendMessage('cookies', $urls !== [] ? ['urls' => $urls] : []);
+
+        /** @var array{result: array{cookies: array}} $message */
+        foreach ($response as $message) {
+            if (isset($message['result']['cookies'])) {
+                return $message['result']['cookies'];
+            }
+        }
+
+        return [];
+    }
+
+    /**
+     * Clears all cookies from this browser context.
+     */
+    public function clearCookies(): self
+    {
+        $response = $this->sendMessage('clearCookies');
+        $this->processVoidResponse($response);
+
+        return $this;
+    }
 }

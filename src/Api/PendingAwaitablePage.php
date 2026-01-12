@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Api;
 
+use InvalidArgumentException;
 use Pest\Browser\Enums\BrowserType;
 use Pest\Browser\Enums\ColorScheme;
 use Pest\Browser\Enums\Device;
@@ -152,6 +153,49 @@ final class PendingAwaitablePage
             'permissions' => ['geolocation'],
             ...$this->options,
         ]);
+    }
+
+    /**
+     * Sets the storage state (cookies, localStorage) for the page context.
+     *
+     * This allows you to reuse authentication state from a previous session.
+     *
+     * @param  array{cookies?: array<array{name: string, value: string, domain?: string, path?: string, expires?: float, httpOnly?: bool, secure?: bool, sameSite?: string}>, origins?: array<array{origin: string, localStorage: array<array{name: string, value: string}>}>}  $storageState
+     */
+    public function withStorageState(array $storageState): self
+    {
+        return new self($this->browserType, $this->device, $this->url, [
+            'storageState' => $storageState,
+            ...$this->options,
+        ]);
+    }
+
+    /**
+     * Loads storage state from a file path.
+     *
+     * The file should contain JSON with cookies and localStorage data
+     * from a previous Context::storageState() call.
+     */
+    public function withStorageStateFromFile(string $path): self
+    {
+        if (! file_exists($path)) {
+            throw new InvalidArgumentException("Storage state file not found: $path");
+        }
+
+        $contents = file_get_contents($path);
+
+        if ($contents === false) {
+            throw new InvalidArgumentException("Could not read storage state file: $path");
+        }
+
+        /** @var array{cookies?: array, origins?: array}|null $storageState */
+        $storageState = json_decode($contents, true);
+
+        if ($storageState === null) {
+            throw new InvalidArgumentException("Invalid storage state JSON in: $path");
+        }
+
+        return $this->withStorageState($storageState);
     }
 
     /**

@@ -1,5 +1,6 @@
 {
     "name": "pestphp/pest-plugin-browser",
+    "version": "4.2.99",
     "description": "Pest plugin to test browser interactions",
     "keywords": [
         "php",
