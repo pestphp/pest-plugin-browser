@@ -6,7 +6,6 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
 use Pest\Browser\Api\Download;
 use Pest\Browser\Api\Webpage;
-use Pest\Expectation;
 use PHPUnit\Framework\ExpectationFailedException;
 
 beforeEach(function (): void {
@@ -136,7 +135,7 @@ it('chains assertions fluidly', function (): void {
         ->assertSuccessful();
 });
 
-it('captures multiple downloads as a collection', function (): void {
+it('captures multiple downloads', function (): void {
     Route::get('/', fn (): string => '
         <button id="all">Download All</button>
         <script>
@@ -158,11 +157,14 @@ it('captures multiple downloads as a collection', function (): void {
 
     expect($downloads)->toHaveCount(3);
 
-    // Collection higher-order magic
-    $downloads->each->assertSuccessful();
+    foreach ($downloads as $download) {
+        $download->assertSuccessful();
+    }
 
-    expect($downloads->map->suggestedFilename()->sort()->values()->all())
-        ->toBe(['a.txt', 'b.txt', 'c.txt']);
+    $filenames = array_map(fn (Download $d): string => $d->suggestedFilename(), $downloads);
+    sort($filenames);
+
+    expect($filenames)->toBe(['a.txt', 'b.txt', 'c.txt']);
 });
 
 it('fails when more downloads than expected', function (): void {
@@ -185,7 +187,7 @@ it('fails when more downloads than expected', function (): void {
     );
 })->throws(ExpectationFailedException::class, 'Expected 2 downloads, but 3 received');
 
-it('saves multiple downloads with collection methods', function (): void {
+it('saves multiple downloads', function (): void {
     Route::get('/', fn (): string => '
         <button id="all">Download All</button>
         <script>
@@ -199,15 +201,16 @@ it('saves multiple downloads with collection methods', function (): void {
     ');
     Route::get('/file/{name}', fn (string $name): Response => downloadResponse("File: {$name}", $name));
 
-    $test = $this;
     $downloads = visit('/')->expectDownloads(
         fn ($page): Webpage => $page->click('#all'),
         count: 2
     );
 
-    $paths = $downloads->map(fn ($d) => tap(tempPath($test, '.txt'), fn (string $p): Download => $d->saveAs($p)));
-
-    $paths->each(fn (string $path): Expectation => expect(file_exists($path))->toBeTrue());
+    foreach ($downloads as $download) {
+        $path = tempPath($this, '.txt');
+        $download->saveAs($path);
+        expect(file_exists($path))->toBeTrue();
+    }
 });
 
 // Helpers
