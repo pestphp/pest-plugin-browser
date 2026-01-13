@@ -101,8 +101,8 @@ final class Client
 
             $responseJson = $this->fetch($this->websocketConnection);
 
-            // Handle null/empty responses (WebSocket connection lost)
-            if ($responseJson === null || $responseJson === '') {
+            // Handle null responses (WebSocket connection lost)
+            if ($responseJson === null) {
                 throw new RuntimeException(
                     "WebSocket connection lost while executing '$method' on '$guid'"
                 );
