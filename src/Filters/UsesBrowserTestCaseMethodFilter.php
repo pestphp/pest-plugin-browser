@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Pest\Browser\Filters;
 
 use Pest\Browser\Playwright\Playwright;
+use Pest\Browser\Playwright\Tracing;
 use Pest\Browser\Plugin;
 use Pest\Browser\ServerManager;
 use Pest\Browser\Support\BrowserTestIdentifier;
@@ -59,6 +60,7 @@ final readonly class UsesBrowserTestCaseMethodFilter implements TestCaseMethodFi
 
             ServerManager::instance()->playwright()->start();
             Screenshot::cleanup();
+            Tracing::cleanup();
         }
 
         return true;

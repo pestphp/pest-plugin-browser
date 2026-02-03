@@ -23,6 +23,7 @@ final class Context
      */
     public function __construct(
         private readonly Browser $browser,
+        private readonly Tracing $tracing,
         private readonly string $guid
     ) {
         //
@@ -34,6 +35,14 @@ final class Context
     public function browser(): Browser
     {
         return $this->browser;
+    }
+
+    /**
+     * Gets the tracing instance.
+     */
+    public function tracing(): Tracing
+    {
+        return $this->tracing;
     }
 
     /**
@@ -68,6 +77,8 @@ final class Context
         if ($this->browser->isClosed() || $this->closed) {
             return;
         }
+
+        $this->tracing->close();
 
         try {
             // fix this...
