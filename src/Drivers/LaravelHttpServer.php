@@ -329,21 +329,23 @@ final class LaravelHttpServer implements HttpServer
         $contentType = $contentType[0] ?? 'application/octet-stream';
 
         if (str_ends_with($filepath, '.js')) {
-            $temporaryStream = fopen('php://temp', 'r+');
-            assert($temporaryStream !== false, 'Failed to open temporary stream.');
+            // Use file_get_contents instead of fread() because fread() is
+            // limited to 8192 bytes when running inside Amp's event loop.
+            fclose($file);
+            $rawContent = file_get_contents($filepath);
 
-            // @phpstan-ignore-next-line
-            $temporaryContent = fread($file, (int) filesize($filepath));
+            assert($rawContent !== false, 'Failed to read file content.');
 
-            assert($temporaryContent !== false, 'Failed to open temporary stream.');
+            $content = $this->rewriteAssetUrl($rawContent);
 
-            $content = $this->rewriteAssetUrl($temporaryContent);
+            // Build the Response without passing headers to the constructor,
+            // because the constructor calls setBody() first (which auto-sets
+            // content-length for string bodies) then setHeaders() (which
+            // clears ALL headers and only keeps what was passed in).
+            $response = new Response(200, [], $content);
+            $response->setHeader('Content-Type', $contentType);
 
-            fwrite($temporaryStream, $content);
-
-            rewind($temporaryStream);
-
-            $file = $temporaryStream;
+            return $response;
         }
 
         return new Response(200, [
