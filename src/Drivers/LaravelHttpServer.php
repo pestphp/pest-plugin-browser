@@ -99,12 +99,12 @@ final class LaravelHttpServer implements HttpServer
             return;
         }
 
-        $this->socket = $server = SocketHttpServer::createForDirectAccess(new NullLogger());
+        $this->socket = $server = SocketHttpServer::createForDirectAccess(new NullLogger);
 
         $server->expose("{$this->host}:{$this->port}");
         $server->start(
             new ClosureRequestHandler($this->handleRequest(...)),
-            new DefaultErrorHandler(),
+            new DefaultErrorHandler,
         );
     }
 
@@ -323,7 +323,7 @@ final class LaravelHttpServer implements HttpServer
             return new Response(404);
         }
 
-        $mimeTypes = new MimeTypes();
+        $mimeTypes = new MimeTypes;
         $contentType = $mimeTypes->getMimeTypes(pathinfo($filepath, PATHINFO_EXTENSION));
 
         $contentType = $contentType[0] ?? 'application/octet-stream';
