@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Drivers;
 
-use const UPLOAD_ERR_OK;
-
 use Amp\ByteStream\ReadableResourceStream;
 use Amp\Http\Cookie\RequestCookie;
 use Amp\Http\Server\DefaultErrorHandler;
@@ -21,6 +19,7 @@ use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Illuminate\Foundation\Testing\Concerns\WithoutExceptionHandlingHandler;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Routing\UrlGenerator;
 use Illuminate\Support\Uri;
 use Pest\Browser\Contracts\HttpServer;
@@ -29,7 +28,6 @@ use Pest\Browser\Execution;
 use Pest\Browser\GlobalState;
 use Pest\Browser\Playwright\Playwright;
 use Psr\Log\NullLogger;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Mime\MimeTypes;
 use Throwable;
 

@@ -120,6 +120,58 @@ it('parse a multipart body with files', function (): void {
     $page->assertSee('Empty file: ');
 });
 
+it('validates multipart pdf upload metadata', function (): void {
+    Route::get('favicon.ico', static fn (): string => '');
+    Route::get('/', static fn (): string => "
+        <html>
+        <head></head>
+        <body>
+            <form method='post' enctype='multipart/form-data' action='/form'>
+                <label for='pdf-file'>PDF file</label>
+                <input id='pdf-file' type='file' name='pdf_file'>
+
+                <button type='submit'>Send</button>
+            </form>
+        </body>
+        </html>
+    ");
+
+    $expectedPdfSize = filesize(fixture('example.pdf'));
+    assert($expectedPdfSize !== false);
+
+    Route::post('/form', static function (Request $request) use ($expectedPdfSize): string {
+        $pdf = $request->file('pdf_file');
+        $name = $pdf?->getClientOriginalName() ?? '';
+        $extension = $pdf?->getClientOriginalExtension() ?? '';
+        $valid = $pdf?->isValid() ? 'yes' : 'no';
+        $size = (string) ($pdf?->getSize() ?? '');
+
+        return "
+            <html>
+            <head></head>
+            <body>
+                <p>Name: $name</p>
+                <p>Extension: $extension</p>
+                <p>Valid: $valid</p>
+                <p>Size: $size</p>
+                <p>Expected size: $expectedPdfSize</p>
+            </body>
+            </html>
+        ";
+    });
+
+    $page = visit('/');
+
+    $page->attach('PDF file', fixture('example.pdf'));
+    $page->submit();
+
+    $page->assertSee('Name: example.pdf')
+        ->assertSee('Extension: pdf')
+        ->assertSee('Valid: yes')
+        ->assertSee('Expected size: '.$expectedPdfSize)
+        ->assertSee('Size: '.$expectedPdfSize);
+});
+
 it('parse a multipart body with nested fields', function (): void {
     Route::get('/', static fn (): string => "
         <html>
