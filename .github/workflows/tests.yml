@@ -9,7 +9,7 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         node: ['22.x']
-        php: ['8.3', '8.4', '8.5']
+        php: ['8.4', '8.5']
         dependency-version: [prefer-stable]
 
     name: PHP ${{ matrix.php }} - Node ${{ matrix.node }} - ${{ matrix.os }} - ${{ matrix.dependency-version }}
