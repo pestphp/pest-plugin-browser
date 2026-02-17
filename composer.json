@@ -12,14 +12,14 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.3",
+        "php": "^8.4",
         "ext-sockets": "*",
         "amphp/amp": "^3.1.1",
         "amphp/http-server": "^3.4.4",
         "amphp/websocket-client": "^2.0.2",
         "pestphp/pest": "^4.3.2",
         "pestphp/pest-plugin": "^4.0.0",
-        "symfony/process": "^7.4.5|^8.0.5"
+        "symfony/process": "^8.0.5"
     },
     "autoload": {
         "psr-4": {
