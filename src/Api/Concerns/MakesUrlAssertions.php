@@ -19,22 +19,31 @@ trait MakesUrlAssertions
     {
         $pattern = str_replace('\*', '.*', preg_quote($url, '/'));
 
-        /** @var array{ scheme: string, host: string, port?: int, path?: string} $segments */
         $segments = parse_url($this->page->url());
 
-        $currentUrl = sprintf(
-            '%s://%s%s%s',
-            $segments['scheme'],
-            $segments['host'],
-            isset($segments['port']) ? ':'.$segments['port'] : '',
-            $segments['path'] ?? ''
-        );
+        if (parse_url($url, PHP_URL_SCHEME) !== null) {
+            $currentUrl = sprintf(
+                '%s://%s%s%s',
+                $segments['scheme'],
+                $segments['host'],
+                isset($segments['port'])
+                    ? ':'.$segments['port']
+                    : '',
+                $segments['path'] ?? ''
+            );
 
-        $currentUrl = mb_rtrim($currentUrl, '/');
+            $currentUrl = mb_rtrim($currentUrl, '/');
 
-        $message = "Actual URL [{$currentUrl}] does not equal expected URL [{$url}].";
+            $message = "Actual URL [{$currentUrl}] does not equal expected URL [{$url}].";
 
-        expect($currentUrl)->toMatch('/^'.$pattern.'$/u', $message);
+            expect($currentUrl)->toMatch('/^'.$pattern.'$/u', $message);
+        } else {
+            $currentPath = $segments['path'] ?? '';
+
+            $message = "Actual path [{$currentPath}] does not equal expected path [{$url}].";
+
+            expect($currentPath)->toMatch('/^'.$pattern.'$/u', $message);
+        }
 
         return $this;
     }

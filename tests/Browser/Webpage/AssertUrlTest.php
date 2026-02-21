@@ -12,6 +12,22 @@ it('may assert current URL matches expected URL', function (): void {
     $page->assertUrlIs(url('/test-url'));
 });
 
+it('may assert current URL path using path-only notation', function (): void {
+    Route::get('/login', fn (): string => 'Login Page');
+
+    $page = visit('/login');
+
+    $page->assertUrlIs('/login');
+});
+
+it('may fail when asserting URL path using path-only notation but it does not match', function (): void {
+    Route::get('/login', fn (): string => 'Login Page');
+
+    $page = visit('/login');
+
+    $page->assertUrlIs('/wrong-path');
+})->throws(ExpectationFailedException::class);
+
 it('may fail when asserting URL matches but it does not', function (): void {
     Route::get('/test-url', fn (): string => 'Test URL Page');
 
