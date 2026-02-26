@@ -250,17 +250,7 @@ final class ExtendedFormParser
                 return;
             }
 
-            if (! array_key_exists($segment, $target)) {
-                $target[$segment] = $value;
-
-                return;
-            }
-
-            if (! is_array($target[$segment])) {
-                $target[$segment] = [$target[$segment]];
-            }
-
-            $target[$segment][] = $value;
+            $target[$segment] = $value;
 
             return;
         }
