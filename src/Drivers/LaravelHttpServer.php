@@ -7,8 +7,6 @@ namespace Pest\Browser\Drivers;
 use Amp\ByteStream\ReadableResourceStream;
 use Amp\Http\Cookie\RequestCookie;
 use Amp\Http\Server\DefaultErrorHandler;
-use Amp\Http\Server\FormParser\BufferedFile;
-use Amp\Http\Server\FormParser\Form;
 use Amp\Http\Server\HttpServer as AmpHttpServer;
 use Amp\Http\Server\HttpServerStatus;
 use Amp\Http\Server\Request as AmpRequest;
@@ -19,13 +17,13 @@ use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Illuminate\Foundation\Testing\Concerns\WithoutExceptionHandlingHandler;
 use Illuminate\Http\Request;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Routing\UrlGenerator;
 use Illuminate\Support\Uri;
 use Pest\Browser\Contracts\HttpServer;
 use Pest\Browser\Exceptions\ServerNotFoundException;
 use Pest\Browser\Execution;
 use Pest\Browser\GlobalState;
+use Pest\Browser\Http\ExtendedFormParser;
 use Pest\Browser\Playwright\Playwright;
 use Psr\Log\NullLogger;
 use Symfony\Component\Mime\MimeTypes;
@@ -54,13 +52,18 @@ final class LaravelHttpServer implements HttpServer
     private ?Throwable $lastThrowable = null;
 
     /**
+     * The multipart parser wrapper with upload validation behavior.
+     */
+    private ExtendedFormParser $extendedFormParser;
+
+    /**
      * Creates a new laravel http server instance.
      */
     public function __construct(
         public readonly string $host,
         public readonly int $port,
     ) {
-        //
+        $this->extendedFormParser = ExtendedFormParser::fromIni();
     }
 
     /**
@@ -70,6 +73,14 @@ final class LaravelHttpServer implements HttpServer
     {
         // @codeCoverageIgnoreStart
         // $this->stop();
+    }
+
+    /**
+     * Overrides the multipart parser instance.
+     */
+    public function setExtendedFormParser(ExtendedFormParser $extendedFormParser): void
+    {
+        $this->extendedFormParser = $extendedFormParser;
     }
 
     /**
@@ -383,170 +394,6 @@ final class LaravelHttpServer implements HttpServer
      */
     private function parseMultipartFormData(AmpRequest $request): array
     {
-        $form = Form::fromRequest($request);
-
-        $values = $form->getValues();
-        $files = $form->getFiles();
-
-        return [
-            $this->normalizeMultipartParameters($values),
-            $this->normalizeMultipartFiles($files),
-        ];
-    }
-
-    /**
-     * Normalize multipart field values to a Symfony request-compatible array.
-     *
-     * @param  array<string, list<string>>  $fields
-     * @return array<int|string, mixed>
-     */
-    private function normalizeMultipartParameters(array $fields): array
-    {
-        $normalized = [];
-
-        foreach ($fields as $field => $values) {
-            foreach ($values as $value) {
-                $this->setFieldValue($normalized, $field, $value);
-            }
-        }
-
-        return $normalized;
-    }
-
-    /**
-     * Normalize multipart files to a Symfony request-compatible files array.
-     *
-     * @param  array<string, list<BufferedFile>>  $files
-     * @return array<int|string, mixed>
-     */
-    private function normalizeMultipartFiles(array $files): array
-    {
-        $normalized = [];
-
-        foreach ($files as $field => $fileEntries) {
-            foreach ($fileEntries as $fileEntry) {
-                $this->setFieldValue($normalized, $field, $this->createUploadedFile($fileEntry));
-            }
-        }
-
-        return $normalized;
-    }
-
-    /**
-     * @param  array<int|string, mixed>  $target
-     */
-    private function setFieldValue(array &$target, string $field, string|UploadedFile $value): void
-    {
-        $segments = $this->fieldSegments($field);
-
-        if ($segments === []) {
-            return;
-        }
-
-        $this->setNestedFieldValue($target, $segments, $value);
-    }
-
-    /**
-     * @return list<string>
-     */
-    private function fieldSegments(string $field): array
-    {
-        if (! str_contains($field, '[')) {
-            return [$field];
-        }
-
-        $segments = [];
-        $head = mb_strstr($field, '[', true);
-
-        if ($head !== false && $head !== '') {
-            $segments[] = $head;
-        }
-
-        preg_match_all('/\[([^\]]*)\]/', $field, $matches);
-
-        foreach ($matches[1] as $segment) {
-            $segments[] = $segment;
-        }
-
-        return $segments;
-    }
-
-    /**
-     * @param  array<int|string, mixed>  $target
-     * @param  list<string>  $segments
-     */
-    private function setNestedFieldValue(array &$target, array $segments, string|UploadedFile $value): void
-    {
-        $segment = array_shift($segments);
-
-        if ($segment === null) {
-            return;
-        }
-
-        if ($segments === []) {
-            if ($segment === '') {
-                $target[] = $value;
-
-                return;
-            }
-
-            if (! array_key_exists($segment, $target)) {
-                $target[$segment] = $value;
-
-                return;
-            }
-
-            if (! is_array($target[$segment])) {
-                $target[$segment] = [$target[$segment]];
-            }
-
-            $target[$segment][] = $value;
-
-            return;
-        }
-
-        if ($segment === '') {
-            $target[] = [];
-
-            $lastKey = array_key_last($target);
-            if (! is_array($target[$lastKey])) {
-                return;
-            }
-
-            $this->setNestedFieldValue($target[$lastKey], $segments, $value);
-
-            return;
-        }
-
-        if (! isset($target[$segment]) || ! is_array($target[$segment])) {
-            $target[$segment] = [];
-        }
-
-        $this->setNestedFieldValue($target[$segment], $segments, $value);
-    }
-
-    private function createUploadedFile(object $fileEntry): UploadedFile
-    {
-        $tempPath = tempnam(sys_get_temp_dir(), 'pest-browser-upload-');
-        assert($tempPath !== false, 'Failed to create temporary upload file.');
-
-        $contents = method_exists($fileEntry, 'getContents') ? $fileEntry->getContents() : '';
-        $contents = is_string($contents) ? $contents : '';
-
-        file_put_contents($tempPath, $contents);
-
-        $clientFilename = method_exists($fileEntry, 'getName') ? $fileEntry->getName() : 'upload';
-        $clientFilename = is_string($clientFilename) && $clientFilename !== '' ? $clientFilename : 'upload';
-
-        $mimeType = method_exists($fileEntry, 'getMimeType') ? $fileEntry->getMimeType() : 'application/octet-stream';
-        $mimeType = is_string($mimeType) && $mimeType !== '' ? $mimeType : 'application/octet-stream';
-
-        return new UploadedFile(
-            $tempPath,
-            $clientFilename,
-            $mimeType,
-            UPLOAD_ERR_OK,
-            true,
-        );
+        return $this->extendedFormParser->parseMultipart($request);
     }
 }
