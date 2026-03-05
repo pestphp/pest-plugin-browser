@@ -273,6 +273,15 @@ final class LaravelHttpServer implements HttpServer
         /** @var array<string, string> $serverVariables */
         $serverVariables = test()->serverVariables(); // @phpstan-ignore-line
 
+        if ($contentType !== '') {
+            $serverVariables['CONTENT_TYPE'] = $contentType;
+        }
+
+        $contentLength = $request->getHeader('content-length');
+        if ($contentLength !== null && $contentLength !== '') {
+            $serverVariables['CONTENT_LENGTH'] = $contentLength;
+        }
+
         $symfonyRequest = Request::create(
             $absoluteUrl,
             $method,

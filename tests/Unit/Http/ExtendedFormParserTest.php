@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Pest\Browser\Playwright\Playwright;
 
+use function Pest\Laravel\withServerVariables;
+
 it('parse a URL-encoded body', function (): void {
     Route::get('/', static fn (): string => "
         <html>
@@ -36,6 +38,134 @@ it('parse a URL-encoded body', function (): void {
     $page->click('Send');
 
     $page->assertSee('Hello World');
+});
+
+it('matches content-type in server variables for URL-encoded form submissions', function (): void {
+    Route::get('/', static fn (): string => "
+        <html>
+        <head></head>
+        <body>
+            <form method='post' action='/content-type'>
+                <label for='name'>Your name</label>
+                <input id='name' type='text' name='name'>
+
+                <button type='submit'>Send</button>
+            </form>
+        </body>
+        </html>
+    ");
+
+    Route::post('/content-type', static function (Request $request): string {
+        $matches = $request->server('CONTENT_TYPE') === $request->header('content-type');
+
+        return $matches ? 'true' : 'false';
+    });
+
+    $page = visit('/');
+
+    $page->fill('Your name', 'World');
+    $page->click('Send');
+
+    $page->assertSee('true');
+});
+
+it('overrides conflicting CONTENT_TYPE from server variables with request header', function (): void {
+    withServerVariables(['CONTENT_TYPE' => 'text/plain']);
+
+    Route::get('/', static fn (): string => "
+        <html>
+        <head></head>
+        <body>
+            <form method='post' action='/content-type'>
+                <label for='name'>Your name</label>
+                <input id='name' type='text' name='name'>
+
+                <button type='submit'>Send</button>
+            </form>
+        </body>
+        </html>
+    ");
+
+    Route::post('/content-type', static function (Request $request): string {
+        $matches = $request->server('CONTENT_TYPE') === $request->header('content-type');
+
+        return $matches ? 'true' : 'false';
+    });
+
+    $page = visit('/');
+
+    $page->fill('Your name', 'World');
+    $page->click('Send');
+
+    $page->assertSee('true');
+});
+
+it('matches content-length in server variables for URL-encoded form submissions', function (): void {
+    Route::get('/', static fn (): string => "
+        <html>
+        <head></head>
+        <body>
+            <form method='post' action='/content-length'>
+                <label for='name'>Your name</label>
+                <input id='name' type='text' name='name'>
+
+                <button type='submit'>Send</button>
+            </form>
+        </body>
+        </html>
+    ");
+
+    Route::post('/content-length', static function (Request $request): string {
+        $serverLength = (string) ($request->server('CONTENT_LENGTH') ?? '');
+        $headerLength = (string) ($request->header('content-length') ?? '');
+        $matches = $serverLength !== '' && $serverLength === $headerLength;
+
+        return $matches ? 'true' : 'false';
+    });
+
+    Playwright::usingTimeout(15_000, function (): void {
+        $page = visit('/');
+
+        $page->fill('Your name', 'World');
+        $page->click('Send');
+
+        $page->assertSee('true');
+    });
+});
+
+it('overrides conflicting CONTENT_LENGTH from server variables with request header', function (): void {
+    withServerVariables(['CONTENT_LENGTH' => '1']);
+
+    Route::get('/', static fn (): string => "
+        <html>
+        <head></head>
+        <body>
+            <form method='post' action='/content-length'>
+                <label for='name'>Your name</label>
+                <input id='name' type='text' name='name'>
+
+                <button type='submit'>Send</button>
+            </form>
+        </body>
+        </html>
+    ");
+
+    Route::post('/content-length', static function (Request $request): string {
+        $serverLength = (string) ($request->server('CONTENT_LENGTH') ?? '');
+        $headerLength = (string) ($request->header('content-length') ?? '');
+        $matches = $serverLength !== '' && $serverLength === $headerLength;
+
+        return $matches ? 'true' : 'false';
+    });
+
+    Playwright::usingTimeout(15_000, function (): void {
+        $page = visit('/');
+
+        $page->fill('Your name', 'World');
+        $page->click('Send');
+
+        $page->assertSee('true');
+    });
 });
 
 it('parse a multipart body with files', function (): void {
@@ -87,6 +217,183 @@ it('parse a multipart body with files', function (): void {
         $page->assertSee('Text file: lorem-ipsum.txt');
         $page->assertSee('Binary file: example.pdf');
         $page->assertSee('Empty file: ');
+    });
+});
+
+it('matches content-type in server variables when uploading files', function (): void {
+    Route::get('/', static fn (): string => "
+        <html>
+        <head></head>
+        <body>
+            <form method='post' action='/content-type' enctype='multipart/form-data'>
+                <label for='file1'>A file</label>
+                <input id='file1' type='file' name='file1'>
+
+                <button type='submit'>Send</button>
+            </form>
+        </body>
+        </html>
+    ");
+
+    Route::post('/content-type', static function (Request $request): string {
+        $matches = $request->server('CONTENT_TYPE') === $request->header('content-type');
+
+        return $matches ? 'true' : 'false';
+    });
+
+    Playwright::usingTimeout(15_000, function (): void {
+        visit('/')
+            ->attach('A file', fixture('lorem-ipsum.txt'))
+            ->click('Send')
+            ->assertSee('true');
+    });
+});
+
+it('matches content-length in server variables when uploading files', function (): void {
+    Route::get('/', static fn (): string => "
+        <html>
+        <head></head>
+        <body>
+            <form method='post' action='/content-length' enctype='multipart/form-data'>
+                <label for='file1'>A file</label>
+                <input id='file1' type='file' name='file1'>
+
+                <button type='submit'>Send</button>
+            </form>
+        </body>
+        </html>
+    ");
+
+    Route::post('/content-length', static function (Request $request): string {
+        $serverLength = (string) ($request->server('CONTENT_LENGTH') ?? '');
+        $headerLength = (string) ($request->header('content-length') ?? '');
+        $matches = $serverLength !== '' && $serverLength === $headerLength;
+
+        return $matches ? 'true' : 'false';
+    });
+
+    Playwright::usingTimeout(15_000, function (): void {
+        visit('/')
+            ->attach('A file', fixture('lorem-ipsum.txt'))
+            ->click('Send')
+            ->assertSee('true');
+    });
+});
+
+it('preserves custom server variables while synchronizing upload content headers', function (): void {
+    withServerVariables([
+        'X_CUSTOM_UPLOAD_FLAG' => 'enabled',
+        'CONTENT_TYPE' => 'text/plain',
+        'CONTENT_LENGTH' => '1',
+    ]);
+
+    Route::get('/', static fn (): string => "
+        <html>
+        <head></head>
+        <body>
+            <form method='post' action='/server-vars' enctype='multipart/form-data'>
+                <label for='file1'>A file</label>
+                <input id='file1' type='file' name='file1'>
+
+                <button type='submit'>Send</button>
+            </form>
+        </body>
+        </html>
+    ");
+
+    Route::post('/server-vars', static function (Request $request): string {
+        $custom = (string) ($request->server('X_CUSTOM_UPLOAD_FLAG') ?? '');
+        $serverType = (string) ($request->server('CONTENT_TYPE') ?? '');
+        $headerType = (string) ($request->header('content-type') ?? '');
+        $serverLength = (string) ($request->server('CONTENT_LENGTH') ?? '');
+        $headerLength = (string) ($request->header('content-length') ?? '');
+
+        $payload = [
+            'custom_preserved' => $custom === 'enabled',
+            'type_matches_header' => $serverType === $headerType,
+            'length_matches_header' => $serverLength === $headerLength,
+        ];
+
+        $json = json_encode($payload, JSON_UNESCAPED_UNICODE);
+        assert($json !== false);
+
+        return '<pre id="payload">'.$json.'</pre>';
+    });
+
+    Playwright::usingTimeout(15_000, function (): void {
+        visit('/')
+            ->attach('A file', fixture('lorem-ipsum.txt'))
+            ->click('Send')
+            ->assertSee('"custom_preserved":true')
+            ->assertSee('"type_matches_header":true')
+            ->assertSee('"length_matches_header":true');
+    });
+});
+
+it('keeps content server variables empty on GET requests', function (): void {
+    Route::get('/server-content-vars', static function (Request $request): string {
+        $payload = [
+            'server_content_type' => $request->server('CONTENT_TYPE'),
+            'server_content_length' => $request->server('CONTENT_LENGTH'),
+            'header_content_type' => $request->header('content-type'),
+            'header_content_length' => $request->header('content-length'),
+        ];
+
+        $json = json_encode($payload, JSON_UNESCAPED_UNICODE);
+        assert($json !== false);
+
+        return '<pre id="payload">'.$json.'</pre>';
+    });
+
+    visit('/server-content-vars')
+        ->assertSee('"server_content_type":null')
+        ->assertSee('"server_content_length":null')
+        ->assertSee('"header_content_type":null')
+        ->assertSee('"header_content_length":null');
+});
+
+it('preserves multipart boundary and numeric content-length in server variables', function (): void {
+    Route::get('/', static fn (): string => "
+        <html>
+        <head></head>
+        <body>
+            <form method='post' action='/content-metadata' enctype='multipart/form-data'>
+                <label for='file1'>A file</label>
+                <input id='file1' type='file' name='file1'>
+
+                <button type='submit'>Send</button>
+            </form>
+        </body>
+        </html>
+    ");
+
+    Route::post('/content-metadata', static function (Request $request): string {
+        $serverType = (string) ($request->server('CONTENT_TYPE') ?? '');
+        $headerType = (string) ($request->header('content-type') ?? '');
+        $serverLength = (string) ($request->server('CONTENT_LENGTH') ?? '');
+        $headerLength = (string) ($request->header('content-length') ?? '');
+
+        $payload = [
+            'type_matches' => $serverType === $headerType,
+            'length_matches' => $serverLength === $headerLength,
+            'has_boundary' => str_contains($serverType, 'boundary='),
+            'length_is_numeric' => $serverLength !== '' && ctype_digit($serverLength),
+        ];
+
+        $json = json_encode($payload, JSON_UNESCAPED_UNICODE);
+        assert($json !== false);
+
+        return '<pre id="payload">'.$json.'</pre>';
+    });
+
+    Playwright::usingTimeout(15_000, function (): void {
+        visit('/')
+            ->attach('A file', fixture('lorem-ipsum.txt'))
+            ->click('Send')
+            ->assertSee('"type_matches":true')
+            ->assertSee('"length_matches":true')
+            ->assertSee('"has_boundary":true')
+            ->assertSee('"length_is_numeric":true');
     });
 });
 
