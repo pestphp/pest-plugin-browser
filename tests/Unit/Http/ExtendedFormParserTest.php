@@ -168,6 +168,59 @@ it('overrides conflicting CONTENT_LENGTH from server variables with request head
     });
 });
 
+it('overrides conflicting CONTENT_MD5 from server variables with request header', function (): void {
+    withServerVariables(['CONTENT_MD5' => 'stale-md5']);
+
+    Route::get('/content-md5', static fn (): string => "
+        <html>
+        <head></head>
+        <body>
+            <button id='send' type='button'>Send</button>
+            <pre id='result'></pre>
+
+            <script>
+                document.getElementById('send').addEventListener('click', async () => {
+                    const response = await fetch('/content-md5', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'Content-MD5': 'abc123',
+                        },
+                        body: 'name=World',
+                    });
+
+                    document.getElementById('result').textContent = await response.text();
+                });
+            </script>
+        </body>
+        </html>
+    ");
+
+    Route::post('/content-md5', static function (Request $request): string {
+        $serverMd5 = (string) ($request->server('CONTENT_MD5') ?? '');
+        $headerMd5 = (string) ($request->header('content-md5') ?? '');
+
+        $payload = [
+            'server_md5' => $serverMd5,
+            'header_md5' => $headerMd5,
+            'md5_matches_header' => $serverMd5 !== '' && $serverMd5 === $headerMd5,
+        ];
+
+        $json = json_encode($payload, JSON_UNESCAPED_UNICODE);
+        assert($json !== false);
+
+        return '<pre id="payload">'.$json.'</pre>';
+    });
+
+    $page = visit('/content-md5');
+
+    $page->click('Send');
+
+    $page->assertSee('"server_md5":"abc123"')
+        ->assertSee('"header_md5":"abc123"')
+        ->assertSee('"md5_matches_header":true');
+});
+
 it('parse a multipart body with files', function (): void {
     Route::get('favicon.ico', static fn (): string => '');
     Route::get('/', static fn (): string => "
@@ -328,6 +381,49 @@ it('preserves custom server variables while synchronizing upload content headers
             ->assertSee('"type_matches_header":true')
             ->assertSee('"length_matches_header":true');
     });
+});
+
+it('hydrates request superglobals during kernel handling', function (): void {
+    Route::get('/superglobals', static fn () => response()->make(" 
+        <html>
+        <head></head>
+        <body>
+            <form method='post' action='/superglobals?source=query-value'>
+                <label for='name'>Your name</label>
+                <input id='name' type='text' name='name'>
+
+                <button type='submit'>Send</button>
+            </form>
+        </body>
+        </html>
+    ")->cookie('super_cookie', 'cookie-value'));
+
+    Route::post('/superglobals', static fn (Request $request) => response()->json([
+        'post_name' => $_POST['name'] ?? null,
+        'request_name' => $_REQUEST['name'] ?? null,
+        'get_source' => $_GET['source'] ?? null,
+        'cookie_super' => $_COOKIE['super_cookie'] ?? null,
+        'query_string' => $_SERVER['QUERY_STRING'] ?? null,
+        'request_query_source' => $request->query('source'),
+        'request_cookie_super' => $request->cookie('super_cookie'),
+        'type_has_form' => str_contains((string) ($_SERVER['CONTENT_TYPE'] ?? ''), 'application/x-www-form-urlencoded'),
+        'length_matches' => (string) ($_SERVER['CONTENT_LENGTH'] ?? '') === (string) ($request->header('content-length') ?? ''),
+    ]));
+
+    $page = visit('/superglobals');
+
+    $page->fill('Your name', 'World');
+    $page->click('Send');
+
+    $page->assertSee('"post_name":"World"')
+        ->assertSee('"request_name":"World"')
+        ->assertSee('"get_source":"query-value"')
+        ->assertSee('"cookie_super":"cookie-value"')
+        ->assertSee('"query_string":"source=query-value"')
+        ->assertSee('"request_query_source":"query-value"')
+        ->assertSee('"request_cookie_super":"cookie-value"')
+        ->assertSee('"type_has_form":true')
+        ->assertSee('"length_matches":true');
 });
 
 it('keeps content server variables empty on GET requests', function (): void {
