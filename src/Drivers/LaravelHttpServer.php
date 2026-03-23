@@ -332,13 +332,13 @@ final class LaravelHttpServer implements HttpServer
             $temporaryStream = fopen('php://temp', 'r+');
             assert($temporaryStream !== false, 'Failed to open temporary stream.');
             
-            $size = filesize($filepath);
+            $size = (int) filesize($filepath);
             if ($size === 0) {
                 return new Response(200, ['Content-Type' => $contentType], '');
             }
             
             // @phpstan-ignore-next-line
-            $temporaryContent = fread($file, (int) $size);
+            $temporaryContent = fread($file, $size);
 
             assert($temporaryContent !== false, 'Failed to open temporary stream.');
 
