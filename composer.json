@@ -40,9 +40,9 @@
     "require-dev": {
         "ext-pcntl": "*",
         "ext-posix": "*",
-        "livewire/livewire": "^3.7.10",
-        "nunomaduro/collision": "^8.9.0",
-        "orchestra/testbench": "^10.9.0",
+        "livewire/livewire": "^3.7.13",
+        "nunomaduro/collision": "^8.9.2",
+        "orchestra/testbench": "^10.11.0",
         "pestphp/pest-dev-tools": "^5.0.0",
         "pestphp/pest-plugin-laravel": "^5.0.0",
         "pestphp/pest-plugin-type-coverage": "^5.0.0"
