@@ -156,7 +156,7 @@ final class PlaywrightNpmServer implements PlaywrightServer
         $output = $process->getOutput();
 
         // check if the output matches the required version
-        if (in_array(preg_match('/^Version\s+(\d+\.\d+\.\d+)/', $output, $matches), [0, false], true)) {
+        if (in_array(preg_match('/^Version\s+(\d+\.\d+\.\d+)/', $output, $matches), [0, false], true) || ! isset($matches[1])) {
             throw new PlaywrightNotInstalledException();
         }
 
