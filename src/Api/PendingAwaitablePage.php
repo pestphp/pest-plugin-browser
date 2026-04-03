@@ -173,7 +173,7 @@ final class PendingAwaitablePage
         $browser = Playwright::browser($this->browserType)->launch();
 
         $context = $browser->newContext([
-            'locale' => 'en-US',
+            'locale' => Playwright::defaultLocale(),
             'timezoneId' => 'UTC',
             'colorScheme' => Playwright::defaultColorScheme()->value,
             ...$this->device->context(),
