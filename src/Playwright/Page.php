@@ -11,6 +11,7 @@ use Pest\Browser\Support\JavaScriptSerializer;
 use Pest\Browser\Support\Screenshot;
 use Pest\Browser\Support\Selector;
 use Pest\Browser\Support\Shell;
+use Pest\Browser\Support\StorageState;
 use Pest\TestSuite;
 use PHPUnit\Framework\ExpectationFailedException;
 use RuntimeException;
@@ -436,6 +437,19 @@ final class Page
         }
 
         return Screenshot::save($binary, $filename);
+    }
+
+    /**
+     * Saves the current browser context's storage state (cookies and localStorage) to a file.
+     *
+     * The file is stored under tests/Browser/StorageState/ and can be loaded in subsequent
+     * tests via withStorageState() to skip repetitive login flows.
+     */
+    public function saveStorageState(?string $name = null): string
+    {
+        $json = $this->context->storageState();
+
+        return StorageState::save($json, $name);
     }
 
     /**
