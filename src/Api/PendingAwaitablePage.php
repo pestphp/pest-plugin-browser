@@ -10,6 +10,7 @@ use Pest\Browser\Enums\Device;
 use Pest\Browser\Playwright\InitScript;
 use Pest\Browser\Playwright\Playwright;
 use Pest\Browser\Support\ComputeUrl;
+use Pest\Browser\Support\StorageState;
 
 /**
  * @mixin Webpage|AwaitableWebpage
@@ -150,6 +151,19 @@ final class PendingAwaitablePage
         return new self($this->browserType, $this->device, $this->url, [
             'geolocation' => $geolocation,
             'permissions' => ['geolocation'],
+            ...$this->options,
+        ]);
+    }
+
+    /**
+     * Loads a previously saved storage state (cookies and localStorage) into the browser context.
+     *
+     * This allows tests to skip login flows by reusing authenticated state saved with saveStorageState().
+     */
+    public function withStorageState(string $name): self
+    {
+        return new self($this->browserType, $this->device, $this->url, [
+            'storageState' => StorageState::path($name),
             ...$this->options,
         ]);
     }
