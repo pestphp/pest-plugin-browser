@@ -124,4 +124,14 @@ final readonly class Configuration
 
         return $this;
     }
+
+    /**
+     * Records a video of the browser session and saves it on test failure.
+     */
+    public function recordVideoOnFailure(): self
+    {
+        Playwright::setRecordVideoOnFailure();
+
+        return $this;
+    }
 }

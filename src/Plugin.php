@@ -11,6 +11,7 @@ use Pest\Browser\Exceptions\BrowserNotSupportedException;
 use Pest\Browser\Exceptions\OptionNotSupportedInParallelException;
 use Pest\Browser\Filters\UsesBrowserTestCaseMethodFilter;
 use Pest\Browser\Playwright\Playwright;
+use Pest\Browser\Support\Video;
 use Pest\Contracts\Plugins\Bootable;
 use Pest\Contracts\Plugins\HandlesArguments;
 use Pest\Contracts\Plugins\Terminable;
@@ -50,9 +51,19 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
                 }
             }
 
+            $videoDir = Playwright::pendingVideoDir();
+            $videoDestName = Playwright::pendingVideoDestName();
+
             ServerManager::instance()->http()->flush();
 
             Playwright::reset();
+
+            if ($videoDir !== null && $videoDestName !== null) {
+                /** @var TestStatus $videoStatus */
+                $videoStatus = $this->status(); // @phpstan-ignore-line
+                Video::handleRecording($videoDir, $videoDestName, $videoStatus->isFailure() || $videoStatus->isError());
+                Playwright::clearVideoRecording();
+            }
         })->in($this->in());
     }
 
@@ -91,6 +102,12 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
             Playwright::setColorScheme(ColorScheme::LIGHT);
 
             $arguments = $this->popArgument('--light', $arguments);
+        }
+
+        if ($this->hasArgument('--record-video', $arguments)) {
+            Playwright::setRecordVideoOnFailure();
+
+            $arguments = $this->popArgument('--record-video', $arguments);
         }
 
         if ($this->hasArgument('--browser', $arguments)) {

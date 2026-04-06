@@ -60,6 +60,21 @@ final class Playwright
     private static ?string $host = null;
 
     /**
+     * Whether to record video on test failure.
+     */
+    private static bool $recordVideoOnFailure = false;
+
+    /**
+     * The temporary directory where the current test's video is being recorded.
+     */
+    private static ?string $pendingVideoDir = null;
+
+    /**
+     * The sanitized test name used as the video destination filename.
+     */
+    private static ?string $pendingVideoDestName = null;
+
+    /**
      * Get a browser factory for the given browser type.
      */
     public static function browser(BrowserType $browserType): BrowserFactory
@@ -185,6 +200,56 @@ final class Playwright
     public static function shouldDebugAssertions(): bool
     {
         return self::$shouldDebugAssertions;
+    }
+
+    /**
+     * Set whether to record video on test failure.
+     */
+    public static function setRecordVideoOnFailure(): void
+    {
+        self::$recordVideoOnFailure = true;
+    }
+
+    /**
+     * Whether to record video on test failure.
+     */
+    public static function shouldRecordVideoOnFailure(): bool
+    {
+        return self::$recordVideoOnFailure;
+    }
+
+    /**
+     * Register a video recording for the current test.
+     */
+    public static function registerVideoRecording(string $dir, string $destName): void
+    {
+        self::$pendingVideoDir = $dir;
+        self::$pendingVideoDestName = $destName;
+    }
+
+    /**
+     * Get the pending video temporary directory.
+     */
+    public static function pendingVideoDir(): ?string
+    {
+        return self::$pendingVideoDir;
+    }
+
+    /**
+     * Get the pending video destination filename (without extension).
+     */
+    public static function pendingVideoDestName(): ?string
+    {
+        return self::$pendingVideoDestName;
+    }
+
+    /**
+     * Clear the pending video recording state.
+     */
+    public static function clearVideoRecording(): void
+    {
+        self::$pendingVideoDir = null;
+        self::$pendingVideoDestName = null;
     }
 
     /**
