@@ -47,9 +47,9 @@ final class Video
 
         $destFile = self::dir().DIRECTORY_SEPARATOR.$destName.'.webm';
 
-        // Avoid overwriting an existing video with the same name
+        // Remove any existing video for this test so re-runs stay clean
         if (file_exists($destFile)) {
-            $destFile = self::dir().DIRECTORY_SEPARATOR.$destName.'-'.time().'.webm';
+            unlink($destFile);
         }
 
         rename($videos[0], $destFile);

@@ -43,32 +43,30 @@ it('does nothing when the temp directory has no webm files', function (): void {
     expect(is_dir($tempDir))->toBeFalse();
 });
 
-it('avoids overwriting an existing video by appending a timestamp', function (): void {
+it('overwrites an existing video when the test fails again', function (): void {
     $tempDir = sys_get_temp_dir().'/pest-video-test-'.uniqid('', true);
     mkdir($tempDir, 0755, true);
     $videoFile = $tempDir.'/video.webm';
-    file_put_contents($videoFile, 'fake-video-data');
+    file_put_contents($videoFile, 'new-video-data');
 
     // Pre-create a file with the expected destination name
     if (is_dir(Video::dir()) === false) {
         mkdir(Video::dir(), 0755, true);
     }
-    $existingFile = Video::dir().'/duplicate_test.webm';
-    file_put_contents($existingFile, 'existing-video');
+    $destFile = Video::dir().'/overwrite_test.webm';
+    file_put_contents($destFile, 'old-video-data');
 
-    Video::handleRecording($tempDir, 'duplicate_test', true);
+    Video::handleRecording($tempDir, 'overwrite_test', true);
 
-    // The original file must still exist
-    expect(file_exists($existingFile))->toBeTrue();
+    // Destination must contain the new content
+    expect(file_exists($destFile))->toBeTrue();
+    expect(file_get_contents($destFile))->toBe('new-video-data');
 
-    // A second file with a timestamp suffix must have been created
-    $videos = glob(Video::dir().'/duplicate_test-*.webm');
-    expect($videos)->not->toBeEmpty();
+    // No timestamp-suffixed files should exist
+    $extras = glob(Video::dir().'/overwrite_test-*.webm');
+    expect($extras)->toBeEmpty();
 
-    @unlink($existingFile);
-    foreach ((array) $videos as $v) {
-        @unlink((string) $v);
-    }
+    @unlink($destFile);
 });
 
 it('cleans up extra videos when more than one webm is present', function (): void {
