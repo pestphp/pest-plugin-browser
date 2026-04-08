@@ -7,16 +7,16 @@
 ### Navigation & Screenshots
 
 ```php
-$this->visit('/')->screenshot(filename: 'homepage');
-$this->visit('/dashboard')->screenshot(filename: 'dashboard', fullPage: true);
-$this->visit('/')->screenshotElement('.hero', filename: 'hero-section');
+visit('/')->screenshot(filename: 'homepage');
+visit('/dashboard')->screenshot(filename: 'dashboard', fullPage: true);
+visit('/')->screenshotElement('.hero', filename: 'hero-section');
 ```
 
 Visual regression testing to catch unintended UI changes:
 
 ```php
-$this->visit('/')->assertScreenshotMatches();
-$this->visit('/dashboard')->assertScreenshotMatches(fullPage: true);
+visit('/')->assertScreenshotMatches();
+visit('/dashboard')->assertScreenshotMatches(fullPage: true);
 ```
 
 ### Responsiveness & Device Emulation
@@ -24,21 +24,21 @@ $this->visit('/dashboard')->assertScreenshotMatches(fullPage: true);
 Test on mobile and specific devices:
 
 ```php
-$this->visit('/')->on()->mobile()->screenshot(filename: 'homepage-mobile');
-$this->visit('/')->on()->iPhone14Pro()->screenshot(filename: 'homepage-iphone14pro');
-$this->visit('/')->on()->macbook14()->screenshot(filename: 'homepage-macbook14');
+visit('/')->on()->mobile()->screenshot(filename: 'homepage-mobile');
+visit('/')->on()->iPhone14Pro()->screenshot(filename: 'homepage-iphone14pro');
+visit('/')->on()->macbook14()->screenshot(filename: 'homepage-macbook14');
 ```
 
 Custom viewport:
 
 ```php
-$this->visit('/')->resize(375, 812)->screenshot(filename: 'homepage-375x812');
+visit('/')->resize(375, 812)->screenshot(filename: 'homepage-375x812');
 ```
 
 Dark mode:
 
 ```php
-$this->visit('/')->inDarkMode()->screenshot(filename: 'homepage-dark');
+visit('/')->inDarkMode()->screenshot(filename: 'homepage-dark');
 ```
 
 ### Interactions
@@ -46,9 +46,9 @@ $this->visit('/')->inDarkMode()->screenshot(filename: 'homepage-dark');
 Click, type, and submit forms:
 
 ```php
-$this->visit('/')->click('Login')->assertPathIs('/login');
+visit('/')->click('Login')->assertPathIs('/login');
 
-$this->visit('/login')
+visit('/login')
     ->type('email', 'user@example.com')
     ->type('password', 'secret')
     ->press('Sign in')
@@ -58,13 +58,13 @@ $this->visit('/login')
 Slow typing for fields with debounce or live validation:
 
 ```php
-$this->visit('/search')->typeSlowly('query', 'pest php')->assertSee('Results');
+visit('/search')->typeSlowly('query', 'pest php')->assertSee('Results');
 ```
 
 Dropdowns, checkboxes, and radio buttons:
 
 ```php
-$this->visit('/settings')
+visit('/settings')
     ->select('timezone', 'America/New_York')
     ->check('notifications')
     ->uncheck('marketing')
@@ -76,28 +76,28 @@ $this->visit('/settings')
 Clear and append to fields:
 
 ```php
-$this->visit('/form')->clear('name')->type('name', 'New Name');
-$this->visit('/form')->append('tags', ', new-tag');
+visit('/form')->clear('name')->type('name', 'New Name');
+visit('/form')->append('tags', ', new-tag');
 ```
 
 File uploads:
 
 ```php
-$this->visit('/upload')->attach('avatar', '/path/to/photo.jpg')->press('Upload');
+visit('/upload')->attach('avatar', '/path/to/photo.jpg')->press('Upload');
 ```
 
 Hover, drag and drop, and keyboard input:
 
 ```php
-$this->visit('/')->hover('.dropdown-trigger')->assertSee('Menu Item');
-$this->visit('/board')->drag('#task-1', '#column-done');
-$this->visit('/editor')->keys('.editor', 'Hello World');
+visit('/')->hover('.dropdown-trigger')->assertSee('Menu Item');
+visit('/board')->drag('#task-1', '#column-done');
+visit('/editor')->keys('.editor', 'Hello World');
 ```
 
 Hold modifier keys during interactions:
 
 ```php
-$this->visit('/editor')->withKeyDown('Shift', function ($page) {
+visit('/editor')->withKeyDown('Shift', function ($page) {
     $page->click('#item-1')->click('#item-5');
 });
 ```
@@ -105,7 +105,7 @@ $this->visit('/editor')->withKeyDown('Shift', function ($page) {
 Interact within iframes:
 
 ```php
-$this->visit('/embed')->withinIframe('#payment-frame', function ($iframe) {
+visit('/embed')->withinIframe('#payment-frame', function ($iframe) {
     $iframe->type('card-number', '4242424242424242')->press('Pay');
 });
 ```
@@ -113,106 +113,106 @@ $this->visit('/embed')->withinIframe('#payment-frame', function ($iframe) {
 Press and wait for async operations:
 
 ```php
-$this->visit('/form')->pressAndWaitFor('Submit', 2)->assertSee('Submitted');
+visit('/form')->pressAndWaitFor('Submit', 2)->assertSee('Submitted');
 ```
 
 ### Content Assertions
 
 ```php
-$this->visit('/')->assertSee('Welcome');
-$this->visit('/')->assertDontSee('Error');
-$this->visit('/')->assertSeeIn('.alert', 'Success');
-$this->visit('/')->assertDontSeeIn('.alert', 'Warning');
-$this->visit('/')->assertCount('.product-card', 5);
-$this->visit('/')->assertSeeLink('Documentation');
-$this->visit('/')->assertDontSeeLink('Admin');
-$this->visit('/')->assertTitle('Home — My App');
-$this->visit('/')->assertTitleContains('Home');
-$this->visit('/')->assertSourceHas('<meta name="description"');
-$this->visit('/')->assertSourceMissing('<div class="debug"');
+visit('/')->assertSee('Welcome');
+visit('/')->assertDontSee('Error');
+visit('/')->assertSeeIn('.alert', 'Success');
+visit('/')->assertDontSeeIn('.alert', 'Warning');
+visit('/')->assertCount('.product-card', 5);
+visit('/')->assertSeeLink('Documentation');
+visit('/')->assertDontSeeLink('Admin');
+visit('/')->assertTitle('Home — My App');
+visit('/')->assertTitleContains('Home');
+visit('/')->assertSourceHas('<meta name="description"');
+visit('/')->assertSourceMissing('<div class="debug"');
 ```
 
 ### Element State Assertions
 
 ```php
-$this->visit('/')->assertVisible('.navbar');
-$this->visit('/')->assertMissing('.loading-spinner');
-$this->visit('/')->assertPresent('input[name=email]');
-$this->visit('/')->assertNotPresent('.modal');
-$this->visit('/form')->assertEnabled('submit');
-$this->visit('/form')->assertDisabled('delete');
-$this->visit('/form')->assertButtonEnabled('Save');
-$this->visit('/form')->assertButtonDisabled('Delete');
+visit('/')->assertVisible('.navbar');
+visit('/')->assertMissing('.loading-spinner');
+visit('/')->assertPresent('input[name=email]');
+visit('/')->assertNotPresent('.modal');
+visit('/form')->assertEnabled('submit');
+visit('/form')->assertDisabled('delete');
+visit('/form')->assertButtonEnabled('Save');
+visit('/form')->assertButtonDisabled('Delete');
 ```
 
 ### Form Assertions
 
 ```php
-$this->visit('/settings')->assertValue('name', 'John Doe');
-$this->visit('/settings')->assertValueIsNot('name', '');
-$this->visit('/settings')->assertChecked('notifications');
-$this->visit('/settings')->assertNotChecked('marketing');
-$this->visit('/settings')->assertIndeterminate('select-all');
-$this->visit('/form')->assertRadioSelected('plan', 'pro');
-$this->visit('/form')->assertRadioNotSelected('plan', 'free');
-$this->visit('/form')->assertSelected('country', 'US');
-$this->visit('/form')->assertNotSelected('country', 'UK');
+visit('/settings')->assertValue('name', 'John Doe');
+visit('/settings')->assertValueIsNot('name', '');
+visit('/settings')->assertChecked('notifications');
+visit('/settings')->assertNotChecked('marketing');
+visit('/settings')->assertIndeterminate('select-all');
+visit('/form')->assertRadioSelected('plan', 'pro');
+visit('/form')->assertRadioNotSelected('plan', 'free');
+visit('/form')->assertSelected('country', 'US');
+visit('/form')->assertNotSelected('country', 'UK');
 ```
 
 ### URL Assertions
 
 ```php
-$this->visit('/dashboard')->assertUrlIs('http://localhost/dashboard');
-$this->visit('/dashboard')->assertPathIs('/dashboard');
-$this->visit('/dashboard')->assertPathIsNot('/login');
-$this->visit('/docs/install')->assertPathBeginsWith('/docs');
-$this->visit('/docs/install')->assertPathEndsWith('/install');
-$this->visit('/docs/install')->assertPathContains('docs');
-$this->visit('/dashboard')->assertSchemeIs('http');
-$this->visit('/dashboard')->assertHostIs('localhost');
-$this->visit('/search?q=pest')->assertQueryStringHas('q');
-$this->visit('/search')->assertQueryStringMissing('q');
-$this->visit('/page#section')->assertFragmentIs('section');
-$this->visit('/page#section-one')->assertFragmentBeginsWith('section');
+visit('/dashboard')->assertUrlIs('http://localhost/dashboard');
+visit('/dashboard')->assertPathIs('/dashboard');
+visit('/dashboard')->assertPathIsNot('/login');
+visit('/docs/install')->assertPathBeginsWith('/docs');
+visit('/docs/install')->assertPathEndsWith('/install');
+visit('/docs/install')->assertPathContains('docs');
+visit('/dashboard')->assertSchemeIs('http');
+visit('/dashboard')->assertHostIs('localhost');
+visit('/search?q=pest')->assertQueryStringHas('q');
+visit('/search')->assertQueryStringMissing('q');
+visit('/page#section')->assertFragmentIs('section');
+visit('/page#section-one')->assertFragmentBeginsWith('section');
 ```
 
 ### Attribute Assertions
 
 ```php
-$this->visit('/')->assertAttribute('.logo', 'alt', 'My App');
-$this->visit('/')->assertAttributeMissing('.input', 'disabled');
-$this->visit('/')->assertAttributeContains('.btn', 'class', 'primary');
-$this->visit('/')->assertAttributeDoesntContain('.btn', 'class', 'hidden');
-$this->visit('/')->assertDataAttribute('.card', 'id', '42');
-$this->visit('/')->assertAriaAttribute('.menu', 'expanded', 'true');
+visit('/')->assertAttribute('.logo', 'alt', 'My App');
+visit('/')->assertAttributeMissing('.input', 'disabled');
+visit('/')->assertAttributeContains('.btn', 'class', 'primary');
+visit('/')->assertAttributeDoesntContain('.btn', 'class', 'hidden');
+visit('/')->assertDataAttribute('.card', 'id', '42');
+visit('/')->assertAriaAttribute('.menu', 'expanded', 'true');
 ```
 
 ### Quality & Accessibility
 
 ```php
-$this->visit('/')->assertNoJavaScriptErrors();
-$this->visit('/')->assertNoConsoleLogs();
-$this->visit('/')->assertNoSmoke();
-$this->visit('/')->assertNoAccessibilityIssues();
-$this->visit('/')->assertScript('document.title', 'My App');
+visit('/')->assertNoJavaScriptErrors();
+visit('/')->assertNoConsoleLogs();
+visit('/')->assertNoSmoke();
+visit('/')->assertNoAccessibilityIssues();
+visit('/')->assertScript('document.title', 'My App');
 ```
 
 ### Data Retrieval
 
 ```php
-$text = $this->visit('/')->text('.heading');
-$href = $this->visit('/')->attribute('.link', 'href');
-$value = $this->visit('/form')->value('email');
-$html = $this->visit('/')->content();
-$url = $this->visit('/redirect')->url();
-$count = $this->visit('/')->script('document.querySelectorAll(".item").length');
+$text = visit('/')->text('.heading');
+$href = visit('/')->attribute('.link', 'href');
+$value = visit('/form')->value('email');
+$html = visit('/')->content();
+$url = visit('/redirect')->url();
+$count = visit('/')->script('document.querySelectorAll(".item").length');
 ```
 
 ### Waiting
 
 ```php
-$this->visit('/')->wait(2); // Wait 2 seconds
-$this->visit('/form')->pressAndWaitFor('Submit', 2); // Press and wait
+visit('/')->wait(2); // Wait 2 seconds
+visit('/form')->pressAndWaitFor('Submit', 2); // Press and wait
 ```
 
 Configure default timeout in `Pest.php`:
@@ -245,16 +245,16 @@ Override via CLI: `./vendor/bin/pest --browser firefox`.
 Configure locale, timezone, and user agent:
 
 ```php
-$this->visit('/')->withLocale('fr-FR')->assertSee('Bienvenue');
-$this->visit('/')->withTimezone('America/New_York');
-$this->visit('/')->withUserAgent('Googlebot');
-$this->visit('/')->withHost('subdomain.localhost');
+visit('/')->withLocale('fr-FR')->assertSee('Bienvenue');
+visit('/')->withTimezone('America/New_York');
+visit('/')->withUserAgent('Googlebot');
+visit('/')->withHost('subdomain.localhost');
 ```
 
 Geolocation:
 
 ```php
-$this->visit('/nearby')->geolocation(40.7128, -74.0060)->assertSee('New York');
+visit('/nearby')->geolocation(40.7128, -74.0060)->assertSee('New York');
 ```
 
 ### Debugging
@@ -272,7 +272,7 @@ $this->visit('/nearby')->geolocation(40.7128, -74.0060)->assertSee('New York');
 
 ```php
 Mail::fake();
-$this->visit('/contact')
+visit('/contact')
     ->type('email', 'test@example.com')
     ->type('message', 'Hello')
     ->press('Send')
@@ -282,7 +282,7 @@ Mail::assertSent(ContactForm::class);
 
 ```php
 Notification::fake();
-$this->visit('/register')
+visit('/register')
     ->type('name', 'John')
     ->type('email', 'john@example.com')
     ->type('password', 'password')
@@ -292,7 +292,7 @@ Notification::assertSentTo(User::first(), WelcomeNotification::class);
 ```
 
 ```php
-$this->visit('/checkout')
+visit('/checkout')
     ->type('card', '4242424242424242')
     ->press('Pay')
     ->assertSee('Transaction processed');
