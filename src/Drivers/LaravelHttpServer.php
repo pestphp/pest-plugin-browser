@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Drivers;
 
+use Amp\ByteStream\ReadableResourceStream;
 use Amp\Http\Cookie\RequestCookie;
 use Amp\Http\Server\DefaultErrorHandler;
 use Amp\Http\Server\HttpServer as AmpHttpServer;
@@ -316,25 +317,38 @@ final class LaravelHttpServer implements HttpServer
      */
     private function asset(string $filepath): Response
     {
-        $rawContent = file_get_contents($filepath);
-
-        if ($rawContent === false) {
-            return new Response(404);
-        }
-
         $mimeTypes = new MimeTypes();
         $contentType = $mimeTypes->getMimeTypes(pathinfo($filepath, PATHINFO_EXTENSION));
-
         $contentType = $contentType[0] ?? 'application/octet-stream';
 
         if (str_ends_with($filepath, '.js')) {
-            $rawContent = $this->rewriteAssetUrl($rawContent);
+            // ReadableResourceStream sets php://temp to non-blocking mode, causing
+            // AMPHP's event loop to deliver only the first 8192-byte chunk for files
+            // written to a php://temp stream. Using file_get_contents + a string body
+            // sends the full content in one shot, avoiding the truncation.
+            $content = file_get_contents($filepath);
+
+            if ($content === false) {
+                return new Response(404);
+            }
+
+            $content = $this->rewriteAssetUrl($content);
+
+            return new Response(200, [
+                'Content-Type' => $contentType,
+                'Content-Length' => (string) strlen($content),
+            ], $content);
+        }
+
+        $file = fopen($filepath, 'r');
+
+        if ($file === false) {
+            return new Response(404);
         }
 
         return new Response(200, [
             'Content-Type' => $contentType,
-            'Content-Length' => (string) strlen($rawContent),
-        ], $rawContent);
+        ], new ReadableResourceStream($file));
     }
 
     /**
