@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Drivers;
 
-use Amp\ByteStream\ReadableResourceStream;
 use Amp\Http\Cookie\RequestCookie;
 use Amp\Http\Server\DefaultErrorHandler;
 use Amp\Http\Server\HttpServer as AmpHttpServer;
@@ -317,9 +316,9 @@ final class LaravelHttpServer implements HttpServer
      */
     private function asset(string $filepath): Response
     {
-        $file = fopen($filepath, 'r');
+        $rawContent = file_get_contents($filepath);
 
-        if ($file === false) {
+        if ($rawContent === false) {
             return new Response(404);
         }
 
@@ -329,26 +328,13 @@ final class LaravelHttpServer implements HttpServer
         $contentType = $contentType[0] ?? 'application/octet-stream';
 
         if (str_ends_with($filepath, '.js')) {
-            $temporaryStream = fopen('php://temp', 'r+');
-            assert($temporaryStream !== false, 'Failed to open temporary stream.');
-
-            // @phpstan-ignore-next-line
-            $temporaryContent = fread($file, (int) filesize($filepath));
-
-            assert($temporaryContent !== false, 'Failed to open temporary stream.');
-
-            $content = $this->rewriteAssetUrl($temporaryContent);
-
-            fwrite($temporaryStream, $content);
-
-            rewind($temporaryStream);
-
-            $file = $temporaryStream;
+            $rawContent = $this->rewriteAssetUrl($rawContent);
         }
 
         return new Response(200, [
             'Content-Type' => $contentType,
-        ], new ReadableResourceStream($file));
+            'Content-Length' => (string) strlen($rawContent),
+        ], $rawContent);
     }
 
     /**
