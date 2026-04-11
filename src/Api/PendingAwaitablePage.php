@@ -175,29 +175,40 @@ final class PendingAwaitablePage
             $testName = str_replace('__pest_evaluable_', '', test()->name());
             // @phpstan-ignore-next-line
             $sanitized = (string) preg_replace('/[^a-zA-Z0-9_-]/', '_', $testName);
-            $videoDir = sys_get_temp_dir().DIRECTORY_SEPARATOR.'pest-browser-videos'.DIRECTORY_SEPARATOR.uniqid('', true);
-            mkdir($videoDir, 0755, true);
-            $options['recordVideo'] = ['dir' => $videoDir];
-            // @phpstan-ignore-next-line
-            Playwright::registerVideoRecording($videoDir, $sanitized);
         }
 
-        $browser = Playwright::browser($this->browserType)->launch();
-
-        $context = $browser->newContext([
+        $contextOptions = [
             'locale' => 'en-US',
             'timezoneId' => 'UTC',
             'colorScheme' => Playwright::defaultColorScheme()->value,
             ...$this->device->context(),
             ...$options,
-        ]);
+        ];
+
+        if (Playwright::shouldRecordVideoOnFailure()) {
+            // Empty array — Playwright uses its own temp storage; we retrieve via saveAs
+            $contextOptions['recordVideo'] = [];
+        }
+
+        $browser = Playwright::browser($this->browserType)->launch();
+
+        $context = $browser->newContext($contextOptions);
 
         $context->addInitScript(InitScript::get());
 
         $url = ComputeUrl::from($this->url);
 
+        // Strip context-only options before passing to goto
+        $gotoOptions = array_diff_key($options, array_flip(['host']));
+
+        $page = $context->newPage()->goto($url, $gotoOptions);
+
+        if (Playwright::shouldRecordVideoOnFailure()) {
+            Playwright::registerVideoRecording($page, $sanitized); // @phpstan-ignore-line
+        }
+
         return new AwaitableWebpage(
-            $context->newPage()->goto($url, $options),
+            $page,
             $url,
         );
     }
