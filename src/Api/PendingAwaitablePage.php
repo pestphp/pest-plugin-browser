@@ -176,7 +176,7 @@ final class PendingAwaitablePage
         $options = $this->options;
         $host = $this->extractHost($options);
 
-        return $this->withTemporaryHost($host, fn(): AwaitableWebpage => $this->buildAwaitablePage($options));
+        return $this->withTemporaryHost($host, fn (): AwaitableWebpage => $this->buildAwaitablePage($options));
     }
 
     /**
