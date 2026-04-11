@@ -45,8 +45,9 @@ final class Context
 
         $frameGuid = '';
         $pageGuid = '';
+        $artifactGuid = null;
 
-        /** @var array{method: string|null, params: array{type: string|null, guid: string, initializer: array{url: string}}, result: array{page: array{guid: string|null}}} $message */
+        /** @var array{method: string|null, params: array{type: string|null, guid: string, initializer: array{url: string, mainFrame?: array{guid: string}, video?: array{guid: string}}}, result: array{page: array{guid: string|null}}} $message */
         foreach ($response as $message) {
             if (isset($message['method']) && $message['method'] === '__create__' && (isset($message['params']['type']) && $message['params']['type'] === 'Frame')) {
                 $frameGuid = $message['params']['guid'];
@@ -55,9 +56,18 @@ final class Context
             if (isset($message['result']['page']['guid'])) {
                 $pageGuid = $message['result']['page']['guid'];
             }
+
+            // The video recording artifact GUID is sent in the Page __create__ initializer
+            if (
+                isset($message['method'], $message['params']['type'], $message['params']['initializer']['video']['guid'])
+                && $message['method'] === '__create__'
+                && $message['params']['type'] === 'Page'
+            ) {
+                $artifactGuid = $message['params']['initializer']['video']['guid'];
+            }
         }
 
-        return new Page($this, $pageGuid, $frameGuid);
+        return new Page($this, $pageGuid, $frameGuid, $artifactGuid);
     }
 
     /**
