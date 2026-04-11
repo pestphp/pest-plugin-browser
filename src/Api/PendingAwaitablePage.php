@@ -176,7 +176,7 @@ final class PendingAwaitablePage
         $options = $this->options;
         $host = $this->extractHost($options);
 
-        return $this->withTemporaryHost($host, fn (): AwaitableWebpage => $this->buildAwaitablePage($options));
+        return $this->withTemporaryHost($host, fn(): AwaitableWebpage => $this->buildAwaitablePage($options));
     }
 
     /**
@@ -184,6 +184,13 @@ final class PendingAwaitablePage
      */
     private function buildAwaitablePage(array $options): AwaitableWebpage
     {
+        if (isset($options['storageState']) && is_string($options['storageState'])) {
+            $options['storageState'] = json_decode(
+                (string) file_get_contents($options['storageState']),
+                true,
+            );
+        }
+
         $browser = Playwright::browser($this->browserType)->launch();
 
         $context = $browser->newContext([
@@ -198,8 +205,10 @@ final class PendingAwaitablePage
 
         $url = ComputeUrl::from($this->url);
 
+        $gotoOptions = array_diff_key($options, array_flip(['storageState', 'host']));
+
         return new AwaitableWebpage(
-            $context->newPage()->goto($url, $options),
+            $context->newPage()->goto($url, $gotoOptions),
             $url,
         );
     }
