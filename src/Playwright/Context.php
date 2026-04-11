@@ -109,8 +109,13 @@ final class Context
     public function storageState(): string
     {
         $response = $this->sendMessage('storageState');
-        $result = $this->processResultResponse($response);
 
-        return (string) json_encode($result);
+        foreach ($response as $message) {
+            if (isset($message['result'])) {
+                return (string) json_encode($message['result']);
+            }
+        }
+
+        return '{"cookies":[],"origins":[]}';
     }
 }
