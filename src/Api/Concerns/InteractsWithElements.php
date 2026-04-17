@@ -22,6 +22,16 @@ trait InteractsWithElements
     }
 
     /**
+     * Click on the specified data-test selector.
+     */
+    public function clickSelector(string $selector): self
+    {
+        $this->guessLocator($selector)->click();
+
+        return $this;
+    }
+
+    /**
      * Get the text of the element matching the given selector.
      */
     public function text(string $selector): ?string
