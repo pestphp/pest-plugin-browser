@@ -76,12 +76,10 @@ it('can click elements via exact match css selectors', function (string $selecto
 
 it('can click on the element using the data-test selector', function (): void {
     Route::get('/', fn (): string => '
-        <form>
-            <div data-test="test-selector" onclick="document.getElementById(\'result\').textContent = \'Selector Clicked\'">
-                Click Me
-            </div>
-            <div id="result"></div>
-        </form>
+        <div data-test="test-selector" onclick="document.getElementById(\'result\').textContent = \'Selector Clicked\'">
+            Click Me
+        </div>
+        <div id="result"></div>
     ');
 
     $page = visit('/');
