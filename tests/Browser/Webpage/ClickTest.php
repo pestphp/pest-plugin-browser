@@ -73,3 +73,20 @@ it('can click elements via exact match css selectors', function (string $selecto
     '[name$="test"]',
     'button[name="test"]',
 ]);
+
+it('can click on the element using the data-test selector', function (): void {
+    Route::get('/', fn (): string => '
+        <form>
+            <div data-test="test-selector" onclick="document.getElementById(\'result\').textContent = \'Selector Clicked\'">
+                Click Me
+            </div>
+            <div id="result"></div>
+        </form>
+    ');
+
+    $page = visit('/');
+
+    $page->click('@test-selector');
+
+    expect($page->text('#result'))->toBe('Selector Clicked');
+});
