@@ -94,8 +94,14 @@ final class PlaywrightNpmServer implements PlaywrightServer
     public function stop(): void
     {
         if ($this->systemProcess instanceof SystemProcess && $this->isRunning()) {
+            // The Playwright node server needs time to clean up its browser
+            // children — especially Chromium in headed mode, which can take
+            // close to a second to shut down gracefully. With the old 0.1s
+            // timeout, SIGTERM raced the browser teardown and Symfony would
+            // escalate to SIGKILL while children were still detaching,
+            // leaving the parent pest process waiting on zombie file handles.
             $this->systemProcess->stop(
-                timeout: 0.1,
+                timeout: 2.0,
                 signal: PHP_OS_FAMILY === 'Windows' ? null : SIGTERM,
             );
         }
