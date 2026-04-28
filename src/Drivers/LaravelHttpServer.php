@@ -175,6 +175,13 @@ final class LaravelHttpServer implements HttpServer
             return;
         }
 
+        // Guard against being called when the Laravel container is not (yet) bootstrapped,
+        // e.g. from a Pest `beforeAll` hook, or between test files in a parallel worker
+        // after the previous test's app has been torn down.
+        if (! app()->bound('config')) {
+            return;
+        }
+
         $url = $this->canonicalUrl();
 
         config(['app.url' => $url]);
