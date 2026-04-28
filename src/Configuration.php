@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Pest\Browser;
 
+use Pest\Browser\Drivers\LaravelHttpServer;
 use Pest\Browser\Enums\BrowserType;
 use Pest\Browser\Enums\ColorScheme;
 use Pest\Browser\Playwright\Playwright;
+use Pest\Browser\ServerManager;
 
 /**
  * @internal
@@ -101,6 +103,11 @@ final readonly class Configuration
     public function withHost(?string $host): self
     {
         Playwright::setHost($host);
+
+        $http = ServerManager::instance()->http();
+        if ($http instanceof LaravelHttpServer) {
+            $http->syncCanonicalUrl();
+        }
 
         return $this;
     }
