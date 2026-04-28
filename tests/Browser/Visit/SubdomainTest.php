@@ -70,18 +70,18 @@ it('Chaining withHost will not override global host', function (): void {
         'host' => request()->getHost(),
     ]);
 
-    // Set global host: test.domain
-    pest()->browser()->withHost('test.domain');
+    // Set global host: test.localhost
+    pest()->browser()->withHost('test.localhost');
 
     // 1. Visit withHost: api.localhost
     visit('/api/health')
         ->withHost('api.localhost')
         ->assertSee('"host":"api.localhost"')
-        ->assertDontSee('test.domain');
+        ->assertDontSee('test.localhost');
 
-    // 2. Visit without withHost: should use global host "test.domain"
+    // 2. Visit without withHost: should use global host "test.localhost"
     visit('/')
-        ->assertSee('"host":"test.domain"')
+        ->assertSee('"host":"test.localhost"')
         ->assertDontSee('api.localhost');
 });
 
