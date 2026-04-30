@@ -100,13 +100,11 @@ final class LaravelHttpServer implements HttpServer
             return;
         }
 
-        $logger = new NullLogger();
-
         // Bump the body size limit well above Amp's 128 KiB default so that
         // POSTs with large JSON payloads (e.g. the booking-engine order submit,
         // which can exceed 180 KiB) don't deadlock when the request body is read.
         $this->socket = $server = SocketHttpServer::createForDirectAccess(
-            logger: $logger,
+            logger: $logger = new NullLogger(),
             httpDriverFactory: new DefaultHttpDriverFactory(
                 logger: $logger,
                 bodySizeLimit: 64 * 1024 * 1024,

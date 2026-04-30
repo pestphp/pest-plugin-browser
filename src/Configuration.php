@@ -105,6 +105,7 @@ final readonly class Configuration
         Playwright::setHost($host);
 
         $http = ServerManager::instance()->http();
+
         if ($http instanceof LaravelHttpServer) {
             $http->syncCanonicalUrl();
         }
