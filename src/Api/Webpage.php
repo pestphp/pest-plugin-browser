@@ -96,6 +96,16 @@ final readonly class Webpage
     }
 
     /**
+     * Get a locator for the given selector for use in custom assertions.
+     *
+     * When multiple elements match, use `->all()` to iterate or `->first()` / `->nth()` for one.
+     */
+    public function element(string $selector, ?string $value = null): Locator
+    {
+        return $this->guessLocator($selector, $value);
+    }
+
+    /**
      * Gets the locator for the given selector.
      */
     private function guessLocator(string $selector, ?string $value = null): Locator
