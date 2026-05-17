@@ -55,6 +55,15 @@ final class ServerManager
      */
     public function playwright(): PlaywrightServer
     {
+        $serverUrl = Playwright::playwrightServerUrl();
+        if ($serverUrl) {
+            $parts = parse_url($serverUrl);
+            $host = $parts['host'];
+            $port = $parts['port'] ?? 9999;
+            AlreadyStartedPlaywrightServer::persist($host, $port);
+            return $this->playwright ??= new AlreadyStartedPlaywrightServer($host, $port);
+        }
+
         if (Parallel::isWorker()) {
             return AlreadyStartedPlaywrightServer::fromPersisted();
         }
