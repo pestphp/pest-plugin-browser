@@ -14,6 +14,7 @@ use Pest\Plugins\Concerns\HandleArguments;
 use Pest\TestSuite;
 use RuntimeException;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Process\Process;
 
 /**
  * @internal
@@ -24,7 +25,7 @@ final class Record implements HandlesArguments
 
     private const string OPTION = '--record';
 
-    private const string DEFAULT_TEST_ID_ATTRIBUTE = 'data-test';
+    private const string DEFAULT_TEST_ID_ATTRIBUTE = 'id';
 
     public function __construct(
         private readonly OutputInterface $output,
@@ -42,14 +43,30 @@ final class Record implements HandlesArguments
 
         $arguments = $this->popArgument(self::OPTION, $arguments);
 
-        $url = $this->popArgumentValue('--url', $arguments) ?? 'http://localhost:8000';
+        $url = $this->popArgumentValue('--url', $arguments) ?? $this->resolveAppUrl();
         $visitPath = $this->popArgumentValue('--visit', $arguments);
         $authName = $this->popArgumentValue('--acting-as', $arguments);
         $viewport = $this->popArgumentValue('--viewport', $arguments);
         $device = $this->popArgumentValue('--device', $arguments);
         $testIdAttribute = $this->popArgumentValue('--test-id-attribute', $arguments) ?? self::DEFAULT_TEST_ID_ATTRIBUTE;
+        $env = $this->popArgumentValue('--env', $arguments) ?? 'local';
 
-        $this->record($url, $visitPath, $authName, $viewport, $device, $testIdAttribute);
+        $server = $this->hasArgument('--server', $arguments);
+        if ($server) {
+            $arguments = $this->popArgument('--server', $arguments);
+        }
+
+        $migrateFresh = $this->hasArgument('--migrate-fresh', $arguments);
+        if ($migrateFresh) {
+            $arguments = $this->popArgument('--migrate-fresh', $arguments);
+        }
+
+        $seed = $this->hasArgument('--seed', $arguments);
+        if ($seed) {
+            $arguments = $this->popArgument('--seed', $arguments);
+        }
+
+        $this->record($url, $visitPath, $authName, $viewport, $device, $testIdAttribute, $server, $env, $migrateFresh, $seed);
 
         exit(0);
     }
@@ -61,6 +78,10 @@ final class Record implements HandlesArguments
         ?string $viewport,
         ?string $device,
         string $testIdAttribute,
+        bool $server = false,
+        string $env = 'local',
+        bool $migrateFresh = false,
+        bool $seed = false,
     ): void
     {
         $codegen = new Codegen;
@@ -72,6 +93,18 @@ final class Record implements HandlesArguments
 
             return;
         }
+
+        if ($migrateFresh) {
+            try {
+                $this->migrateFresh($env, $seed);
+            } catch (RuntimeException $e) {
+                $this->writeLine('<fg=red>✗</> ' . $e->getMessage());
+
+                return;
+            }
+        }
+
+        $serverProcess = $server ? $this->startServer($url, $env) : null;
 
         $loadStorage = ! is_null($authName)
             ? $this->resolveAuthState($codegen, $url, $authName, $viewport, $testIdAttribute)
@@ -101,7 +134,7 @@ final class Record implements HandlesArguments
 
             $title = $this->prompt('Test description');
             $outputPath = $this->resolveOutputPath();
-            $code = (new TestGenerator($testIdAttribute))->generate($events, $title, $url);
+            $code = (new TestGenerator($testIdAttribute))->generate($events, $title, $url, ! is_null($authName));
 
             (new TestWriter)->write($outputPath, $code);
 
@@ -110,7 +143,56 @@ final class Record implements HandlesArguments
             $this->writeLine('<fg=red>✗</> ' . $e->getMessage());
         } finally {
             @unlink($tmpFile);
+            $serverProcess?->stop(3);
         }
+    }
+
+    private function startServer(string $url, string $env): Process
+    {
+        $port = (int) (parse_url($url, PHP_URL_PORT) ?? 8000);
+
+        $process = new Process(['php', 'artisan', 'serve', '--port=' . $port, '--env=' . $env]);
+        $process->setTimeout(null);
+        $process->start();
+
+        $deadline = time() + 10;
+
+        while (time() < $deadline) {
+            usleep(200_000);
+            $connection = @fsockopen('127.0.0.1', $port, $errno, $errstr, 1);
+
+            if ($connection !== false) {
+                fclose($connection);
+                $this->writeLine('<fg=green>✔</> Dev server started at ' . $url);
+
+                return $process;
+            }
+        }
+
+        $this->writeLine('<fg=yellow>●</> Server may not be ready yet, proceeding...');
+
+        return $process;
+    }
+
+    private function migrateFresh(string $env, bool $seed): void
+    {
+        $this->writeLine('<fg=yellow>●</> Running migrate:fresh...');
+
+        $command = ['php', 'artisan', 'migrate:fresh', '--env=' . $env, '--force'];
+
+        if ($seed) {
+            $command[] = '--seed';
+        }
+
+        $process = new Process($command);
+        $process->setTimeout(null);
+        $process->run();
+
+        if (! $process->isSuccessful()) {
+            throw new RuntimeException('migrate:fresh failed: ' . trim($process->getErrorOutput()));
+        }
+
+        $this->writeLine('<fg=green>✔</> Database ready.');
     }
 
     private function resolveAuthState(
@@ -168,6 +250,36 @@ final class Record implements HandlesArguments
         $name = ucfirst(str_replace(['.php', 'Test.php'], '', $this->prompt('Test file name')));
 
         return $testsDir . DIRECTORY_SEPARATOR . $name . 'Test.php';
+    }
+
+    private function resolveAppUrl(): string
+    {
+        return $_ENV['APP_URL']
+            ?? $_SERVER['APP_URL']
+            ?? (getenv('APP_URL') ?: null)
+            ?? $this->readDotEnvValue('APP_URL')
+            ?? 'http://localhost:8000';
+    }
+
+    private function readDotEnvValue(string $key): ?string
+    {
+        $envFile = $this->testSuite->rootPath.DIRECTORY_SEPARATOR.'.env';
+
+        if (! file_exists($envFile)) {
+            return null;
+        }
+
+        foreach (file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+            if (str_starts_with(ltrim($line), '#')) {
+                continue;
+            }
+
+            if (str_starts_with($line, $key.'=')) {
+                return trim(substr($line, strlen($key) + 1), '"\'');
+            }
+        }
+
+        return null;
     }
 
     private function prompt(string $question): string
