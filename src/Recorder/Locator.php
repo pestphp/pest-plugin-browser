@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Recorder;
 
+use Pest\Browser\Support\Selector;
+
 final readonly class Locator
 {
     private function __construct(
@@ -56,9 +58,8 @@ final readonly class Locator
         }
 
         return match ($this->body) {
-            'button', 'link', 'menuitem', 'tab', 'option' => $name,
-            'textbox', 'searchbox', 'combobox' => sprintf('[aria-label="%s"]', $name),
-            'checkbox', 'radio' => $name,
+            'button', 'link', 'menuitem', 'tab', 'option', 'checkbox', 'radio' => $name,
+            'textbox', 'searchbox', 'combobox' => Selector::getByLabelSelector($name, true),
             default => null,
         };
     }
