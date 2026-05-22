@@ -2,30 +2,54 @@
 
 ## How it works
 
-`vendor/bin/pest --record` automatically starts an HTTP server with `APP_ENV=testing` before the browser opens, then shuts it down when recording ends — matching the same behavior as running browser tests normally with `vendor/bin/pest`.
+`vendor/bin/pest --record` automatically starts an HTTP server with `APP_ENV=testing` before the browser opens, then
+shuts it down when recording ends — matching the same behavior as running browser tests normally with `vendor/bin/pest`.
 
-The browser opens at full screen resolution by default (auto-detected per OS). Close the browser when done. Pest prompts for a test description and output file, then writes the generated test to `tests/Browser/`.
+The browser opens at full screen resolution by default (auto-detected per OS). Close the browser when done. Pest prompts
+for a test description and output file, then writes the generated test to `tests/Browser/`.
 
 ## Options
 
-| Option | Default | Description |
-|---|---|---|
-| `--url=` | auto | Skip auto-server; connect to this URL instead |
-| `--visit=` | `/` | Path to open on start |
-| `--test-id-attribute=` | `id` | HTML attribute used for element selectors |
-| `--device=` | — | Emulate a device (e.g. `"iPhone 15"`) |
-| `--viewport=` | screen resolution | Viewport size in pixels (e.g. `1280,800`) |
-| `--auth` / `--user` | — | Start browser pre-authenticated as a factory user (see below) |
-| `--auth-script=` | — | Path to a custom auth bootstrap script (non-Laravel apps) |
-| `--env=` | `testing` | Environment for the auto-started server |
-| `--migrate-fresh` | — | Run `migrate:fresh` before opening the browser |
-| `--seed` | — | Seed the database after `--migrate-fresh` |
+| Option                 | Default           | Description                                                   |
+|------------------------|-------------------|---------------------------------------------------------------|
+| `--url=`               | auto              | Skip auto-server; connect to this URL instead                 |
+| `--visit=`             | `/`               | Path to open on start                                         |
+| `--test-id-attribute=` | `id`              | HTML attribute used for element selectors                     |
+| `--device=`            | —                 | Emulate a device (e.g. `"iPhone 15"`)                         |
+| `--viewport=`          | screen resolution | Viewport size in pixels (e.g. `1280,800`)                     |
+| `--auth` / `--user`    | —                 | Start browser pre-authenticated as a factory user (see below) |
+| `--auth-script=`       | —                 | Path to a custom auth bootstrap script (non-Laravel apps)     |
+| `--env=`               | `testing`         | Environment for the auto-started server                       |
+| `--migrate-fresh`      | —                 | Run `migrate:fresh` before opening the browser                |
+| `--seed`               | —                 | Seed the database after `--migrate-fresh`                     |
+| `--browser=`           | `chrome`          | Browser to record with: `chrome`, `firefox`, `safari`         |
+| `--channel=`           | —                 | Browser channel (e.g. `msedge`, `chrome-canary`)              |
+| `--lang=`              | —                 | Override browser locale (e.g. `fr`, `nl`)                     |
+| `--timezone=`          | —                 | Override browser timezone (e.g. `Europe/Paris`)               |
+| `--color-scheme=`      | —                 | Preferred color scheme: `dark`, `light`, `no-preference`      |
+
+## Recording in a specific browser
+
+```bash
+vendor/bin/pest --record --browser=firefox
+vendor/bin/pest --record --browser=chrome --channel=msedge
+```
+
+## Recording with locale or timezone
+
+```bash
+vendor/bin/pest --record --lang=fr --timezone=Europe/Paris
+vendor/bin/pest --record --color-scheme=dark
+```
 
 ## Recording authenticated flows (`--auth`)
 
-Tests run with `APP_ENV=testing` (fresh, isolated DB). Recording against credentials that only exist in your local DB means those credentials won't exist when the test runs.
+Tests run with `APP_ENV=testing` (fresh, isolated DB). Recording against credentials that only exist in your local DB
+means those credentials won't exist when the test runs.
 
-`--auth` solves this without manual login: before the browser opens, Pest bootstraps the Laravel app, creates a factory user, starts a session authenticated as that user, and injects a valid session cookie into the browser. The browser starts pre-authenticated.
+`--auth` solves this without manual login: before the browser opens, Pest bootstraps the Laravel app, creates a factory
+user, starts a session authenticated as that user, and injects a valid session cookie into the browser. The browser
+starts pre-authenticated.
 
 ```bash
 vendor/bin/pest --record --auth --visit=/dashboard
@@ -33,7 +57,8 @@ vendor/bin/pest --record --auth --visit=/dashboard
 
 `--user` is an alias for `--auth`.
 
-The generated test uses `$this->actingAs(\App\Models\User::factory()->create())` — no real credentials, works in any environment.
+The generated test uses `$this->actingAs(\App\Models\User::factory()->create())` — no real credentials, works in any
+environment.
 
 ## Fresh database before recording
 

@@ -32,6 +32,11 @@ final class Codegen
         ?string $visitPath = null,
         ?string $loadStorage = null,
         ?string $device = null,
+        ?string $browser = null,
+        ?string $channel = null,
+        ?string $lang = null,
+        ?string $timezone = null,
+        ?string $colorScheme = null,
     ): string
     {
         $command = $this->buildCommand(
@@ -42,6 +47,11 @@ final class Codegen
             visitPath: $visitPath,
             loadStorage: $loadStorage,
             device: $device,
+            browser: $browser,
+            channel: $channel,
+            lang: $lang,
+            timezone: $timezone,
+            colorScheme: $colorScheme,
         );
 
         $process = (new Process($command))->setTimeout(null);
@@ -71,6 +81,11 @@ final class Codegen
         ?string $visitPath,
         ?string $loadStorage = null,
         ?string $device = null,
+        ?string $browser = null,
+        ?string $channel = null,
+        ?string $lang = null,
+        ?string $timezone = null,
+        ?string $colorScheme = null,
     ): array
     {
         $command = [
@@ -79,6 +94,26 @@ final class Codegen
             '--test-id-attribute=' . $testIdAttribute,
             '--output=' . $outputFile,
         ];
+
+        if (! is_null($browser)) {
+            $command[] = '--browser=' . $browser;
+        }
+
+        if (! is_null($channel)) {
+            $command[] = '--channel=' . $channel;
+        }
+
+        if (! is_null($lang)) {
+            $command[] = '--lang=' . $lang;
+        }
+
+        if (! is_null($timezone)) {
+            $command[] = '--timezone=' . $timezone;
+        }
+
+        if (! is_null($colorScheme)) {
+            $command[] = '--color-scheme=' . $colorScheme;
+        }
 
         $flag = match (true) {
             ! is_null($device) => '--device=' . $device,
