@@ -15,10 +15,6 @@ final class TestGenerator
      */
     public function generate(array $events, string $title, string $baseUrl, bool $actingAs = false): string
     {
-        if (! $actingAs) {
-            [$events, $actingAs] = $this->stripLoginSequence($events);
-        }
-
         $pages = $this->groupByNavigation($events, $baseUrl);
         $body = $this->renderBody($pages);
 
@@ -29,73 +25,6 @@ final class TestGenerator
         $escapedTitle = str_replace("'", "\\'", $title);
 
         return sprintf("it('%s', function (): void {\n%s\n});", $escapedTitle, $body);
-    }
-
-    /**
-     * Detect a login form (email + password fills) and strip it from the recorded events.
-     * Returns the cleaned event list and whether a login sequence was found.
-     *
-     * @param RecordedEvent[] $events
-     * @return array{0: RecordedEvent[], 1: bool}
-     */
-    private function stripLoginSequence(array $events): array
-    {
-        $passwordIdx = null;
-
-        foreach ($events as $i => $event) {
-            if ($event->type !== 'fill') {
-                continue;
-            }
-
-            $selector = $this->resolveSelector($event);
-
-            if ($selector !== null && str_contains(strtolower($selector), 'password')) {
-                $passwordIdx = $i;
-                break;
-            }
-        }
-
-        if ($passwordIdx === null) {
-            return [$events, false];
-        }
-
-        $emailIdx = null;
-
-        for ($i = $passwordIdx - 1; $i >= 0; $i--) {
-            if ($events[$i]->type === 'fill') {
-                $emailIdx = $i;
-                break;
-            }
-        }
-
-        $start = $emailIdx ?? $passwordIdx;
-
-        // Also remove the "Log in" link click that precedes the email field
-        if ($emailIdx !== null && $start > 0 && $events[$start - 1]->type === 'click') {
-            $start--;
-        }
-
-        // Remove up to 2 clicks after the password fill (remember-me checkbox + submit button)
-        $end = $passwordIdx;
-        $clickCount = 0;
-
-        while (isset($events[$end + 1]) && $events[$end + 1]->type === 'click' && $clickCount < 2) {
-            $end++;
-            $clickCount++;
-        }
-
-        array_splice($events, $start, $end - $start + 1);
-
-        return [$events, true];
-    }
-
-    private function resolveSelector(RecordedEvent $event): ?string
-    {
-        if ($event->locator === null) {
-            return null;
-        }
-
-        return Locator::fromArray($event->locator)->toSelector($this->testIdAttribute);
     }
 
     /**
@@ -193,22 +122,18 @@ final class TestGenerator
                 ? sprintf("assertVisible('%s')", $this->escape($selector))
                 : null,
 
-            'assertText' => $this->renderAssertText($event, $selector),
+            'assertText' => $this->renderAssertText($event),
 
             default => null,
         };
     }
 
-    private function renderAssertText(RecordedEvent $event, ?string $selector): ?string
+    private function renderAssertText(RecordedEvent $event): ?string
     {
         $text = $event->text ?? '';
 
         if ($text === '') {
             return null;
-        }
-
-        if (! is_null($selector)) {
-            return sprintf("assertSeeIn('%s', '%s')", $this->escape($selector), $this->escape($text));
         }
 
         return sprintf("assertSee('%s')", $this->escape($text));

@@ -9,6 +9,7 @@ use Pest\Browser\Recorder\EventParser;
 use Pest\Browser\Recorder\EventSanitizer;
 use Pest\Browser\Recorder\TestGenerator;
 use Pest\Browser\Recorder\TestWriter;
+use Pest\Browser\Support\Port;
 use Pest\Contracts\Plugins\HandlesArguments;
 use Pest\Plugins\Concerns\HandleArguments;
 use Pest\TestSuite;
@@ -43,43 +44,30 @@ final class Record implements HandlesArguments
 
         $arguments = $this->popArgument(self::OPTION, $arguments);
 
-        $url = $this->popArgumentValue('--url', $arguments) ?? $this->resolveAppUrl();
+        $url = $this->popArgumentValue('--url', $arguments);
         $visitPath = $this->popArgumentValue('--visit', $arguments);
         $authName = $this->popArgumentValue('--acting-as', $arguments);
         $viewport = $this->popArgumentValue('--viewport', $arguments);
         $device = $this->popArgumentValue('--device', $arguments);
         $testIdAttribute = $this->popArgumentValue('--test-id-attribute', $arguments) ?? self::DEFAULT_TEST_ID_ATTRIBUTE;
-        $env = $this->popArgumentValue('--env', $arguments) ?? 'local';
-
-        $server = $this->hasArgument('--server', $arguments);
-        if ($server) {
-            $arguments = $this->popArgument('--server', $arguments);
-        }
+        $env = $this->popArgumentValue('--env', $arguments) ?? 'testing';
 
         $migrateFresh = $this->hasArgument('--migrate-fresh', $arguments);
-        if ($migrateFresh) {
-            $arguments = $this->popArgument('--migrate-fresh', $arguments);
-        }
-
         $seed = $this->hasArgument('--seed', $arguments);
-        if ($seed) {
-            $arguments = $this->popArgument('--seed', $arguments);
-        }
 
-        $this->record($url, $visitPath, $authName, $viewport, $device, $testIdAttribute, $server, $env, $migrateFresh, $seed);
+        $this->record($url, $visitPath, $authName, $viewport, $device, $testIdAttribute, $env, $migrateFresh, $seed);
 
         exit(0);
     }
 
     private function record(
-        string $url,
+        ?string $url,
         ?string $visitPath,
         ?string $authName,
         ?string $viewport,
         ?string $device,
         string $testIdAttribute,
-        bool $server = false,
-        string $env = 'local',
+        string $env = 'testing',
         bool $migrateFresh = false,
         bool $seed = false,
     ): void
@@ -104,11 +92,29 @@ final class Record implements HandlesArguments
             }
         }
 
-        $serverProcess = $server ? $this->startServer($url, $env) : null;
+        if (is_null($viewport) && is_null($device)) {
+            $viewport = $this->detectScreenResolution();
+        }
 
-        $loadStorage = ! is_null($authName)
-            ? $this->resolveAuthState($codegen, $url, $authName, $viewport, $testIdAttribute)
-            : null;
+        $serverProcess = null;
+
+        if (is_null($url)) {
+            $port = Port::find();
+            $url = sprintf('http://127.0.0.1:%d', $port);
+            $serverProcess = $this->startServer($url, $env);
+        }
+
+        $loadStorage = null;
+
+        if (! is_null($authName)) {
+            $loadStorage = $this->resolveAuthState($url, $authName, $env);
+
+            if (is_null($loadStorage)) {
+                $this->writeLine('<fg=red>✗</> Auth state generation failed.');
+
+                return;
+            }
+        }
 
         $tmpFile = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'pest-recording-' . getmypid() . '.jsonl';
 
@@ -174,6 +180,27 @@ final class Record implements HandlesArguments
         return $process;
     }
 
+    private function detectScreenResolution(): string
+    {
+        $output = match (PHP_OS_FAMILY) {
+            'Linux' => shell_exec('xrandr --current 2>/dev/null | grep -m1 " connected" | grep -oP "\d+x\d+"'),
+            'Darwin' => shell_exec('system_profiler SPDisplaysDataType 2>/dev/null | grep -m1 "Resolution"'),
+            'Windows' => shell_exec('wmic desktopmonitor get screenwidth,screenheight 2>nul'),
+            default => null,
+        };
+
+        if ($output === null || $output === '') {
+            return '1920,1000';
+        }
+
+        return match (PHP_OS_FAMILY) {
+            'Linux' => preg_match('/(\d+)x(\d+)/', trim($output), $m) ? $m[1] . ',' . ((int) $m[2] - 80) : '1920,1000',
+            'Darwin' => preg_match('/(\d+) x (\d+)/', $output, $m) ? $m[1] . ',' . ((int) $m[2] - 80) : '1920,1000',
+            'Windows' => preg_match('/(\d+)\s+(\d+)/', trim($output), $m) ? $m[2] . ',' . ((int) $m[1] - 80) : '1920,1000',
+            default => '1920,1000',
+        };
+    }
+
     private function migrateFresh(string $env, bool $seed): void
     {
         $this->writeLine('<fg=yellow>●</> Running migrate:fresh...');
@@ -195,34 +222,94 @@ final class Record implements HandlesArguments
         $this->writeLine('<fg=green>✔</> Database ready.');
     }
 
-    private function resolveAuthState(
-        Codegen $codegen,
-        string $url,
-        string $name,
-        ?string $viewport,
-        string $testIdAttribute,
-    ): ?string
+    private function resolveAuthState(string $url, string $name, string $env): ?string
     {
         $storageFile = sys_get_temp_dir()
             . DIRECTORY_SEPARATOR
             . 'pest-auth-' . preg_replace('/[^a-z0-9_-]/i', '-', $name) . '.json';
 
-        if (! file_exists($storageFile)) {
-            $this->writeLine(sprintf(
-                "<fg=yellow>●</> No auth state found for '%s'. Record a login sequence to save it.",
-                $name,
-            ));
+        $this->writeLine(sprintf("<fg=yellow>●</> Generating auth state for '%s'...", $name));
 
-            try {
-                $codegen->captureAuthState($url, $storageFile, '/login', $testIdAttribute, $viewport);
-            } catch (RuntimeException $e) {
-                $this->writeLine('<fg=red>✗</> ' . $e->getMessage());
+        try {
+            $this->generateAuthState($url, $storageFile, $env);
+        } catch (RuntimeException $e) {
+            $this->writeLine('<fg=red>✗</> ' . $e->getMessage());
 
-                return null;
-            }
+            return null;
         }
 
-        return file_exists($storageFile) ? $storageFile : null;
+        $this->writeLine('<fg=green>✔</> Auth state ready.');
+
+        return $storageFile;
+    }
+
+    private function generateAuthState(string $url, string $storageFile, string $env): void
+    {
+        $rootPath = addslashes($this->testSuite->rootPath);
+        $host = parse_url($url, PHP_URL_HOST) ?? '127.0.0.1';
+        $cookieName = addslashes(preg_replace('/[^a-z0-9_\-]/i', '_', basename($rootPath)) . '_session');
+
+        $script = <<<PHP
+        <?php
+        define('LARAVEL_START', microtime(true));
+        require '{$rootPath}/vendor/autoload.php';
+        \$app = require_once '{$rootPath}/bootstrap/app.php';
+        \$kernel = \$app->make(\Illuminate\Contracts\Console\Kernel::class);
+        \$kernel->bootstrap();
+
+        \$manager = app('session');
+        \$store = \$manager->driver();
+        \$store->setId(\Illuminate\Support\Str::random(40));
+        \$store->start();
+
+        \$user = \App\Models\User::factory()->create();
+        app('auth')->guard()->setUser(\$user);
+        \$store->put(app('auth')->guard()->getName(), \$user->getAuthIdentifier());
+        \$store->put('password_hash_' . app('auth')->getDefaultDriver(), \$user->getAuthPassword());
+        \$store->save();
+
+        \$sessionId = \$store->getId();
+        \$cookieName = config('session.cookie');
+        \$encrypter = app('encrypter');
+        \$prefix = \Illuminate\Cookie\CookieValuePrefix::create(\$cookieName, \$encrypter->getKey());
+        \$encrypted = \$encrypter->encrypt(\$prefix . \$sessionId, false);
+
+        echo json_encode([
+            'cookies' => [[
+                'name'     => \$cookieName,
+                'value'    => \$encrypted,
+                'domain'   => '{$host}',
+                'path'     => '/',
+                'expires'  => -1,
+                'httpOnly' => true,
+                'secure'   => false,
+                'sameSite' => 'Lax',
+            ]],
+            'origins' => [],
+        ]);
+        PHP;
+
+        $tmpScript = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'pest-auth-gen-' . getmypid() . '.php';
+        file_put_contents($tmpScript, $script);
+
+        $process = new Process(['php', $tmpScript]);
+        $process->setTimeout(30);
+        $process->setEnv(['APP_ENV' => $env]);
+        $process->run();
+
+        @unlink($tmpScript);
+
+        if (! $process->isSuccessful()) {
+            throw new RuntimeException('Auth generation failed: ' . trim($process->getErrorOutput()));
+        }
+
+        $output = trim($process->getOutput());
+
+        if ($output === '' || json_decode($output) === null) {
+            throw new RuntimeException('Auth generation returned invalid output.');
+        }
+
+        file_put_contents($storageFile, $output);
     }
 
     private function resolveOutputPath(): string
@@ -250,36 +337,6 @@ final class Record implements HandlesArguments
         $name = ucfirst(str_replace(['.php', 'Test.php'], '', $this->prompt('Test file name')));
 
         return $testsDir . DIRECTORY_SEPARATOR . $name . 'Test.php';
-    }
-
-    private function resolveAppUrl(): string
-    {
-        return $_ENV['APP_URL']
-            ?? $_SERVER['APP_URL']
-            ?? (getenv('APP_URL') ?: null)
-            ?? $this->readDotEnvValue('APP_URL')
-            ?? 'http://localhost:8000';
-    }
-
-    private function readDotEnvValue(string $key): ?string
-    {
-        $envFile = $this->testSuite->rootPath.DIRECTORY_SEPARATOR.'.env';
-
-        if (! file_exists($envFile)) {
-            return null;
-        }
-
-        foreach (file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
-            if (str_starts_with(ltrim($line), '#')) {
-                continue;
-            }
-
-            if (str_starts_with($line, $key.'=')) {
-                return trim(substr($line, strlen($key) + 1), '"\'');
-            }
-        }
-
-        return null;
     }
 
     private function prompt(string $question): string
