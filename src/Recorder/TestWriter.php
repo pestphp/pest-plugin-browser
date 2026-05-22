@@ -38,7 +38,7 @@ final class TestWriter
         return $files;
     }
 
-    public function write(string $path, string $testCode): void
+    public function write(string $path, string $testCode, bool $actingAs = false): void
     {
         if (! file_exists($path)) {
             $dir = dirname($path);
@@ -47,7 +47,9 @@ final class TestWriter
                 mkdir($dir, 0755, true);
             }
 
-            file_put_contents($path, "<?php\n\ndeclare(strict_types=1);\n\n{$testCode}\n");
+            $uses = $actingAs ? "uses(Tests\\TestCase::class);\n\n" : '';
+
+            file_put_contents($path, "<?php\n\ndeclare(strict_types=1);\n\n{$uses}{$testCode}\n");
 
             return;
         }

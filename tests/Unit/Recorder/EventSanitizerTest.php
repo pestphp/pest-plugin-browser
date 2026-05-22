@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Pest\Browser\Recorder\EventSanitizer;
 use Pest\Browser\Recorder\RecordedEvent;
 
-function makeEvent(string $type, ?array $locator = null, ?string $url = null, ?string $text = null): RecordedEvent
+function makeRecordedEvent(string $type, ?array $locator = null, ?string $url = null, ?string $text = null): RecordedEvent
 {
     return new RecordedEvent(
         type: $type,
@@ -15,7 +15,7 @@ function makeEvent(string $type, ?array $locator = null, ?string $url = null, ?s
     );
 }
 
-function testIdLocator(string $id): array
+function makeTestIdLocator(string $id): array
 {
     return [
         'kind' => 'test-id',
@@ -24,7 +24,7 @@ function testIdLocator(string $id): array
     ];
 }
 
-function roleLocator(string $role, string $name): array
+function makeRoleLocator(string $role, string $name): array
 {
     return [
         'kind' => 'role',
@@ -39,13 +39,13 @@ function roleLocator(string $role, string $name): array
 it('keeps supported event types', function (): void {
     $sanitizer = new EventSanitizer('id');
     $events = [
-        makeEvent('navigate', url: 'http://localhost/'),
-        makeEvent('click', testIdLocator('btn')),
-        makeEvent('fill', testIdLocator('email')),
-        makeEvent('check', testIdLocator('remember')),
-        makeEvent('uncheck', testIdLocator('remember')),
-        makeEvent('assertVisible', testIdLocator('heading')),
-        makeEvent('assertText', testIdLocator('msg'), text: 'Hello'),
+        makeRecordedEvent('navigate', url: 'http://localhost/'),
+        makeRecordedEvent('click', makeTestIdLocator('btn')),
+        makeRecordedEvent('fill', makeTestIdLocator('email')),
+        makeRecordedEvent('check', makeTestIdLocator('remember')),
+        makeRecordedEvent('uncheck', makeTestIdLocator('remember')),
+        makeRecordedEvent('assertVisible', makeTestIdLocator('heading')),
+        makeRecordedEvent('assertText', makeTestIdLocator('msg'), text: 'Hello'),
     ];
 
     expect($sanitizer->sanitize($events))->toHaveCount(7);
@@ -54,9 +54,9 @@ it('keeps supported event types', function (): void {
 it('drops unsupported event types', function (): void {
     $sanitizer = new EventSanitizer('id');
     $events = [
-        makeEvent('hover', testIdLocator('btn')),
-        makeEvent('press', testIdLocator('input')),
-        makeEvent('navigate', url: 'http://localhost/'),
+        makeRecordedEvent('hover', makeTestIdLocator('btn')),
+        makeRecordedEvent('press', makeTestIdLocator('input')),
+        makeRecordedEvent('navigate', url: 'http://localhost/'),
     ];
     $result = $sanitizer->sanitize($events);
 
@@ -67,8 +67,8 @@ it('drops unsupported event types', function (): void {
 it('drops navigate events without url', function (): void {
     $sanitizer = new EventSanitizer('id');
     $events = [
-        makeEvent('navigate'),
-        makeEvent('navigate', url: 'http://localhost/'),
+        makeRecordedEvent('navigate'),
+        makeRecordedEvent('navigate', url: 'http://localhost/'),
     ];
     $result = $sanitizer->sanitize($events);
 
@@ -78,9 +78,9 @@ it('drops navigate events without url', function (): void {
 it('drops events with null locator (except navigate)', function (): void {
     $sanitizer = new EventSanitizer('id');
     $events = [
-        makeEvent('click'),
-        makeEvent('fill'),
-        makeEvent('navigate', url: 'http://localhost/'),
+        makeRecordedEvent('click'),
+        makeRecordedEvent('fill'),
+        makeRecordedEvent('navigate', url: 'http://localhost/'),
     ];
     $result = $sanitizer->sanitize($events);
 
@@ -91,12 +91,12 @@ it('drops events with null locator (except navigate)', function (): void {
 it('drops events where locator resolves to null selector', function (): void {
     $sanitizer = new EventSanitizer('id');
     $events = [
-        makeEvent('click', [
+        makeRecordedEvent('click', [
             'kind' => 'unknown',
             'body' => '',
             'options' => [],
         ]),
-        makeEvent('navigate', url: 'http://localhost/'),
+        makeRecordedEvent('navigate', url: 'http://localhost/'),
     ];
     $result = $sanitizer->sanitize($events);
 
@@ -107,8 +107,8 @@ it('drops events where locator resolves to null selector', function (): void {
 it('drops click when immediately followed by fill on same selector', function (): void {
     $sanitizer = new EventSanitizer('id');
     $events = [
-        makeEvent('click', testIdLocator('email')),
-        makeEvent('fill', testIdLocator('email'), text: 'user@example.com'),
+        makeRecordedEvent('click', makeTestIdLocator('email')),
+        makeRecordedEvent('fill', makeTestIdLocator('email'), text: 'user@example.com'),
     ];
     $result = $sanitizer->sanitize($events);
 
@@ -119,8 +119,8 @@ it('drops click when immediately followed by fill on same selector', function ()
 it('keeps click when followed by fill on different selector', function (): void {
     $sanitizer = new EventSanitizer('id');
     $events = [
-        makeEvent('click', testIdLocator('btn')),
-        makeEvent('fill', testIdLocator('email'), text: 'user@example.com'),
+        makeRecordedEvent('click', makeTestIdLocator('btn')),
+        makeRecordedEvent('fill', makeTestIdLocator('email'), text: 'user@example.com'),
     ];
     $result = $sanitizer->sanitize($events);
 
@@ -130,8 +130,8 @@ it('keeps click when followed by fill on different selector', function (): void 
 it('keeps click not followed by fill', function (): void {
     $sanitizer = new EventSanitizer('id');
     $events = [
-        makeEvent('click', roleLocator('button', 'Submit')),
-        makeEvent('navigate', url: 'http://localhost/dashboard'),
+        makeRecordedEvent('click', makeRoleLocator('button', 'Submit')),
+        makeRecordedEvent('navigate', url: 'http://localhost/dashboard'),
     ];
     $result = $sanitizer->sanitize($events);
 
@@ -142,9 +142,9 @@ it('keeps click not followed by fill', function (): void {
 it('keeps only the last fill for each selector', function (): void {
     $sanitizer = new EventSanitizer('id');
     $events = [
-        makeEvent('fill', testIdLocator('email'), text: 'first@example.com'),
-        makeEvent('fill', testIdLocator('email'), text: 'second@example.com'),
-        makeEvent('fill', testIdLocator('email'), text: 'final@example.com'),
+        makeRecordedEvent('fill', makeTestIdLocator('email'), text: 'first@example.com'),
+        makeRecordedEvent('fill', makeTestIdLocator('email'), text: 'second@example.com'),
+        makeRecordedEvent('fill', makeTestIdLocator('email'), text: 'final@example.com'),
     ];
     $result = $sanitizer->sanitize($events);
 
@@ -155,20 +155,57 @@ it('keeps only the last fill for each selector', function (): void {
 it('keeps fills for different selectors', function (): void {
     $sanitizer = new EventSanitizer('id');
     $events = [
-        makeEvent('fill', testIdLocator('email'), text: 'user@example.com'),
-        makeEvent('fill', testIdLocator('password'), text: 'secret'),
+        makeRecordedEvent('fill', makeTestIdLocator('email'), text: 'user@example.com'),
+        makeRecordedEvent('fill', makeTestIdLocator('password'), text: 'secret'),
     ];
     $result = $sanitizer->sanitize($events);
 
     expect($result)->toHaveCount(2);
 });
 
+it('keeps assertText with unresolvable locator when text is non-empty', function (): void {
+    $sanitizer = new EventSanitizer('id');
+    $events = [
+        makeRecordedEvent('assertText', ['kind' => 'role', 'body' => 'main', 'options' => ['attrs' => []]], text: 'Welcome'),
+    ];
+    $result = $sanitizer->sanitize($events);
+    expect($result)->toHaveCount(1)
+        ->and($result[0]->text)->toBe('Welcome');
+});
+
+it('keeps assertText with null locator when text is non-empty', function (): void {
+    $sanitizer = new EventSanitizer('id');
+    $events = [makeRecordedEvent('assertText', text: 'Welcome')];
+    $result = $sanitizer->sanitize($events);
+    expect($result)->toHaveCount(1);
+});
+
+it('drops assertText when text is empty', function (): void {
+    $sanitizer = new EventSanitizer('id');
+    $events = [makeRecordedEvent('assertText', text: '')];
+    expect($sanitizer->sanitize($events))->toHaveCount(0);
+});
+
+it('keeps fills for same selector on different pages', function (): void {
+    $sanitizer = new EventSanitizer('id');
+    $events = [
+        makeRecordedEvent('navigate', url: 'http://localhost/login'),
+        makeRecordedEvent('fill', makeTestIdLocator('email'), text: 'admin@a.com'),
+        makeRecordedEvent('navigate', url: 'http://localhost/register'),
+        makeRecordedEvent('fill', makeTestIdLocator('email'), text: 'user@b.com'),
+    ];
+    $result = $sanitizer->sanitize($events);
+    expect($result)->toHaveCount(4)
+        ->and($result[1]->text)->toBe('admin@a.com')
+        ->and($result[3]->text)->toBe('user@b.com');
+});
+
 it('preserves event order after deduplication', function (): void {
     $sanitizer = new EventSanitizer('id');
     $events = [
-        makeEvent('fill', testIdLocator('email'), text: 'first@example.com'),
-        makeEvent('fill', testIdLocator('password'), text: 'secret'),
-        makeEvent('fill', testIdLocator('email'), text: 'final@example.com'),
+        makeRecordedEvent('fill', makeTestIdLocator('email'), text: 'first@example.com'),
+        makeRecordedEvent('fill', makeTestIdLocator('password'), text: 'secret'),
+        makeRecordedEvent('fill', makeTestIdLocator('email'), text: 'final@example.com'),
     ];
     $result = $sanitizer->sanitize($events);
 

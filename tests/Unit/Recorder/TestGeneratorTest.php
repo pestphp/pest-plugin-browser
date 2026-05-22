@@ -5,12 +5,12 @@ declare(strict_types=1);
 use Pest\Browser\Recorder\RecordedEvent;
 use Pest\Browser\Recorder\TestGenerator;
 
-function navigate(string $url): RecordedEvent
+function navigateEvent(string $url): RecordedEvent
 {
     return new RecordedEvent(type: 'navigate', url: $url);
 }
 
-function click(string $name): RecordedEvent
+function clickEvent(string $name): RecordedEvent
 {
     return new RecordedEvent(
         type: 'click',
@@ -22,7 +22,7 @@ function click(string $name): RecordedEvent
     );
 }
 
-function fill(string $id, string $value): RecordedEvent
+function fillEvent(string $id, string $value): RecordedEvent
 {
     return new RecordedEvent(
         type: 'fill',
@@ -35,24 +35,24 @@ function fill(string $id, string $value): RecordedEvent
     );
 }
 
-function assertText(string $text): RecordedEvent
+function assertTextEvent(string $text): RecordedEvent
 {
     return new RecordedEvent(type: 'assertText', text: $text);
 }
 
 // actingAs
-it('injects actingAs when actingAs=true', function (): void {
+it('injects actingAs with resolved model class', function (): void {
     $generator = new TestGenerator('id');
-    $events = [navigate('http://localhost/'), fill('email', 'test@example.com')];
-    $code = $generator->generate($events, 'can do something', 'http://localhost', true);
+    $events = [navigateEvent('http://localhost/'), fillEvent('email', 'test@example.com')];
+    $code = $generator->generate($events, 'can do something', 'http://localhost', 'App\\Models\\User');
 
     expect($code)->toContain('$this->actingAs(\App\Models\User::factory()->create())');
 });
 
-it('does not inject actingAs when actingAs=false', function (): void {
+it('does not inject actingAs when userModelClass is null', function (): void {
     $generator = new TestGenerator('id');
-    $events = [navigate('http://localhost/'), fill('email', 'test@example.com')];
-    $code = $generator->generate($events, 'can do something', 'http://localhost', false);
+    $events = [navigateEvent('http://localhost/'), fillEvent('email', 'test@example.com')];
+    $code = $generator->generate($events, 'can do something', 'http://localhost');
 
     expect($code)->not->toContain('actingAs');
 });
@@ -60,7 +60,7 @@ it('does not inject actingAs when actingAs=false', function (): void {
 // test structure
 it('wraps output in it() closure', function (): void {
     $generator = new TestGenerator('id');
-    $events = [navigate('http://localhost/')];
+    $events = [navigateEvent('http://localhost/')];
     $code = $generator->generate($events, 'can visit home', 'http://localhost');
 
     expect($code)->toStartWith("it('can visit home', function (): void {");
@@ -68,7 +68,7 @@ it('wraps output in it() closure', function (): void {
 
 it('escapes single quotes in title', function (): void {
     $generator = new TestGenerator('id');
-    $events = [navigate('http://localhost/')];
+    $events = [navigateEvent('http://localhost/')];
     $code = $generator->generate($events, "can't login", 'http://localhost');
 
     expect($code)->toContain("it('can\\'t login'");
@@ -78,10 +78,10 @@ it('escapes single quotes in title', function (): void {
 it('groups events into visit() blocks per page', function (): void {
     $generator = new TestGenerator('id');
     $events = [
-        navigate('http://localhost/'),
-        click('Submit'),
-        navigate('http://localhost/dashboard'),
-        click('Settings'),
+        navigateEvent('http://localhost/'),
+        clickEvent('Submit'),
+        navigateEvent('http://localhost/dashboard'),
+        clickEvent('Settings'),
     ];
     $code = $generator->generate($events, 'can navigate', 'http://localhost');
 
@@ -92,7 +92,7 @@ it('groups events into visit() blocks per page', function (): void {
 
 it('strips base url from path', function (): void {
     $generator = new TestGenerator('id');
-    $events = [navigate('http://localhost:8000/dashboard')];
+    $events = [navigateEvent('http://localhost:8000/dashboard')];
     $code = $generator->generate($events, 'test', 'http://localhost:8000');
 
     expect($code)->toContain("visit('/dashboard')");
@@ -100,7 +100,7 @@ it('strips base url from path', function (): void {
 
 it('uses / when url matches base exactly', function (): void {
     $generator = new TestGenerator('id');
-    $events = [navigate('http://localhost/')];
+    $events = [navigateEvent('http://localhost/')];
     $code = $generator->generate($events, 'test', 'http://localhost');
 
     expect($code)->toContain("visit('/')");
@@ -109,7 +109,7 @@ it('uses / when url matches base exactly', function (): void {
 // action rendering
 it('renders click action', function (): void {
     $generator = new TestGenerator('id');
-    $events = [navigate('http://localhost/'), click('Log in')];
+    $events = [navigateEvent('http://localhost/'), clickEvent('Log in')];
     $code = $generator->generate($events, 'test', 'http://localhost');
 
     expect($code)->toContain("->click('Log in')");
@@ -117,7 +117,7 @@ it('renders click action', function (): void {
 
 it('renders fill action with id selector', function (): void {
     $generator = new TestGenerator('id');
-    $events = [navigate('http://localhost/'), fill('email', 'user@example.com')];
+    $events = [navigateEvent('http://localhost/'), fillEvent('email', 'user@example.com')];
     $code = $generator->generate($events, 'test', 'http://localhost');
 
     expect($code)->toContain("->fill('#email', 'user@example.com')");
@@ -125,7 +125,7 @@ it('renders fill action with id selector', function (): void {
 
 it('renders assertText as assertSee without selector', function (): void {
     $generator = new TestGenerator('id');
-    $events = [navigate('http://localhost/'), assertText('These credentials do not match')];
+    $events = [navigateEvent('http://localhost/'), assertTextEvent('These credentials do not match')];
     $code = $generator->generate($events, 'test', 'http://localhost');
 
     expect($code)
@@ -135,7 +135,7 @@ it('renders assertText as assertSee without selector', function (): void {
 
 it('skips assertText with empty text', function (): void {
     $generator = new TestGenerator('id');
-    $events = [navigate('http://localhost/'), assertText('')];
+    $events = [navigateEvent('http://localhost/'), assertTextEvent('')];
     $code = $generator->generate($events, 'test', 'http://localhost');
 
     expect($code)->not->toContain('assertSee');
@@ -144,7 +144,7 @@ it('skips assertText with empty text', function (): void {
 // escaping
 it('escapes single quotes in fill value', function (): void {
     $generator = new TestGenerator('id');
-    $events = [navigate('http://localhost/'), fill('name', "O'Brien")];
+    $events = [navigateEvent('http://localhost/'), fillEvent('name', "O'Brien")];
     $code = $generator->generate($events, 'test', 'http://localhost');
 
     expect($code)->toContain("->fill('#name', 'O\\'Brien')");
@@ -152,7 +152,7 @@ it('escapes single quotes in fill value', function (): void {
 
 it('escapes backslashes in fill value', function (): void {
     $generator = new TestGenerator('id');
-    $events = [navigate('http://localhost/'), fill('path', 'C:\\Users')];
+    $events = [navigateEvent('http://localhost/'), fillEvent('path', 'C:\\Users')];
     $code = $generator->generate($events, 'test', 'http://localhost');
 
     expect($code)->toContain("->fill('#path', 'C:\\\\Users')");
@@ -162,8 +162,8 @@ it('escapes backslashes in fill value', function (): void {
 it('separates multiple pages with blank line', function (): void {
     $generator = new TestGenerator('id');
     $events = [
-        navigate('http://localhost/'),
-        navigate('http://localhost/dashboard'),
+        navigateEvent('http://localhost/'),
+        navigateEvent('http://localhost/dashboard'),
     ];
     $code = $generator->generate($events, 'test', 'http://localhost');
 
@@ -171,10 +171,10 @@ it('separates multiple pages with blank line', function (): void {
 });
 
 // actingAs placed before first visit
-it('places actingAs before visit when actingAs=true', function (): void {
+it('places actingAs before visit when userModelClass is set', function (): void {
     $generator = new TestGenerator('id');
-    $events = [navigate('http://localhost/dashboard')];
-    $code = $generator->generate($events, 'test', 'http://localhost', true);
+    $events = [navigateEvent('http://localhost/dashboard')];
+    $code = $generator->generate($events, 'test', 'http://localhost', 'App\\Models\\User');
     $actingAsPos = strpos($code, 'actingAs');
     $visitPos = strpos($code, 'visit(');
 

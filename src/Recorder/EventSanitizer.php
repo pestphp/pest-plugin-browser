@@ -49,6 +49,10 @@ final class EventSanitizer
                 return is_string($event->url);
             }
 
+            if ($event->type === 'assertText') {
+                return $event->text !== null && $event->text !== '';
+            }
+
             if (is_null($event->locator)) {
                 return false;
             }
@@ -90,23 +94,36 @@ final class EventSanitizer
      */
     private function deduplicateFills(array $events): array
     {
+        $pageIndex = 0;
         $lastIndex = [];
 
         foreach ($events as $index => $event) {
+            if ($event->type === 'navigate') {
+                $pageIndex++;
+                continue;
+            }
+
             if ($event->type === 'fill') {
                 $selector = $this->resolveSelector($event);
                 if (! is_null($selector)) {
-                    $lastIndex[$selector] = $index;
+                    $lastIndex[$pageIndex][$selector] = $index;
                 }
             }
         }
 
+        $pageIndex = 0;
         $result = [];
 
         foreach ($events as $index => $event) {
+            if ($event->type === 'navigate') {
+                $pageIndex++;
+                $result[] = $event;
+                continue;
+            }
+
             if ($event->type === 'fill') {
                 $selector = $this->resolveSelector($event);
-                if (! is_null($selector) && $lastIndex[$selector] !== $index) {
+                if (! is_null($selector) && ($lastIndex[$pageIndex][$selector] ?? null) !== $index) {
                     continue;
                 }
             }
