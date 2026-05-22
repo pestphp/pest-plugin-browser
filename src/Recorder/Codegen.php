@@ -40,7 +40,6 @@ final class Codegen
             testIdAttribute: $testIdAttribute,
             viewport: $viewport,
             visitPath: $visitPath,
-            saveStorage: null,
             loadStorage: $loadStorage,
             device: $device,
         );
@@ -61,36 +60,6 @@ final class Codegen
         return is_string($content) ? $content : '';
     }
 
-    public function captureAuthState(
-        string $url,
-        string $storageFile,
-        string $loginPath,
-        string $testIdAttribute,
-        ?string $viewport = null,
-    ): void
-    {
-        $dir = dirname($storageFile);
-
-        if (! is_dir($dir)) {
-            mkdir($dir, 0755, true);
-        }
-
-        $tmpOutput = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'pest-auth-capture-' . getmypid() . '.jsonl';
-
-        $command = $this->buildCommand(
-            url: $url,
-            outputFile: $tmpOutput,
-            testIdAttribute: $testIdAttribute,
-            viewport: $viewport,
-            visitPath: $loginPath,
-            saveStorage: $storageFile,
-        );
-
-        (new Process($command))->setTimeout(null)->run();
-
-        @unlink($tmpOutput);
-    }
-
     /**
      * @return string[]
      */
@@ -100,7 +69,6 @@ final class Codegen
         string $testIdAttribute,
         ?string $viewport,
         ?string $visitPath,
-        ?string $saveStorage,
         ?string $loadStorage = null,
         ?string $device = null,
     ): array
@@ -112,14 +80,14 @@ final class Codegen
             '--output=' . $outputFile,
         ];
 
-        if (! is_null($device)) {
-            $command[] = '--device=' . $device;
-        } else if (! is_null($viewport)) {
-            $command[] = '--viewport-size=' . $viewport;
-        }
+        $flag = match (true) {
+            ! is_null($device) => '--device=' . $device,
+            ! is_null($viewport) => '--viewport-size=' . $viewport,
+            default => null,
+        };
 
-        if (! is_null($saveStorage)) {
-            $command[] = '--save-storage=' . $saveStorage;
+        if (! is_null($flag)) {
+            $command[] = $flag;
         }
 
         if (! is_null($loadStorage)) {

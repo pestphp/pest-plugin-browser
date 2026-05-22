@@ -46,16 +46,27 @@ final class Record implements HandlesArguments
 
         $url = $this->popArgumentValue('--url', $arguments);
         $visitPath = $this->popArgumentValue('--visit', $arguments);
-        $authName = $this->popArgumentValue('--acting-as', $arguments);
+        $auth = $this->hasArgument('--auth', $arguments) || $this->hasArgument('--user', $arguments);
+        $arguments = $this->hasArgument('--auth', $arguments) ? $this->popArgument('--auth', $arguments) : $arguments;
+        $arguments = $this->hasArgument('--user', $arguments) ? $this->popArgument('--user', $arguments) : $arguments;
         $viewport = $this->popArgumentValue('--viewport', $arguments);
         $device = $this->popArgumentValue('--device', $arguments);
         $testIdAttribute = $this->popArgumentValue('--test-id-attribute', $arguments) ?? self::DEFAULT_TEST_ID_ATTRIBUTE;
         $env = $this->popArgumentValue('--env', $arguments) ?? 'testing';
 
-        $migrateFresh = $this->hasArgument('--migrate-fresh', $arguments);
-        $seed = $this->hasArgument('--seed', $arguments);
+        $authScript = $this->popArgumentValue('--auth-script', $arguments);
 
-        $this->record($url, $visitPath, $authName, $viewport, $device, $testIdAttribute, $env, $migrateFresh, $seed);
+        $migrateFresh = $this->hasArgument('--migrate-fresh', $arguments);
+        if ($migrateFresh) {
+            $arguments = $this->popArgument('--migrate-fresh', $arguments);
+        }
+
+        $seed = $this->hasArgument('--seed', $arguments);
+        if ($seed) {
+            $arguments = $this->popArgument('--seed', $arguments);
+        }
+
+        $this->record($url, $visitPath, $auth, $authScript, $viewport, $device, $testIdAttribute, $env, $migrateFresh, $seed);
 
         exit(0);
     }
@@ -63,7 +74,8 @@ final class Record implements HandlesArguments
     private function record(
         ?string $url,
         ?string $visitPath,
-        ?string $authName,
+        bool $auth,
+        ?string $authScript,
         ?string $viewport,
         ?string $device,
         string $testIdAttribute,
@@ -80,6 +92,10 @@ final class Record implements HandlesArguments
             $this->writeLine('<fg=red>✗</> ' . $e->getMessage());
 
             return;
+        }
+
+        if ($seed && ! $migrateFresh) {
+            $this->writeLine('<fg=yellow>⚠</> --seed has no effect without --migrate-fresh.');
         }
 
         if ($migrateFresh) {
@@ -105,15 +121,18 @@ final class Record implements HandlesArguments
         }
 
         $loadStorage = null;
+        $userModelClass = null;
 
-        if (! is_null($authName)) {
-            $loadStorage = $this->resolveAuthState($url, $authName, $env);
+        if ($auth) {
+            $auth = $this->resolveAuthState($url, $env, $authScript);
 
-            if (is_null($loadStorage)) {
+            if (is_null($auth)) {
                 $this->writeLine('<fg=red>✗</> Auth state generation failed.');
 
                 return;
             }
+
+            [$loadStorage, $userModelClass] = $auth;
         }
 
         $tmpFile = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'pest-recording-' . getmypid() . '.jsonl';
@@ -138,17 +157,21 @@ final class Record implements HandlesArguments
                 return;
             }
 
+            $writer = new TestWriter;
             $title = $this->prompt('Test description');
-            $outputPath = $this->resolveOutputPath();
-            $code = (new TestGenerator($testIdAttribute))->generate($events, $title, $url, ! is_null($authName));
+            $outputPath = $this->resolveOutputPath($writer);
+            $code = (new TestGenerator($testIdAttribute))->generate($events, $title, $url, $userModelClass);
 
-            (new TestWriter)->write($outputPath, $code);
+            $writer->write($outputPath, $code, ! is_null($userModelClass));
 
             $this->writeLine(sprintf('<fg=green>✔</> Test written: %s', $outputPath));
         } catch (RuntimeException $e) {
             $this->writeLine('<fg=red>✗</> ' . $e->getMessage());
         } finally {
             @unlink($tmpFile);
+            if (! is_null($loadStorage)) {
+                @unlink($loadStorage);
+            }
             $serverProcess?->stop(3);
         }
     }
@@ -175,9 +198,9 @@ final class Record implements HandlesArguments
             }
         }
 
-        $this->writeLine('<fg=yellow>●</> Server may not be ready yet, proceeding...');
+        $process->stop(3);
 
-        return $process;
+        throw new RuntimeException('Dev server failed to start within 10 seconds.');
     }
 
     private function detectScreenResolution(): string
@@ -196,7 +219,7 @@ final class Record implements HandlesArguments
         return match (PHP_OS_FAMILY) {
             'Linux' => preg_match('/(\d+)x(\d+)/', trim($output), $m) ? $m[1] . ',' . ((int) $m[2] - 80) : '1920,1000',
             'Darwin' => preg_match('/(\d+) x (\d+)/', $output, $m) ? $m[1] . ',' . ((int) $m[2] - 80) : '1920,1000',
-            'Windows' => preg_match('/(\d+)\s+(\d+)/', trim($output), $m) ? $m[2] . ',' . ((int) $m[1] - 80) : '1920,1000',
+            'Windows' => preg_match('/(\d+)\s+(\d+)/', trim($output), $m) ? $m[1] . ',' . ((int) $m[2] - 80) : '1920,1000',
             default => '1920,1000',
         };
     }
@@ -222,16 +245,19 @@ final class Record implements HandlesArguments
         $this->writeLine('<fg=green>✔</> Database ready.');
     }
 
-    private function resolveAuthState(string $url, string $name, string $env): ?string
+    /**
+     * @return array{string, ?string}|null
+     */
+    private function resolveAuthState(string $url, string $env, ?string $authScript): ?array
     {
         $storageFile = sys_get_temp_dir()
             . DIRECTORY_SEPARATOR
-            . 'pest-auth-' . preg_replace('/[^a-z0-9_-]/i', '-', $name) . '.json';
+            . 'pest-auth-' . getmypid() . '.json';
 
-        $this->writeLine(sprintf("<fg=yellow>●</> Generating auth state for '%s'...", $name));
+        $this->writeLine('<fg=yellow>●</> Generating auth state...');
 
         try {
-            $this->generateAuthState($url, $storageFile, $env);
+            $userModelClass = $this->generateAuthState($url, $storageFile, $env, $authScript);
         } catch (RuntimeException $e) {
             $this->writeLine('<fg=red>✗</> ' . $e->getMessage());
 
@@ -240,82 +266,47 @@ final class Record implements HandlesArguments
 
         $this->writeLine('<fg=green>✔</> Auth state ready.');
 
-        return $storageFile;
+        return [$storageFile, $userModelClass];
     }
 
-    private function generateAuthState(string $url, string $storageFile, string $env): void
+    private function generateAuthState(string $url, string $storageFile, string $env, ?string $authScript): ?string
     {
-        $rootPath = addslashes($this->testSuite->rootPath);
-        $host = parse_url($url, PHP_URL_HOST) ?? '127.0.0.1';
-        $cookieName = addslashes(preg_replace('/[^a-z0-9_\-]/i', '_', basename($rootPath)) . '_session');
+        $host = preg_replace('/[^a-zA-Z0-9._\-\[\]:]/', '', parse_url($url, PHP_URL_HOST) ?? '127.0.0.1');
 
-        $script = <<<PHP
-        <?php
-        define('LARAVEL_START', microtime(true));
-        require '{$rootPath}/vendor/autoload.php';
-        \$app = require_once '{$rootPath}/bootstrap/app.php';
-        \$kernel = \$app->make(\Illuminate\Contracts\Console\Kernel::class);
-        \$kernel->bootstrap();
+        $scriptPath = $this->resolveAuthScriptPath($authScript);
 
-        \$manager = app('session');
-        \$store = \$manager->driver();
-        \$store->setId(\Illuminate\Support\Str::random(40));
-        \$store->start();
-
-        \$user = \App\Models\User::factory()->create();
-        app('auth')->guard()->setUser(\$user);
-        \$store->put(app('auth')->guard()->getName(), \$user->getAuthIdentifier());
-        \$store->put('password_hash_' . app('auth')->getDefaultDriver(), \$user->getAuthPassword());
-        \$store->save();
-
-        \$sessionId = \$store->getId();
-        \$cookieName = config('session.cookie');
-        \$encrypter = app('encrypter');
-        \$prefix = \Illuminate\Cookie\CookieValuePrefix::create(\$cookieName, \$encrypter->getKey());
-        \$encrypted = \$encrypter->encrypt(\$prefix . \$sessionId, false);
-
-        echo json_encode([
-            'cookies' => [[
-                'name'     => \$cookieName,
-                'value'    => \$encrypted,
-                'domain'   => '{$host}',
-                'path'     => '/',
-                'expires'  => -1,
-                'httpOnly' => true,
-                'secure'   => false,
-                'sameSite' => 'Lax',
-            ]],
-            'origins' => [],
-        ]);
-        PHP;
-
-        $tmpScript = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'pest-auth-gen-' . getmypid() . '.php';
-        file_put_contents($tmpScript, $script);
-
-        $process = new Process(['php', $tmpScript]);
+        $process = new Process(['php', $scriptPath, $this->testSuite->rootPath, $host, $storageFile]);
         $process->setTimeout(30);
         $process->setEnv(['APP_ENV' => $env]);
         $process->run();
-
-        @unlink($tmpScript);
 
         if (! $process->isSuccessful()) {
             throw new RuntimeException('Auth generation failed: ' . trim($process->getErrorOutput()));
         }
 
-        $output = trim($process->getOutput());
+        $userModelClass = trim($process->getOutput());
 
-        if ($output === '' || json_decode($output) === null) {
-            throw new RuntimeException('Auth generation returned invalid output.');
-        }
-
-        file_put_contents($storageFile, $output);
+        return $userModelClass !== '' ? $userModelClass : null;
     }
 
-    private function resolveOutputPath(): string
+    private function resolveAuthScriptPath(?string $customScript): string
+    {
+        if (! is_null($customScript)) {
+            return $customScript;
+        }
+
+        if (! file_exists($this->testSuite->rootPath . DIRECTORY_SEPARATOR . 'bootstrap' . DIRECTORY_SEPARATOR . 'app.php')) {
+            throw new RuntimeException(
+                '--auth requires a Laravel application. For other frameworks, provide a custom bootstrap script with --auth-script=path/to/auth.php',
+            );
+        }
+
+        return __DIR__ . DIRECTORY_SEPARATOR . 'Recorder' . DIRECTORY_SEPARATOR . 'Laravel' . DIRECTORY_SEPARATOR . 'auth-gen.php';
+    }
+
+    private function resolveOutputPath(TestWriter $writer): string
     {
         $testsDir = $this->testSuite->rootPath . DIRECTORY_SEPARATOR . $this->testSuite->testPath . DIRECTORY_SEPARATOR . 'Browser';
-        $writer = new TestWriter;
         $existing = $writer->findExistingTestFiles($testsDir);
 
         if ($existing !== []) {

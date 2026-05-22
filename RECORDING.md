@@ -15,20 +15,23 @@ The browser opens at full screen resolution by default (auto-detected per OS). C
 | `--test-id-attribute=` | `id` | HTML attribute used for element selectors |
 | `--device=` | — | Emulate a device (e.g. `"iPhone 15"`) |
 | `--viewport=` | screen resolution | Viewport size in pixels (e.g. `1280,800`) |
-| `--acting-as=` | — | Name for the auth state (see below) |
+| `--auth` / `--user` | — | Start browser pre-authenticated as a factory user (see below) |
+| `--auth-script=` | — | Path to a custom auth bootstrap script (non-Laravel apps) |
 | `--env=` | `testing` | Environment for the auto-started server |
 | `--migrate-fresh` | — | Run `migrate:fresh` before opening the browser |
 | `--seed` | — | Seed the database after `--migrate-fresh` |
 
-## Recording authenticated flows (`--acting-as`)
+## Recording authenticated flows (`--auth`)
 
 Tests run with `APP_ENV=testing` (fresh, isolated DB). Recording against credentials that only exist in your local DB means those credentials won't exist when the test runs.
 
-`--acting-as` solves this without manual login: before the browser opens, Pest bootstraps the Laravel app, creates a factory user, starts a session authenticated as that user, and injects a valid session cookie into the browser. The browser starts pre-authenticated.
+`--auth` solves this without manual login: before the browser opens, Pest bootstraps the Laravel app, creates a factory user, starts a session authenticated as that user, and injects a valid session cookie into the browser. The browser starts pre-authenticated.
 
 ```bash
-vendor/bin/pest --record --acting-as=user --visit=/dashboard
+vendor/bin/pest --record --auth --visit=/dashboard
 ```
+
+`--user` is an alias for `--auth`.
 
 The generated test uses `$this->actingAs(\App\Models\User::factory()->create())` — no real credentials, works in any environment.
 

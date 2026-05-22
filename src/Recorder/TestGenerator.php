@@ -13,13 +13,13 @@ final class TestGenerator
     /**
      * @param RecordedEvent[] $events
      */
-    public function generate(array $events, string $title, string $baseUrl, bool $actingAs = false): string
+    public function generate(array $events, string $title, string $baseUrl, ?string $userModelClass = null): string
     {
         $pages = $this->groupByNavigation($events, $baseUrl);
         $body = $this->renderBody($pages);
 
-        if ($actingAs) {
-            $body = "    \$this->actingAs(\\App\\Models\\User::factory()->create());\n\n" . $body;
+        if (! is_null($userModelClass)) {
+            $body = "    \$this->actingAs(\\{$userModelClass}::factory()->create());\n\n" . $body;
         }
 
         $escapedTitle = str_replace("'", "\\'", $title);
