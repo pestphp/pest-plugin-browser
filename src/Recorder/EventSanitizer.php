@@ -90,24 +90,31 @@ final class EventSanitizer
      */
     private function deduplicateFills(array $events): array
     {
-        $lastFillIndex = [];
-        $result = [];
+        $lastIndex = [];
 
-        foreach ($events as $event) {
+        foreach ($events as $index => $event) {
             if ($event->type === 'fill') {
                 $selector = $this->resolveSelector($event);
-
-                if (! is_null($selector) && isset($lastFillIndex[$selector])) {
-                    unset($result[$lastFillIndex[$selector]]);
+                if (! is_null($selector)) {
+                    $lastIndex[$selector] = $index;
                 }
+            }
+        }
 
-                $lastFillIndex[$selector ?? ''] = count($result);
+        $result = [];
+
+        foreach ($events as $index => $event) {
+            if ($event->type === 'fill') {
+                $selector = $this->resolveSelector($event);
+                if (! is_null($selector) && $lastIndex[$selector] !== $index) {
+                    continue;
+                }
             }
 
             $result[] = $event;
         }
 
-        return array_values($result);
+        return $result;
     }
 
     private function resolveSelector(RecordedEvent $event): ?string
