@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Pest\Browser;
 
+use Pest\Browser\Enums\BrowserType;
 use Pest\Browser\Recorder\Codegen;
 use Pest\Browser\Recorder\EventParser;
 use Pest\Browser\Recorder\EventSanitizer;
@@ -51,6 +52,26 @@ final class Record implements HandlesArguments
         $arguments = $this->hasArgument('--user', $arguments) ? $this->popArgument('--user', $arguments) : $arguments;
         $viewport = $this->popArgumentValue('--viewport', $arguments);
         $device = $this->popArgumentValue('--device', $arguments);
+        $browserValue = $this->popArgumentValue('--browser', $arguments);
+        $browser = null;
+
+        if (! is_null($browserValue)) {
+            $browserType = BrowserType::tryFrom($browserValue);
+
+            if (is_null($browserType)) {
+                $this->writeLine(sprintf('<fg=red>✗</> Unknown browser "%s". Valid values: chrome, firefox, safari.', $browserValue));
+
+                return $arguments;
+            }
+
+            $browser = $browserType->toPlaywrightName();
+        }
+
+        $channel = $this->popArgumentValue('--channel', $arguments);
+        $lang = $this->popArgumentValue('--lang', $arguments);
+        $timezone = $this->popArgumentValue('--timezone', $arguments);
+        $colorScheme = $this->popArgumentValue('--color-scheme', $arguments);
+
         $testIdAttribute = $this->popArgumentValue('--test-id-attribute', $arguments) ?? self::DEFAULT_TEST_ID_ATTRIBUTE;
         $env = $this->popArgumentValue('--env', $arguments) ?? 'testing';
 
@@ -66,7 +87,7 @@ final class Record implements HandlesArguments
             $arguments = $this->popArgument('--seed', $arguments);
         }
 
-        $this->record($url, $visitPath, $auth, $authScript, $viewport, $device, $testIdAttribute, $env, $migrateFresh, $seed);
+        $this->record($url, $visitPath, $auth, $authScript, $viewport, $device, $browser, $channel, $lang, $timezone, $colorScheme, $testIdAttribute, $env, $migrateFresh, $seed);
 
         exit(0);
     }
@@ -78,6 +99,11 @@ final class Record implements HandlesArguments
         ?string $authScript,
         ?string $viewport,
         ?string $device,
+        ?string $browser,
+        ?string $channel,
+        ?string $lang,
+        ?string $timezone,
+        ?string $colorScheme,
         string $testIdAttribute,
         string $env = 'testing',
         bool $migrateFresh = false,
@@ -140,7 +166,7 @@ final class Record implements HandlesArguments
         try {
             $this->writeLine('<fg=yellow>●</> Recorder running — close the browser to finish...');
 
-            $jsonl = $codegen->record($url, $tmpFile, $testIdAttribute, $viewport, $visitPath, $loadStorage, $device);
+            $jsonl = $codegen->record($url, $tmpFile, $testIdAttribute, $viewport, $visitPath, $loadStorage, $device, $browser, $channel, $lang, $timezone, $colorScheme);
 
             if ($jsonl === '') {
                 $this->writeLine('<fg=red>✗</> No recording captured.');
@@ -217,9 +243,9 @@ final class Record implements HandlesArguments
         }
 
         return match (PHP_OS_FAMILY) {
-            'Linux' => preg_match('/(\d+)x(\d+)/', trim($output), $m) ? $m[1] . ',' . ((int) $m[2] - 80) : '1920,1000',
+            'Linux' => preg_match('/(\d+)x(\d+)/', mb_trim($output), $m) ? $m[1] . ',' . ((int) $m[2] - 80) : '1920,1000',
             'Darwin' => preg_match('/(\d+) x (\d+)/', $output, $m) ? $m[1] . ',' . ((int) $m[2] - 80) : '1920,1000',
-            'Windows' => preg_match('/(\d+)\s+(\d+)/', trim($output), $m) ? $m[1] . ',' . ((int) $m[2] - 80) : '1920,1000',
+            'Windows' => preg_match('/(\d+)\s+(\d+)/', mb_trim($output), $m) ? $m[1] . ',' . ((int) $m[2] - 80) : '1920,1000',
             default => '1920,1000',
         };
     }
@@ -239,7 +265,7 @@ final class Record implements HandlesArguments
         $process->run();
 
         if (! $process->isSuccessful()) {
-            throw new RuntimeException('migrate:fresh failed: ' . trim($process->getErrorOutput()));
+            throw new RuntimeException('migrate:fresh failed: ' . mb_trim($process->getErrorOutput()));
         }
 
         $this->writeLine('<fg=green>✔</> Database ready.');
@@ -281,10 +307,10 @@ final class Record implements HandlesArguments
         $process->run();
 
         if (! $process->isSuccessful()) {
-            throw new RuntimeException('Auth generation failed: ' . trim($process->getErrorOutput()));
+            throw new RuntimeException('Auth generation failed: ' . mb_trim($process->getErrorOutput()));
         }
 
-        $userModelClass = trim($process->getOutput());
+        $userModelClass = mb_trim($process->getOutput());
 
         return $userModelClass !== '' ? $userModelClass : null;
     }
@@ -313,7 +339,7 @@ final class Record implements HandlesArguments
             $choices = array_merge(
                 ['New file...'],
                 array_map(
-                    fn(string $path): string => ltrim(str_replace($testsDir, '', $path), DIRECTORY_SEPARATOR),
+                    fn(string $path): string => mb_ltrim(str_replace($testsDir, '', $path), DIRECTORY_SEPARATOR),
                     $existing,
                 ),
             );
@@ -336,7 +362,7 @@ final class Record implements HandlesArguments
 
         $answer = fgets(STDIN);
 
-        return ($answer !== false && trim($answer) !== '') ? trim($answer) : 'Untitled';
+        return ($answer !== false && mb_trim($answer) !== '') ? mb_trim($answer) : 'Untitled';
     }
 
     private function choose(string $question, array $choices): string
@@ -350,7 +376,7 @@ final class Record implements HandlesArguments
         $this->output->write('  Choice: ');
 
         $input = fgets(STDIN);
-        $index = ($input !== false && is_numeric(trim($input))) ? (int) trim($input) : 0;
+        $index = ($input !== false && is_numeric(mb_trim($input))) ? (int) mb_trim($input) : 0;
 
         return $choices[$index] ?? $choices[0];
     }
