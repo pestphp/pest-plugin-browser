@@ -5,18 +5,6 @@ declare(strict_types=1);
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-/*
- * Regression test for the Amp http-server body-size deadlock: by default
- * SocketHttpServer caps request bodies at 128 KiB (HttpDriver::DEFAULT_BODY_SIZE_LIMIT).
- * Any POST larger than that — common for SPA endpoints that submit nested form
- * state, e.g. a booking engine sending its full order graph as JSON — would
- * cause `(string) $request->getBody()` to block forever, the test would hang,
- * and the spinner-on-a-submit-button would never resolve.
- *
- * The plugin now wires a DefaultHttpDriverFactory with a 64 MiB body limit, so
- * large JSON payloads round-trip through the test server without stalling.
- */
-
 it('accepts JSON request bodies larger than the default 128 KiB limit', function (): void {
     Route::post('/large-body/echo', fn (Request $request): array => [
         'received_bytes' => mb_strlen($request->getContent()),

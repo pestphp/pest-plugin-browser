@@ -6,19 +6,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Pest\Browser\ServerManager;
 
-/*
- * These tests cover the "canonical URL" wiring: when `withHost(...)` is set, the
- * URL generator, `route()` helper, server-side `request()->url()`, and the URL
- * Playwright actually navigates to all line up on `http://{host}:{port}` — not
- * a mix of the configured host (header-only) and the bound socket IP.
- *
- * This matters for SPAs (Inertia, Livewire) that compare a clicked link's
- * origin to `window.location.origin` to decide whether navigation is internal.
- * If the page is at `app.localhost:<port>` but `route()` produces
- * `127.0.0.1:<port>`, the SPA treats every link as cross-origin and falls back
- * to a full reload — which then 404s in the test harness.
- */
-
 it('exposes the canonical host on request()->url() when withHost is set', function (): void {
     Route::domain('app.localhost')->get('/canonical/request-url', fn (Request $request) => $request->url());
 
