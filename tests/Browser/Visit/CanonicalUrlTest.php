@@ -51,14 +51,15 @@ it('updates the URL generator immediately when withHost changes mid-test', funct
 
     $port = ServerManager::instance()->http()->port; // @phpstan-ignore-line
 
-    pest()->browser()->withHost('first.localhost');
+    visit('/canonical/first')
+        ->withHost('first.localhost')
+        ->assertSee("http://first.localhost:{$port}/canonical/first");
 
     expect(route('canonical.first'))->toBe("http://first.localhost:{$port}/canonical/first");
 
-    pest()->browser()->withHost('second.localhost');
-
     // Per-request resync should also surface the new host on the page itself.
     visit('/canonical/second')
+        ->withHost('second.localhost')
         ->assertSee("http://second.localhost:{$port}/canonical/second");
 
     expect(route('canonical.second'))->toBe("http://second.localhost:{$port}/canonical/second");
