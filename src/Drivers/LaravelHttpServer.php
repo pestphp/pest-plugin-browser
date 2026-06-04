@@ -173,9 +173,8 @@ final class LaravelHttpServer implements HttpServer
     }
 
     /**
-     * Re-sync Laravel's `app.url` and the URL generator's origin to the
-     * canonical URL, so that `route()`, `asset()`, and `config('app.url')`
-     * stay consistent with the host the browser is navigating to.
+     * Re-sync Laravel's `app.url` and the URL generator's origin to the canonical URL, so that `route()`,
+     * `asset()`, and `config('app.url')` stay consistent with the host the browser is navigating to.
      */
     public function syncCanonicalUrl(): void
     {
