@@ -100,9 +100,9 @@ final class LaravelHttpServer implements HttpServer
             return;
         }
 
-        // Bump the body size limit well above Amp's 128 KiB default so that
-        // POSTs with large JSON payloads (e.g. the booking-engine order submit,
-        // which can exceed 180 KiB) don't deadlock when the request body is read.
+        // Increase the body size limit beyond Amp's 128-KiB
+        // default to prevent deadlocks when reading large
+        // JSON payloads in POST, PUT, and PATCH requests.
         $this->socket = $server = SocketHttpServer::createForDirectAccess(
             logger: $logger = new NullLogger(),
             httpDriverFactory: new DefaultHttpDriverFactory(
@@ -173,10 +173,8 @@ final class LaravelHttpServer implements HttpServer
     }
 
     /**
-     * Re-sync Laravel's `app.url` and the URL generator's origin to the canonical URL.
-     *
-     * Called both at bootstrap and when the configured host changes mid-test (e.g.
-     * via `withHost(...)`), so that `route()`, `asset()`, and `config('app.url')`
+     * Re-sync Laravel's `app.url` and the URL generator's origin to the
+     * canonical URL, so that `route()`, `asset()`, and `config('app.url')`
      * stay consistent with the host the browser is navigating to.
      */
     public function syncCanonicalUrl(): void
