@@ -7,6 +7,7 @@ namespace Pest\Browser;
 use Pest\Browser\Enums\BrowserType;
 use Pest\Browser\Enums\ColorScheme;
 use Pest\Browser\Playwright\Playwright;
+use Pest\Browser\Support\Screenshot;
 
 /**
  * @internal
@@ -91,6 +92,16 @@ final readonly class Configuration
     public function userAgent(string $userAgent): self
     {
         Playwright::setUserAgent($userAgent);
+
+        return $this;
+    }
+
+    /**
+     * Sets the screenshots directory.
+     */
+    public function screenshots(string $dir): self
+    {
+        Screenshot::useDirectory($dir);
 
         return $this;
     }
