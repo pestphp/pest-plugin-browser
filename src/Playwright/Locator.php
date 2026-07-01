@@ -651,6 +651,8 @@ final readonly class Locator
 
     /**
      * Set input files for a file input element.
+     *
+     * @param  string|array<string>  $path
      */
     public function setInputFiles(string|array $path): void
     {
