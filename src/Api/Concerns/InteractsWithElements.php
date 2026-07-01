@@ -177,6 +177,8 @@ trait InteractsWithElements
 
     /**
      * Attach the given files to the field.
+     *
+     * @param  string|array<string>  $path
      */
     public function attach(string $field, string|array $path): self
     {
