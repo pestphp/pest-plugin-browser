@@ -91,3 +91,16 @@ it('may press an input button by data test attribute', function (): void {
 
     expect($page->text('#result'))->toBe('Input Button Pressed');
 });
+
+it('forwards options to the underlying press', function (): void {
+    Route::get('/', fn (): string => '
+        <button oncontextmenu="event.preventDefault(); document.getElementById(\'result\').textContent = \'Right Pressed\'">Submit</button>
+        <div id="result"></div>
+    ');
+
+    $page = visit('/');
+
+    $page->press('Submit', ['button' => 'right']);
+
+    expect($page->text('#result'))->toBe('Right Pressed');
+});
