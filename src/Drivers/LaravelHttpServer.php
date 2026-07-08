@@ -25,6 +25,7 @@ use Pest\Browser\Execution;
 use Pest\Browser\GlobalState;
 use Pest\Browser\Playwright\Playwright;
 use Psr\Log\NullLogger;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Mime\MimeTypes;
 use Throwable;
 
@@ -241,8 +242,14 @@ final class LaravelHttpServer implements HttpServer
         $method = mb_strtoupper($request->getMethod());
         $rawBody = (string) $request->getBody();
         $parameters = [];
-        if ($method !== 'GET' && str_starts_with(mb_strtolower($contentType), 'application/x-www-form-urlencoded')) {
-            parse_str($rawBody, $parameters);
+        $files = [];
+        if ($method !== 'GET') {
+            $lcContentType = mb_strtolower($contentType);
+            if (str_starts_with($lcContentType, 'application/x-www-form-urlencoded')) {
+                parse_str($rawBody, $parameters);
+            } elseif (str_starts_with($lcContentType, 'multipart/form-data')) {
+                [$parameters, $files] = $this->parseMultipartBody($rawBody, $contentType);
+            }
         }
         $cookies = array_map(fn (RequestCookie $cookie): string => urldecode($cookie->getValue()), $request->getCookies());
         $cookies = array_merge($cookies, test()->prepareCookiesForRequest()); // @phpstan-ignore-line
@@ -254,7 +261,7 @@ final class LaravelHttpServer implements HttpServer
             $method,
             $parameters,
             $cookies,
-            [], // @TODO files...
+            $files,
             $serverVariables,
             $rawBody
         );
@@ -310,6 +317,163 @@ final class LaravelHttpServer implements HttpServer
             $response->headers->all(), // @phpstan-ignore-line
             $content,
         );
+    }
+
+    /**
+     * Parse a `multipart/form-data` body into ($parameters, $files) suitable
+     * for `Symfony\Component\HttpFoundation\Request::create()`.
+     *
+     * Byte-safe — uses string functions (not `mb_*`) so binary uploads
+     * (.xlsx, .zip, images, PDFs) survive without UTF-8 corruption. Each
+     * file part is written to a temp file in `sys_get_temp_dir()` and
+     * wrapped in a Symfony `UploadedFile` constructed with `$test = true`
+     * to bypass `is_uploaded_file()` (which only returns true for real
+     * SAPI uploads).
+     *
+     * @return array{0: array<string, mixed>, 1: array<string, mixed>}
+     *         [0] parameters (non-file form fields), [1] files (UploadedFile
+     *         instances keyed by field name).
+     */
+    private function parseMultipartBody(string $body, string $contentType): array
+    {
+        if (preg_match('/boundary="?([^";\s]+)"?/i', $contentType, $matches) !== 1) {
+            return [[], []];
+        }
+        $boundary = '--'.$matches[1];
+
+        // Split byte-safe; first chunk is empty (preamble before first boundary).
+        $parts = explode("\r\n".$boundary, "\r\n".$body);
+        array_shift($parts);
+
+        $parameters = [];
+        $files = [];
+
+        foreach ($parts as $part) {
+            // Closing boundary is "--{boundary}--"; the leading "--" remains
+            // at the start of $part after split — skip it.
+            if (str_starts_with($part, '--')) {
+                continue;
+            }
+            // Strip leading "\r\n" left by the split.
+            if (str_starts_with($part, "\r\n")) {
+                $part = substr($part, 2);
+            }
+
+            $headerEnd = strpos($part, "\r\n\r\n");
+            if ($headerEnd === false) {
+                continue;
+            }
+            $headerSection = substr($part, 0, $headerEnd);
+            $content = substr($part, $headerEnd + 4);
+
+            // Trailing "\r\n" precedes the next boundary delimiter.
+            if (str_ends_with($content, "\r\n")) {
+                $content = substr($content, 0, -2);
+            }
+
+            $headers = [];
+            foreach (explode("\r\n", $headerSection) as $line) {
+                $colonPos = strpos($line, ':');
+                if ($colonPos === false) {
+                    continue;
+                }
+                $name = strtolower(trim(substr($line, 0, $colonPos)));
+                $value = trim(substr($line, $colonPos + 1));
+                $headers[$name] = $value;
+            }
+
+            $disposition = $headers['content-disposition'] ?? '';
+            if (preg_match('/name="([^"]+)"/', $disposition, $nameMatch) !== 1) {
+                continue;
+            }
+            $fieldName = $nameMatch[1];
+
+            if (preg_match('/filename="([^"]*)"/', $disposition, $filenameMatch) === 1) {
+                $filename = $filenameMatch[1];
+                if ($filename === '') {
+                    // Empty `<input type="file">` with no selection.
+                    continue;
+                }
+                $mimeType = $headers['content-type'] ?? 'application/octet-stream';
+
+                $tmpPath = tempnam(sys_get_temp_dir(), 'pest_browser_upload_');
+                if ($tmpPath === false) {
+                    continue;
+                }
+                file_put_contents($tmpPath, $content);
+
+                $uploadedFile = new UploadedFile(
+                    $tmpPath,
+                    $filename,
+                    $mimeType,
+                    UPLOAD_ERR_OK,
+                    test: true,
+                );
+
+                $this->assignParsedValue($files, $fieldName, $uploadedFile);
+            } else {
+                $this->assignParsedValue($parameters, $fieldName, $content);
+            }
+        }
+
+        return [$parameters, $files];
+    }
+
+    /**
+     * Assign a parsed multipart value into the target array, honoring
+     * PHP's bracket notation for nested fields (e.g. `tags[]`, `user[name]`,
+     * `files[0]`). Delegates to `parse_str()` via `http_build_query()` so
+     * the same nesting semantics PHP applies to `$_POST`/`$_FILES` apply
+     * here.
+     *
+     * @param  array<string, mixed>  $target
+     */
+    private function assignParsedValue(array &$target, string $fieldName, mixed $value): void
+    {
+        if (! str_contains($fieldName, '[')) {
+            $target[$fieldName] = $value;
+
+            return;
+        }
+
+        // For files we cannot round-trip through http_build_query() — encode
+        // a placeholder, parse the structure, then walk the parsed tree and
+        // replace the placeholder leaf with the UploadedFile instance.
+        $placeholder = '__pest_browser_placeholder_'.spl_object_id((object) []).'__';
+        $encoded = http_build_query([$fieldName => $value instanceof UploadedFile ? $placeholder : $value]);
+        $decoded = [];
+        parse_str($encoded, $decoded);
+
+        if ($value instanceof UploadedFile) {
+            $this->replacePlaceholderLeaf($decoded, $placeholder, $value);
+        }
+
+        $target = array_replace_recursive($target, $decoded);
+    }
+
+    /**
+     * Walk an array recursively, replacing the first leaf string equal to
+     * `$placeholder` with `$replacement`. Used to inject `UploadedFile`
+     * instances into the structure produced by `parse_str()` (which only
+     * preserves scalars).
+     *
+     * @param  array<int|string, mixed>  $array
+     */
+    private function replacePlaceholderLeaf(array &$array, string $placeholder, mixed $replacement): bool
+    {
+        foreach ($array as $key => &$value) {
+            if (is_array($value)) {
+                if ($this->replacePlaceholderLeaf($value, $placeholder, $replacement)) {
+                    return true;
+                }
+            } elseif ($value === $placeholder) {
+                $array[$key] = $replacement;
+
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
