@@ -86,7 +86,9 @@ final class ServerManager
         return $this->http ??= match (function_exists('app_path')) {
             true => new LaravelHttpServer(
                 self::DEFAULT_HOST, // Always bind to 127.0.0.1 for server
-                Port::find(),
+                0, // Bind to an OS-assigned ephemeral port at bind time; the server
+                   // resolves the actual port after starting. Avoids the find-then-rebind
+                   // race that throws "Address already in use" under parallel runs.
             ),
             default => new NullableHttpServer(),
         };

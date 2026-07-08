@@ -13,6 +13,7 @@ use Amp\Http\Server\Request as AmpRequest;
 use Amp\Http\Server\RequestHandler\ClosureRequestHandler;
 use Amp\Http\Server\Response;
 use Amp\Http\Server\SocketHttpServer;
+use Amp\Socket\InternetAddress;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Illuminate\Foundation\Testing\Concerns\WithoutExceptionHandlingHandler;
@@ -49,6 +50,15 @@ final class LaravelHttpServer implements HttpServer
      * The last throwable that occurred during the server's execution.
      */
     private ?Throwable $lastThrowable = null;
+
+    /**
+     * The port the server actually bound to, resolved at start time.
+     *
+     * When constructed with port 0 the operating system assigns a free
+     * ephemeral port atomically at bind time, which avoids the find-then-rebind
+     * race that can throw "Address already in use" under parallel test runs.
+     */
+    private ?int $resolvedPort = null;
 
     /**
      * Creates a new laravel http server instance.
@@ -106,6 +116,16 @@ final class LaravelHttpServer implements HttpServer
             new ClosureRequestHandler($this->handleRequest(...)),
             new DefaultErrorHandler(),
         );
+
+        foreach ($server->getServers() as $socketServer) {
+            $address = $socketServer->getAddress();
+
+            if ($address instanceof InternetAddress) {
+                $this->resolvedPort = $address->getPort();
+
+                break;
+            }
+        }
     }
 
     /**
@@ -202,7 +222,7 @@ final class LaravelHttpServer implements HttpServer
             throw new ServerNotFoundException('The HTTP server is not running.');
         }
 
-        return sprintf('http://%s:%d', $this->host, $this->port);
+        return sprintf('http://%s:%d', $this->host, $this->resolvedPort ?? $this->port);
     }
 
     /**
@@ -264,7 +284,7 @@ final class LaravelHttpServer implements HttpServer
         // Set the Host header to match the configured host for subdomain routing
         $configuredHost = Playwright::host();
         if ($configuredHost !== null) {
-            $hostHeader = sprintf('%s:%d', $configuredHost, $this->port);
+            $hostHeader = sprintf('%s:%d', $configuredHost, $this->resolvedPort ?? $this->port);
             $symfonyRequest->headers->set('Host', $hostHeader);
             // Also set SERVER_NAME for Laravel routing
             $symfonyRequest->server->set('SERVER_NAME', $configuredHost);
