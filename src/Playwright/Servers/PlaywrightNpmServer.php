@@ -94,10 +94,7 @@ final class PlaywrightNpmServer implements PlaywrightServer
     public function stop(): void
     {
         if ($this->systemProcess instanceof SystemProcess && $this->isRunning()) {
-            $this->systemProcess->stop(
-                timeout: 0.1,
-                signal: PHP_OS_FAMILY === 'Windows' ? null : SIGTERM,
-            );
+            $this->systemProcess->stop(timeout: 0.1);
         }
 
         $this->systemProcess = null;
