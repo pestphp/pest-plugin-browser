@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Pest\Browser\Drivers;
 
 use Amp\ByteStream\ReadableResourceStream;
+use Amp\Http\Cookie\RequestCookie;
 use Amp\Http\Server\DefaultErrorHandler;
 use Amp\Http\Server\HttpServer as AmpHttpServer;
 use Amp\Http\Server\HttpServerStatus;
@@ -22,6 +23,7 @@ use Pest\Browser\Contracts\HttpServer;
 use Pest\Browser\Exceptions\ServerNotFoundException;
 use Pest\Browser\Execution;
 use Pest\Browser\GlobalState;
+use Pest\Browser\Playwright\Playwright;
 use Psr\Log\NullLogger;
 use Symfony\Component\Mime\MimeTypes;
 use Throwable;
@@ -242,18 +244,32 @@ final class LaravelHttpServer implements HttpServer
         if ($method !== 'GET' && str_starts_with(mb_strtolower($contentType), 'application/x-www-form-urlencoded')) {
             parse_str($rawBody, $parameters);
         }
+        $cookies = array_map(fn (RequestCookie $cookie): string => urldecode($cookie->getValue()), $request->getCookies());
+        $cookies = array_merge($cookies, test()->prepareCookiesForRequest()); // @phpstan-ignore-line
+        /** @var array<string, string> $serverVariables */
+        $serverVariables = test()->serverVariables(); // @phpstan-ignore-line
 
         $symfonyRequest = Request::create(
             $absoluteUrl,
             $method,
             $parameters,
-            $request->getCookies(),
+            $cookies,
             [], // @TODO files...
-            [], // @TODO server variables...
+            $serverVariables,
             $rawBody
         );
 
         $symfonyRequest->headers->add($request->getHeaders());
+
+        // Set the Host header to match the configured host for subdomain routing
+        $configuredHost = Playwright::host();
+        if ($configuredHost !== null) {
+            $hostHeader = sprintf('%s:%d', $configuredHost, $this->port);
+            $symfonyRequest->headers->set('Host', $hostHeader);
+            // Also set SERVER_NAME for Laravel routing
+            $symfonyRequest->server->set('SERVER_NAME', $configuredHost);
+            $symfonyRequest->server->set('HTTP_HOST', $hostHeader);
+        }
 
         $debug = config('app.debug');
 

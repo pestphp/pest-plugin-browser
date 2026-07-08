@@ -119,6 +119,17 @@ final class PendingAwaitablePage
     }
 
     /**
+     * Sets the host for the server.
+     */
+    public function withHost(string $host): self
+    {
+        return new self($this->browserType, $this->device, $this->url, [
+            'host' => $host,
+            ...$this->options,
+        ]);
+    }
+
+    /**
      * Sets the timezone for the page.
      */
     public function withTimezone(string $timezone): self
@@ -148,6 +159,17 @@ final class PendingAwaitablePage
      */
     private function createAwaitablePage(): AwaitableWebpage
     {
+        $options = $this->options;
+        $host = $this->extractHost($options);
+
+        return $this->withTemporaryHost($host, fn (): AwaitableWebpage => $this->buildAwaitablePage($options));
+    }
+
+    /**
+     * @param  array<string, mixed>  $options
+     */
+    private function buildAwaitablePage(array $options): AwaitableWebpage
+    {
         $browser = Playwright::browser($this->browserType)->launch();
 
         $context = $browser->newContext([
@@ -155,7 +177,7 @@ final class PendingAwaitablePage
             'timezoneId' => 'UTC',
             'colorScheme' => Playwright::defaultColorScheme()->value,
             ...$this->device->context(),
-            ...$this->options,
+            ...$options,
         ]);
 
         $context->addInitScript(InitScript::get());
@@ -163,8 +185,43 @@ final class PendingAwaitablePage
         $url = ComputeUrl::from($this->url);
 
         return new AwaitableWebpage(
-            $context->newPage()->goto($url, $this->options),
+            $context->newPage()->goto($url, $options),
             $url,
         );
+    }
+
+    /**
+     * @param  array<string, mixed>  &$options
+     */
+    private function extractHost(array &$options): ?string
+    {
+        if (! array_key_exists('host', $options)) {
+            return null;
+        }
+
+        $host = $options['host'];
+
+        unset($options['host']);
+
+        return is_string($host) ? $host : null;
+    }
+
+    /**
+     * @param  callable(): AwaitableWebpage  $callback
+     */
+    private function withTemporaryHost(?string $host, callable $callback): AwaitableWebpage
+    {
+        if ($host === null) {
+            return $callback();
+        }
+
+        $previousHost = Playwright::host();
+        Playwright::setHost($host);
+
+        try {
+            return $callback();
+        } finally {
+            Playwright::setHost($previousHost);
+        }
     }
 }

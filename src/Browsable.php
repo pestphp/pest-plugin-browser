@@ -60,4 +60,12 @@ trait Browsable
             ), $url),
         );
     }
+
+    /**
+     * @return array <string, string>
+     */
+    protected function serverVariables(): array
+    {
+        return property_exists($this, 'serverVariables') ? $this->serverVariables : [];
+    }
 }

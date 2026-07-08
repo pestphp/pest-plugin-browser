@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Api\Concerns;
 
-use Illuminate\Support\Str;
 use Pest\Browser\Api\Webpage;
 use PHPUnit\Framework\ExpectationFailedException;
 
@@ -155,7 +154,7 @@ trait MakesElementAssertions
      */
     public function assertScript(string $expression, mixed $expected = true): Webpage
     {
-        if (! Str::contains($expression, ['===', '!==', '==', '!=', '>', '<', '>=', '<=', '&&', '||']) && ! Str::startsWith($expression, 'return ') && ! Str::startsWith($expression, 'function')) {
+        if (! self::strContainsAny($expression, ['===', '!==', '==', '!=', '>', '<', '>=', '<=', '&&', '||']) && ! str_starts_with($expression, 'return ') && ! str_starts_with($expression, 'function')) {
             $expression = "function() { return {$expression}; }";
         }
 
@@ -200,6 +199,19 @@ trait MakesElementAssertions
     }
 
     /**
+     * Assert that the given source code is present within the selector.
+     */
+    public function assertSourceInHas(string $selector, string $code): Webpage
+    {
+        $locator = $this->guessLocator($selector);
+        $html = $locator->innerHTML();
+        $message = "Expected page source to contain [{$code}] on the page initially with the url [{$this->initialUrl}], but it was not found.";
+        expect(str_contains($html, $code))->toBeTrue($message);
+
+        return $this;
+    }
+
+    /**
      * Assert that the given source code is not present on the page.
      */
     public function assertSourceMissing(string $code): Webpage
@@ -207,6 +219,19 @@ trait MakesElementAssertions
         $content = $this->page->content();
         $message = "Expected page source not to contain [{$code}] on the page initially with the url [{$this->initialUrl}], but it was found.";
         expect(str_contains($content, $code))->toBeFalse($message);
+
+        return $this;
+    }
+
+    /**
+     * Assert that the given source code is not present within the selector.
+     */
+    public function assertSourceInMissing(string $selector, string $code): Webpage
+    {
+        $locator = $this->guessLocator($selector);
+        $html = $locator->innerHTML();
+        $message = "Expected page source not to contain [{$code}] on the page initially with the url [{$this->initialUrl}], but it was found.";
+        expect(str_contains($html, $code))->toBeFalse($message);
 
         return $this;
     }
@@ -566,5 +591,22 @@ trait MakesElementAssertions
         $text = (string) $text;
 
         return $this->assertSee($text);
+    }
+
+    /**
+     * Return true if haystack contains any of the given needles
+     *
+     * @param  string  $haystack  String to look in
+     * @param  array<int, string>  $needles  List of needles to look for in haystack
+     */
+    private static function strContainsAny(string $haystack, array $needles): bool
+    {
+        foreach ($needles as $needle) {
+            if (str_contains($haystack, $needle)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

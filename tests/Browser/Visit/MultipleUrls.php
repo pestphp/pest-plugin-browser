@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\Route;
+
 it('may visit multiple pages', function (): void {
     Route::get('/page1', fn (): string => '<div>
         <h1>Page 1</h1>

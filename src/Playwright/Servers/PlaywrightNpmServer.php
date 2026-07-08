@@ -21,7 +21,7 @@ final class PlaywrightNpmServer implements PlaywrightServer
     /**
      * The playwright version required to run this server.
      */
-    private const string PLAYWRIGHT_VERSION = '1.54.1';
+    private const string PLAYWRIGHT_VERSION = '1.59.1';
 
     /**
      * The underlying process instance, if any.
@@ -153,7 +153,7 @@ final class PlaywrightNpmServer implements PlaywrightServer
         $output = $process->getOutput();
 
         // check if the output matches the required version
-        if (in_array(preg_match('/^Version\s+(\d+\.\d+\.\d+)/', $output, $matches), [0, false], true)) {
+        if (in_array(preg_match('/^Version\s+(\d+\.\d+\.\d+)/', $output, $matches), [0, false], true) || ! isset($matches[1])) {
             throw new PlaywrightNotInstalledException();
         }
 

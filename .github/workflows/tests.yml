@@ -2,6 +2,9 @@ name: Tests
 
 on: ['push', 'pull_request']
 
+permissions:
+  contents: read
+
 jobs:
   ci:
     runs-on: ${{ matrix.os }}
@@ -9,22 +12,22 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         node: ['22.x']
-        php: ['8.3', '8.4']
+        php: ['8.4', '8.5']
         dependency-version: [prefer-stable]
 
     name: PHP ${{ matrix.php }} - Node ${{ matrix.node }} - ${{ matrix.os }} - ${{ matrix.dependency-version }}
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
     - name: Setup Node ${{ matrix.node }}
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
       with:
         node-version: ${{ matrix.node }}
 
     - name: Setup PHP
-      uses: shivammathur/setup-php@v2
+      uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # v2
       with:
         php-version: ${{ matrix.php }}
         tools: composer:v2
@@ -36,7 +39,7 @@ jobs:
         echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
 
     - name: Install PHP dependencies
-      run: composer update --${{ matrix.dependency-version }} --no-interaction --no-progress --ansi
+      run: composer update --${{ matrix.dependency-version }} --prefer-dist --no-interaction --no-progress --ansi --optimize-autoloader
 
     - name: Install dependencies
       run: npm ci

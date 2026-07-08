@@ -96,6 +96,16 @@ final readonly class Configuration
     }
 
     /**
+     * Sets the host for the server.
+     */
+    public function withHost(?string $host): self
+    {
+        Playwright::setHost($host);
+
+        return $this;
+    }
+
+    /**
      * Enables debug mode for assertions.
      */
     public function debug(): self
