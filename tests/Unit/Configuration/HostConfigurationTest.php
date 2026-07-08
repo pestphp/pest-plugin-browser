@@ -4,10 +4,22 @@ declare(strict_types=1);
 
 use Pest\Browser\Configuration;
 use Pest\Browser\Playwright\Playwright;
+use Pest\Browser\Support\Screenshot;
+
+function resetConfigurationScreenshotDir(): void
+{
+    $property = new ReflectionProperty(Screenshot::class, 'dir');
+    $property->setValue(null, null);
+}
 
 beforeEach(function (): void {
     // Reset Playwright state before each test
     Playwright::setHost(null);
+    resetConfigurationScreenshotDir();
+});
+
+afterEach(function (): void {
+    resetConfigurationScreenshotDir();
 });
 
 it('can set host via configuration', function (): void {
@@ -29,6 +41,16 @@ it('follows fluent interface pattern', function (): void {
 
     expect($result)->toBeInstanceOf(Configuration::class);
     expect(Playwright::host())->toBe('app.localhost');
+});
+
+it('can set screenshots directory via configuration', function (): void {
+    $config = new Configuration();
+    $dir = sys_get_temp_dir().'/pest-browser-configuration-'.uniqid('', true);
+
+    $result = $config->screenshots($dir);
+
+    expect($result)->toBeInstanceOf(Configuration::class)
+        ->and(Screenshot::dir())->toBe($dir);
 });
 
 it('stores host in Playwright global state', function (): void {

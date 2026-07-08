@@ -12,10 +12,27 @@ use Pest\TestSuite;
 final class Screenshot
 {
     /**
+     * The path to the screenshots' directory.
+     */
+    private static ?string $dir = null;
+
+    /**
+     * Set the path to the screenshots' directory.
+     */
+    public static function useDirectory(string $dir): void
+    {
+        self::$dir = $dir;
+    }
+
+    /**
      * Return the path to the screenshots' directory.
      */
     public static function dir(): string
     {
+        if (self::$dir !== null) {
+            return self::$dir;
+        }
+
         return TestSuite::getInstance()->rootPath
             .'/tests/Browser/Screenshots';
     }
