@@ -16,6 +16,7 @@
         "ext-sockets": "*",
         "amphp/amp": "^3.1.1",
         "amphp/http-server": "^3.4.4",
+        "amphp/http-server-form-parser": "^2.0.0",
         "amphp/websocket-client": "^2.0.2",
         "pestphp/pest": "^4.5.0",
         "pestphp/pest-plugin": "^4.0.0",

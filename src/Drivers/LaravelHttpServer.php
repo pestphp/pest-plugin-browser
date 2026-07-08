@@ -23,6 +23,7 @@ use Pest\Browser\Contracts\HttpServer;
 use Pest\Browser\Exceptions\ServerNotFoundException;
 use Pest\Browser\Execution;
 use Pest\Browser\GlobalState;
+use Pest\Browser\Http\ExtendedFormParser;
 use Pest\Browser\Playwright\Playwright;
 use Psr\Log\NullLogger;
 use Symfony\Component\Mime\MimeTypes;
@@ -51,13 +52,18 @@ final class LaravelHttpServer implements HttpServer
     private ?Throwable $lastThrowable = null;
 
     /**
+     * The multipart parser wrapper with upload validation behavior.
+     */
+    private ExtendedFormParser $extendedFormParser;
+
+    /**
      * Creates a new laravel http server instance.
      */
     public function __construct(
         public readonly string $host,
         public readonly int $port,
     ) {
-        //
+        $this->extendedFormParser = ExtendedFormParser::fromIni();
     }
 
     /**
@@ -67,6 +73,14 @@ final class LaravelHttpServer implements HttpServer
     {
         // @codeCoverageIgnoreStart
         // $this->stop();
+    }
+
+    /**
+     * Overrides the multipart parser instance.
+     */
+    public function setExtendedFormParser(ExtendedFormParser $extendedFormParser): void
+    {
+        $this->extendedFormParser = $extendedFormParser;
     }
 
     /**
@@ -239,22 +253,46 @@ final class LaravelHttpServer implements HttpServer
 
         $contentType = $request->getHeader('content-type') ?? '';
         $method = mb_strtoupper($request->getMethod());
-        $rawBody = (string) $request->getBody();
         $parameters = [];
-        if ($method !== 'GET' && str_starts_with(mb_strtolower($contentType), 'application/x-www-form-urlencoded')) {
-            parse_str($rawBody, $parameters);
+        $files = [];
+
+        if ($method !== 'GET' && str_starts_with(mb_strtolower($contentType), 'multipart/form-data')) {
+            [$parameters, $files] = $this->parseMultipartFormData($request);
+
+            $rawBody = '';
+        } else {
+            $rawBody = (string) $request->getBody();
+
+            if ($method !== 'GET' && str_starts_with(mb_strtolower($contentType), 'application/x-www-form-urlencoded')) {
+                parse_str($rawBody, $parameters);
+            }
         }
+
         $cookies = array_map(fn (RequestCookie $cookie): string => urldecode($cookie->getValue()), $request->getCookies());
         $cookies = array_merge($cookies, test()->prepareCookiesForRequest()); // @phpstan-ignore-line
         /** @var array<string, string> $serverVariables */
         $serverVariables = test()->serverVariables(); // @phpstan-ignore-line
+
+        if ($contentType !== '') {
+            $serverVariables['CONTENT_TYPE'] = $contentType;
+        }
+
+        $contentLength = $request->getHeader('content-length');
+        if ($contentLength !== null && $contentLength !== '') {
+            $serverVariables['CONTENT_LENGTH'] = $contentLength;
+        }
+
+        $contentMd5 = $request->getHeader('content-md5');
+        if ($contentMd5 !== null && $contentMd5 !== '') {
+            $serverVariables['CONTENT_MD5'] = $contentMd5;
+        }
 
         $symfonyRequest = Request::create(
             $absoluteUrl,
             $method,
             $parameters,
             $cookies,
-            [], // @TODO files...
+            $files,
             $serverVariables,
             $rawBody
         );
@@ -271,6 +309,9 @@ final class LaravelHttpServer implements HttpServer
             $symfonyRequest->server->set('HTTP_HOST', $hostHeader);
         }
 
+        $superglobalState = $this->captureRequestSuperglobals();
+        $symfonyRequest->overrideGlobals();
+
         $debug = config('app.debug');
 
         try {
@@ -283,6 +324,7 @@ final class LaravelHttpServer implements HttpServer
             throw $e;
         } finally {
             config(['app.debug' => $debug]);
+            $this->restoreRequestSuperglobals($superglobalState);
         }
 
         $kernel->terminate($laravelRequest, $response);
@@ -361,5 +403,41 @@ final class LaravelHttpServer implements HttpServer
         }
 
         return str_replace($this->originalAssetUrl, $this->url(), $content);
+    }
+
+    /**
+     * Parse multipart form data and return request parameters and files.
+     *
+     * @return array{array<int|string, mixed>, array<int|string, mixed>}
+     */
+    private function parseMultipartFormData(AmpRequest $request): array
+    {
+        return $this->extendedFormParser->parseMultipart($request);
+    }
+
+    /**
+     * @return array{get: array<int|string, mixed>, post: array<int|string, mixed>, request: array<int|string, mixed>, server: array<int|string, mixed>, cookie: array<int|string, mixed>}
+     */
+    private function captureRequestSuperglobals(): array
+    {
+        return [
+            'get' => $_GET,
+            'post' => $_POST,
+            'request' => $_REQUEST,
+            'server' => $_SERVER,
+            'cookie' => $_COOKIE,
+        ];
+    }
+
+    /**
+     * @param  array{get: array<int|string, mixed>, post: array<int|string, mixed>, request: array<int|string, mixed>, server: array<int|string, mixed>, cookie: array<int|string, mixed>}  $superglobalState
+     */
+    private function restoreRequestSuperglobals(array $superglobalState): void
+    {
+        $_GET = $superglobalState['get'];
+        $_POST = $superglobalState['post'];
+        $_REQUEST = $superglobalState['request'];
+        $_SERVER = $superglobalState['server'];
+        $_COOKIE = $superglobalState['cookie'];
     }
 }
