@@ -7,10 +7,13 @@ namespace Pest\Browser;
 use Error;
 use Pest\Browser\Enums\BrowserType;
 use Pest\Browser\Enums\ColorScheme;
+use Pest\Browser\Enums\TracingOption;
 use Pest\Browser\Exceptions\BrowserNotSupportedException;
 use Pest\Browser\Exceptions\OptionNotSupportedInParallelException;
+use Pest\Browser\Exceptions\TracingOptionNotSupportedException;
 use Pest\Browser\Filters\UsesBrowserTestCaseMethodFilter;
 use Pest\Browser\Playwright\Playwright;
+use Pest\Browser\Playwright\Tracing;
 use Pest\Contracts\Plugins\Bootable;
 use Pest\Contracts\Plugins\HandlesArguments;
 use Pest\Contracts\Plugins\Terminable;
@@ -41,18 +44,24 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
             ->addTestCaseMethodFilter(new UsesBrowserTestCaseMethodFilter());
 
         pest()->afterEach(function (): void {
-            if (Playwright::shouldDebugAssertions()) {
-                /** @var TestStatus $status */
-                $status = $this->status(); // @phpstan-ignore-line
+            /** @var TestStatus $status */
+            $status = $this->status(); // @phpstan-ignore-line
+            $failed_or_error = $status->isFailure() || $status->isError();
 
-                if ($status->isFailure() || $status->isError()) {
-                    Execution::instance()->debug($status);
-                }
+            if (Playwright::shouldDebugAssertions() && $failed_or_error) {
+                Execution::instance()->debug($status);
             }
 
             ServerManager::instance()->http()->flush();
 
             Playwright::reset();
+
+            if (Playwright::tracingOption() === TracingOption::RETAIN_ON_FAILURE && $failed_or_error === false) {
+                @unlink(Tracing::path());
+                if (glob(Tracing::dir().'/*') === []) {
+                    @rmdir(Tracing::dir());
+                }
+            }
         })->in($this->in());
     }
 
@@ -91,6 +100,31 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
             Playwright::setColorScheme(ColorScheme::LIGHT);
 
             $arguments = $this->popArgument('--light', $arguments);
+        }
+
+        if ($this->hasArgument('--trace', $arguments)) {
+            $index = array_search('--trace', $arguments, true);
+
+            if ($index === false || ! isset($arguments[$index + 1])) {
+                throw new TracingOptionNotSupportedException(
+                    'The "--trace" argument requires a value. Usage: --trace <option> (e.g., on, retain-on-failure).'
+                );
+            }
+
+            $option = $arguments[$index + 1];
+
+            if (($option = TracingOption::tryFrom($option)) === null) {
+                throw new TracingOptionNotSupportedException(
+                    'The specified tracing type is not supported. Supported types are: '.
+                    implode(', ', array_map(fn (TracingOption $type): string => mb_strtolower($type->name), TracingOption::cases()))
+                );
+            }
+
+            Playwright::setTracingOption($option);
+
+            unset($arguments[$index], $arguments[$index + 1]);
+
+            $arguments = array_values($arguments);
         }
 
         if ($this->hasArgument('--browser', $arguments)) {

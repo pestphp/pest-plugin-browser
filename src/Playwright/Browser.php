@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Playwright;
 
+use Pest\Browser\Enums\TracingOption;
 use Pest\Browser\Exceptions\BrowserAlreadyClosedException;
 
 /**
@@ -47,14 +48,28 @@ final class Browser
 
         $response = Client::instance()->execute($this->guid, 'newContext', $options);
 
-        /** @var array{result: array{context: array{guid: string|null}}} $message */
+        /** @var array{result: array{context: array{guid: string|null}}, params: array{type: string|null, guid: string}} $message */
         foreach ($response as $message) {
+            if (isset($message['params']['type']) && $message['params']['type'] === 'Tracing') {
+                $tracing = new Tracing($message['params']['guid']);
+            }
             if (isset($message['result']['context']['guid'])) {
-                $context = new Context($this, $message['result']['context']['guid']);
+                assert(isset($tracing), 'Tracing object was not initialized.');
+                $context = new Context($this, $tracing, $message['result']['context']['guid']);
             }
         }
 
+        assert(isset($tracing), 'Tracing object was not initialized.');
         assert(isset($context), 'Browser context was not created successfully.');
+
+        // Auto start tracing
+        if (Playwright::tracingOption() !== TracingOption::OFF) {
+            $tracing->start([
+                'screenshots' => true,
+                'snapshots' => true,
+            ]);
+            $tracing->startChunk();
+        }
 
         $this->contexts[] = $context;
 

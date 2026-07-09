@@ -6,6 +6,7 @@ namespace Pest\Browser\Playwright;
 
 use Pest\Browser\Enums\BrowserType;
 use Pest\Browser\Enums\ColorScheme;
+use Pest\Browser\Enums\TracingOption;
 
 /**
  * @internal
@@ -33,6 +34,11 @@ final class Playwright
      * Whether to show the diff on screenshot assertions.
      */
     private static bool $shouldDiffOnScreenshotAssertions = false;
+
+    /**
+     * The tracing option.
+     */
+    private static TracingOption $tracingOption = TracingOption::OFF;
 
     /**
      * The default browser type.
@@ -195,6 +201,22 @@ final class Playwright
         foreach (self::$browserTypes as $browserType) {
             $browserType->reset();
         }
+    }
+
+    /**
+     * Sets the default browser type.
+     */
+    public static function setTracingOption(TracingOption $tracingOption): void
+    {
+        self::$tracingOption = $tracingOption;
+    }
+
+    /**
+     * Get the default browser type.
+     */
+    public static function tracingOption(): TracingOption
+    {
+        return self::$tracingOption;
     }
 
     /**
