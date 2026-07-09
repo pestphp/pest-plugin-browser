@@ -47,3 +47,33 @@ it('may attach a file to a file input using an id selector', function (): void {
     // Clean up
     unlink($tempFile);
 });
+
+it('may attach multiple files to a file input', function (): void {
+    Route::get('/', fn (): string => '
+        <form>
+            <input type="file" id="avatar" name="avatar" multiple>
+        </form>
+    ');
+
+    $page = visit('/');
+
+    // Create temporary files
+    $tempFiles = [
+        tempnam(sys_get_temp_dir(), 'test'),
+        tempnam(sys_get_temp_dir(), 'test'),
+    ];
+    file_put_contents($tempFiles[0], 'test content 1');
+    file_put_contents($tempFiles[1], 'test content 2');
+
+    $page->attach('avatar', $tempFiles);
+
+    // Check that the files are attached
+    $fileNames = array_map(fn ($file) => basename($file), $tempFiles);
+    expect($page->script('() => document.querySelector("input[name=avatar]").files.length'))->toBe(count($tempFiles));
+    expect($page->script('() => document.querySelector("input[name=avatar]").files.map(file => file.name)'))->toBe($fileNames);
+
+    // Clean up
+    foreach ($tempFiles as $tempFile) {
+        unlink($tempFile);
+    }
+});

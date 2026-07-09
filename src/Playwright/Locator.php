@@ -651,10 +651,12 @@ final readonly class Locator
 
     /**
      * Set input files for a file input element.
+     *
+     * @param  string|array<string>  $path
      */
-    public function setInputFiles(string $path): void
+    public function setInputFiles(string|array $path): void
     {
-        $params = ['localPaths' => [$path]];
+        $params = ['localPaths' => is_array($path) ? $path : [$path]];
         $response = $this->sendMessage('setInputFiles', $params);
 
         $this->processVoidResponse($response);
