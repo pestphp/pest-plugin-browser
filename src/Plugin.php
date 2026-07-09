@@ -11,6 +11,7 @@ use Pest\Browser\Exceptions\BrowserNotSupportedException;
 use Pest\Browser\Exceptions\OptionNotSupportedInParallelException;
 use Pest\Browser\Filters\UsesBrowserTestCaseMethodFilter;
 use Pest\Browser\Playwright\Playwright;
+use Pest\Browser\Support\Video;
 use Pest\Contracts\Plugins\Bootable;
 use Pest\Contracts\Plugins\HandlesArguments;
 use Pest\Contracts\Plugins\Terminable;
@@ -50,9 +51,35 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
                 }
             }
 
+            $videoPage = Playwright::pendingVideoPage();
+            $videoDestName = Playwright::pendingVideoDestName();
+
             ServerManager::instance()->http()->flush();
 
             Playwright::reset();
+
+            if ($videoPage instanceof \Pest\Browser\Playwright\Page && $videoDestName !== null) {
+                /** @var TestStatus $videoStatus */
+                $videoStatus = $this->status(); // @phpstan-ignore-line
+
+                if ($videoStatus->isFailure() || $videoStatus->isError()) {
+                    if (is_dir(Video::dir()) === false) {
+                        mkdir(Video::dir(), 0755, true);
+                    }
+
+                    $destFile = Video::dir().DIRECTORY_SEPARATOR.$videoDestName.'.webm';
+
+                    if (file_exists($destFile)) {
+                        unlink($destFile);
+                    }
+
+                    $videoPage->saveVideo($destFile);
+                } else {
+                    $videoPage->deleteVideo();
+                }
+
+                Playwright::clearVideoRecording();
+            }
         })->in($this->in());
     }
 
@@ -67,6 +94,12 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
             Playwright::headed();
 
             $arguments = $this->popArgument('--headed', $arguments);
+        }
+
+        if ($this->hasArgument('--record-video', $arguments)) {
+            Playwright::setRecordVideoOnFailure();
+
+            $arguments = $this->popArgument('--record-video', $arguments);
         }
 
         if ($this->hasArgument('--diff', $arguments)) {
@@ -107,7 +140,7 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
             if (($browser = BrowserType::tryFrom($browser)) === null) {
                 throw new BrowserNotSupportedException(
                     'The specified browser type is not supported. Supported types are: '.
-                    implode(', ', array_map(fn (BrowserType $type): string => mb_strtolower($type->name), BrowserType::cases()))
+                        implode(', ', array_map(fn (BrowserType $type): string => mb_strtolower($type->name), BrowserType::cases()))
                 );
             }
 

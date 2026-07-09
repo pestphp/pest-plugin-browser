@@ -39,6 +39,7 @@ final class Page
         private readonly Context $context,
         private readonly string $guid,
         private readonly string $frameGuid,
+        private readonly ?string $artifactGuid = null,
     ) {
         //
     }
@@ -49,6 +50,42 @@ final class Page
     public function context(): Context
     {
         return $this->context;
+    }
+
+    /**
+     * Save the recorded video to the given absolute path.
+     * This calls Playwright's Artifact.saveAs and blocks until the file is written.
+     * Returns false if no video artifact is associated with this page.
+     */
+    public function saveVideo(string $destPath): bool
+    {
+        if ($this->artifactGuid === null) {
+            return false;
+        }
+
+        $response = Client::instance()->execute($this->artifactGuid, 'saveAs', ['path' => $destPath]);
+
+        foreach ($response as $_) {
+            // consume until done
+        }
+
+        return true;
+    }
+
+    /**
+     * Delete the recorded video artifact (used when test passes).
+     */
+    public function deleteVideo(): void
+    {
+        if ($this->artifactGuid === null) {
+            return;
+        }
+
+        $response = Client::instance()->execute($this->artifactGuid, 'delete');
+
+        foreach ($response as $_) {
+            // consume
+        }
     }
 
     /**
@@ -480,7 +517,6 @@ final class Page
 
         /** @var array<int, string> $brokenImages */
         return $brokenImages;
-
     }
 
     /**
@@ -541,7 +577,8 @@ final class Page
                         $openDiff
                     );
 
-                    throw new ExpectationFailedException(<<<'EOT'
+                    throw new ExpectationFailedException(
+                        <<<'EOT'
                         Screenshot does not match the last one.
                           - Expected? Update the snapshots with [--update-snapshots].
                           - Not expected? Re-run the test with [--diff] to see the differences.
@@ -558,7 +595,8 @@ final class Page
                 $openDiff,
             );
 
-            throw new ExpectationFailedException(<<<'EOT'
+            throw new ExpectationFailedException(
+                <<<'EOT'
                 Screenshot does not match the last one.
                   - Expected? Update the snapshots with [--update-snapshots].
                 EOT,
@@ -571,9 +609,11 @@ final class Page
      */
     public function close(): void
     {
-        if ($this->context->browser()->isClosed()
+        if (
+            $this->context->browser()->isClosed()
             || $this->context->isClosed()
-            || $this->closed) {
+            || $this->closed
+        ) {
             return;
         }
 

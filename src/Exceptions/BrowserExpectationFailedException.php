@@ -30,6 +30,12 @@ final class BrowserExpectationFailedException
             }
         }
 
+        $pendingVideoDestName = Playwright::pendingVideoDestName();
+
+        if ($pendingVideoDestName !== null) {
+            $message .= " A video recording of the browser session has been saved to [Tests/Browser/Videos/$pendingVideoDestName.webm].";
+        }
+
         $consoleLogs = $page->consoleLogs();
 
         if (count($consoleLogs) > 0) {
