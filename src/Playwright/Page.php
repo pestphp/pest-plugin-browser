@@ -567,6 +567,15 @@ final class Page
     }
 
     /**
+     * Get the clock instance for controlling time in tests.
+     * The clock is installed for the entire BrowserContext.
+     */
+    public function clock(): Clock
+    {
+        return new Clock($this->guid);
+    }
+
+    /**
      * Closes the page.
      */
     public function close(): void
