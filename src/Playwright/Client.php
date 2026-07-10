@@ -8,6 +8,7 @@ use Amp\Websocket\Client\WebsocketConnection;
 use Generator;
 use Pest\Browser\Exceptions\PlaywrightOutdatedException;
 use PHPUnit\Framework\ExpectationFailedException;
+use WeakReference;
 
 use function Amp\Websocket\Client\connect;
 
@@ -25,6 +26,13 @@ final class Client
      * WebSocket client instance.
      */
     private ?WebsocketConnection $websocketConnection = null;
+
+    /**
+     * Registry of Page instances for handling events.
+     *
+     * @var array<string, WeakReference<Page>>
+     */
+    private array $pages = [];
 
     /**
      * Default timeout for requests in milliseconds.
@@ -87,8 +95,10 @@ final class Client
         $this->websocketConnection->sendText($requestJson);
 
         while (true) {
+            // @phpstan-ignore-next-line
             $responseJson = $this->fetch($this->websocketConnection);
-            /** @var array{id: string|null, params: array{add: string|null}, error: array{error: array{message: string|null}}} $response */
+
+            /** @var array{id: string|null, guid: string|null, method: string|null, params: array{add: string|null, type: string|null, guid: string|null, initializer: array{mainFrame: array{guid: string}, opener: array{guid: string}}|null }, error: array{error: array{message: string|null}}} $response */
             $response = json_decode($responseJson, true);
 
             if (isset($response['error']['error']['message'])) {
@@ -99,6 +109,17 @@ final class Client
                 }
 
                 throw new ExpectationFailedException($message);
+            }
+
+            if (isset($response['method']) && $response['method'] === '__create__'
+                && isset($response['params']['type']) && $response['params']['type'] === 'Page'
+                && isset($response['guid'], $response['params']['guid'], $response['params']['initializer']['opener']['guid'])) {
+                $this->handlePopupCreation($response['params']['initializer']['opener']['guid'], $response['params']['guid'], $response['params']['initializer']);
+            }
+
+            if (isset($response['method']) && $response['method'] === '__dispose__'
+                && isset($response['guid']) && $this->getPage($response['guid']) instanceof Page) {
+                $this->unregisterPage($response['guid']);
             }
 
             yield $response;
@@ -126,6 +147,44 @@ final class Client
     public function timeout(): int
     {
         return $this->timeout;
+    }
+
+    /**
+     * Registers the current page for event handling.
+     */
+    public function registerPage(string $guid, Page $page): void
+    {
+        $this->pages[$guid] = WeakReference::create($page);
+    }
+
+    /**
+     * Removes page from event handling.
+     */
+    public function unregisterPage(string $guid): void
+    {
+        unset($this->pages[$guid]);
+    }
+
+    private function getPage(string $guid): ?Page
+    {
+        if (! array_key_exists($guid, $this->pages)) {
+            return null;
+        }
+
+        return $this->pages[$guid]->get();
+    }
+
+    /**
+     * Handles popup creation events.
+     *
+     * @param  array{mainFrame: array{guid: string}, opener: array{guid: string}}  $initializer
+     */
+    private function handlePopupCreation(string $openerGuid, string $popupGuid, array $initializer): void
+    {
+        $opener = $this->getPage($openerGuid);
+        if ($opener instanceof Page && $opener->hasPendingPopup()) {
+            $opener->handlePopupCreation($popupGuid, $initializer['mainFrame']['guid']);
+        }
     }
 
     /**

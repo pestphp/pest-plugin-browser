@@ -14,6 +14,7 @@ final readonly class Webpage
     use Concerns\HasWaitCapabilities,
         Concerns\InteractsWithElements,
         Concerns\InteractsWithFrames,
+        Concerns\InteractsWithPopups,
         Concerns\InteractsWithScreen,
         Concerns\InteractsWithTab,
         Concerns\InteractsWithToolbar,
