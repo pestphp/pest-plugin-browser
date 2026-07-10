@@ -427,9 +427,9 @@ final class Page
     /**
      * Make screenshot of the page.
      */
-    public function screenshot(bool $fullPage = true, ?string $filename = null): ?string
+    public function screenshot(bool $fullPage = true, ?string $filename = null, ?string $scale = null): ?string
     {
-        $binary = $this->screenshotBinary($fullPage);
+        $binary = $this->screenshotBinary($fullPage, $scale);
 
         if ($binary === null) {
             return null;
@@ -441,10 +441,12 @@ final class Page
     /**
      * Make screenshot of a specific element.
      */
-    public function screenshotElement(string $selector, ?string $filename = null): string
+    public function screenshotElement(string $selector, ?string $filename = null, ?string $scale = null): string
     {
         $locator = $this->locator($selector);
-        $binary = $locator->screenshot();
+        $binary = $locator->screenshot([
+            'scale' => $scale ?? 'css',
+        ]);
 
         return Screenshot::save($binary, $filename);
     }
@@ -594,12 +596,12 @@ final class Page
     /**
      * Screenshots the page and returns the binary data.
      */
-    private function screenshotBinary(bool $fullPage = true): ?string
+    private function screenshotBinary(bool $fullPage = true, ?string $scale = null): ?string
     {
         $response = Client::instance()->execute(
             $this->guid,
             'screenshot',
-            $this->screenshotOptions($fullPage)
+            $this->screenshotOptions($fullPage, $scale)
         );
 
         /** @var array{result: array{binary: string|null}} $message */
@@ -651,14 +653,14 @@ final class Page
     /**
      * @return array<string, mixed>
      */
-    private function screenshotOptions(bool $fullPage = true): array
+    private function screenshotOptions(bool $fullPage = true, ?string $scale = null): array
     {
         return [
             'type' => 'png',
             'fullPage' => $fullPage,
             'caret' => 'hide',
             'animations' => 'disabled',
-            'scale' => 'css',
+            'scale' => $scale ?? 'css', // 'css' or 'device'
         ];
     }
 

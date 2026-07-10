@@ -29,6 +29,17 @@ it('captures a full-page screenshot with default filename', function (): void {
         ->toBeTrue();
 });
 
+it('captures a screenshot with device scale', function (): void {
+    Route::get('/', fn (): string => 'Hello World');
+
+    $page = visit('/');
+
+    $page->screenshot(filename: 'device-scale-screenshot.png', scale: 'device');
+
+    expect(file_exists(Screenshot::path('device-scale-screenshot.png')))
+        ->toBeTrue();
+});
+
 it('captures a screenshot of an specific element', function (): void {
     Route::get('/', fn (): string => '<div>
         <h1>Text outside of screenshot element</h1>
@@ -40,5 +51,19 @@ it('captures a screenshot of an specific element', function (): void {
     $page->screenshotElement('#screenshot-element', 'element-screenshot.png');
 
     expect(file_exists(Screenshot::path('element-screenshot.png')))
+        ->toBeTrue();
+});
+
+it('captures a screenshot of an element with device scale', function (): void {
+    Route::get('/', fn (): string => '<div>
+        <h1>Text outside of screenshot element</h1>
+        <div id="screenshot-element">Text inside of screenshot element</div>
+    </div>');
+
+    $page = visit('/');
+
+    $page->screenshotElement('#screenshot-element', 'element-device-scale-screenshot.png', scale: 'device');
+
+    expect(file_exists(Screenshot::path('element-device-scale-screenshot.png')))
         ->toBeTrue();
 });

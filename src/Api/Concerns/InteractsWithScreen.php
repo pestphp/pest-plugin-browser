@@ -9,11 +9,11 @@ trait InteractsWithScreen
     /**
      * Performs a screenshot of the current page and saves it to the given path.
      */
-    public function screenshot(bool $fullPage = true, ?string $filename = null): self
+    public function screenshot(bool $fullPage = true, ?string $filename = null, ?string $scale = null): self
     {
         $filename = $this->getFilename($filename);
 
-        $this->page->screenshot($fullPage, $filename);
+        $this->page->screenshot($fullPage, $filename, $scale);
 
         return $this;
     }
@@ -21,11 +21,11 @@ trait InteractsWithScreen
     /**
      * Performs a screenshot of an element and saves it to the given path.
      */
-    public function screenshotElement(string $selector, ?string $filename = null): self
+    public function screenshotElement(string $selector, ?string $filename = null, ?string $scale = null): self
     {
         $filename = $this->getFilename($filename);
 
-        $this->page->screenshotElement($selector, $filename);
+        $this->page->screenshotElement($selector, $filename, $scale);
 
         return $this;
     }
