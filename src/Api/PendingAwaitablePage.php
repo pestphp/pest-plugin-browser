@@ -10,6 +10,7 @@ use Pest\Browser\Enums\Device;
 use Pest\Browser\Playwright\InitScript;
 use Pest\Browser\Playwright\Playwright;
 use Pest\Browser\Support\ComputeUrl;
+use Pest\Browser\Support\StorageState;
 
 /**
  * @mixin Webpage|AwaitableWebpage
@@ -155,6 +156,19 @@ final class PendingAwaitablePage
     }
 
     /**
+     * Loads a previously saved storage state (cookies and localStorage) into the browser context.
+     *
+     * This allows tests to skip login flows by reusing authenticated state saved with saveStorageState().
+     */
+    public function withStorageState(string $name): self
+    {
+        return new self($this->browserType, $this->device, $this->url, [
+            'storageState' => StorageState::path($name),
+            ...$this->options,
+        ]);
+    }
+
+    /**
      * Creates the webpage instance.
      */
     private function createAwaitablePage(): AwaitableWebpage
@@ -170,6 +184,13 @@ final class PendingAwaitablePage
      */
     private function buildAwaitablePage(array $options): AwaitableWebpage
     {
+        if (isset($options['storageState']) && is_string($options['storageState'])) {
+            $options['storageState'] = json_decode(
+                (string) file_get_contents($options['storageState']),
+                true,
+            );
+        }
+
         $browser = Playwright::browser($this->browserType)->launch();
 
         $context = $browser->newContext([
@@ -184,8 +205,10 @@ final class PendingAwaitablePage
 
         $url = ComputeUrl::from($this->url);
 
+        $gotoOptions = array_diff_key($options, array_flip(['storageState', 'host']));
+
         return new AwaitableWebpage(
-            $context->newPage()->goto($url, $options),
+            $context->newPage()->goto($url, $gotoOptions),
             $url,
         );
     }

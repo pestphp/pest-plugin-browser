@@ -96,6 +96,19 @@ final readonly class Webpage
     }
 
     /**
+     * Saves the current browser context's storage state (cookies and localStorage) to a file.
+     *
+     * The file is saved to tests/Browser/StorageState/<name>.json and can be loaded in
+     * subsequent tests via withStorageState() to avoid repetitive login flows.
+     */
+    public function saveStorageState(?string $name = null): self
+    {
+        $this->page->saveStorageState($name);
+
+        return $this;
+    }
+
+    /**
      * Gets the locator for the given selector.
      */
     private function guessLocator(string $selector, ?string $value = null): Locator
