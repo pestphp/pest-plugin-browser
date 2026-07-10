@@ -60,6 +60,27 @@ final class Playwright
     private static ?string $host = null;
 
     /**
+     * Custom launch arguments for all modes.
+     *
+     * @var array<string>
+     */
+    private static array $launchArgs = [];
+
+    /**
+     * Custom launch arguments for headed mode only.
+     *
+     * @var array<string>
+     */
+    private static array $headedLaunchArgs = [];
+
+    /**
+     * Custom launch arguments for headless mode only.
+     *
+     * @var array<string>
+     */
+    private static array $headlessLaunchArgs = [];
+
+    /**
      * Get a browser factory for the given browser type.
      */
     public static function browser(BrowserType $browserType): BrowserFactory
@@ -211,6 +232,52 @@ final class Playwright
     public static function defaultBrowserType(): BrowserType
     {
         return self::$defaultBrowserType;
+    }
+
+    /**
+     * Set custom launch arguments for all modes.
+     *
+     * @param  array<string>  $args
+     */
+    public static function setLaunchArgs(array $args): void
+    {
+        self::$launchArgs = $args;
+    }
+
+    /**
+     * Set custom launch arguments for headed mode only.
+     *
+     * @param  array<string>  $args
+     */
+    public static function setHeadedLaunchArgs(array $args): void
+    {
+        self::$headedLaunchArgs = $args;
+    }
+
+    /**
+     * Set custom launch arguments for headless mode only.
+     *
+     * @param  array<string>  $args
+     */
+    public static function setHeadlessLaunchArgs(array $args): void
+    {
+        self::$headlessLaunchArgs = $args;
+    }
+
+    /**
+     * Get effective launch arguments based on current mode.
+     *
+     * @return array<string>
+     */
+    public static function getEffectiveLaunchArgs(): array
+    {
+        $args = self::$launchArgs;
+
+        if (self::isHeadless()) {
+            return array_merge($args, self::$headlessLaunchArgs);
+        }
+
+        return array_merge($args, self::$headedLaunchArgs);
     }
 
     /**

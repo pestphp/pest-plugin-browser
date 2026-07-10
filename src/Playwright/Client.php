@@ -51,11 +51,18 @@ final class Client
         if (! $this->websocketConnection instanceof WebsocketConnection) {
             $browser = Playwright::defaultBrowserType()->toPlaywrightName();
 
-            $launchOptions = json_encode([
+            $launchOptions = [
                 'headless' => Playwright::isHeadless(),
                 'ignoreHTTPSErrors' => true,
                 'bypassCSP' => true,
-            ]);
+            ];
+
+            $customArgs = Playwright::getEffectiveLaunchArgs();
+            if ($customArgs !== []) {
+                $launchOptions['args'] = $customArgs;
+            }
+
+            $launchOptions = json_encode($launchOptions);
 
             $this->websocketConnection = connect(
                 "ws://$url?browser=$browser&launch-options=$launchOptions",
