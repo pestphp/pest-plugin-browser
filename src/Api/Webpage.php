@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Api;
 
-use Pest\Browser\Execution;
 use Pest\Browser\Playwright\Locator;
 use Pest\Browser\Playwright\Page;
 use Pest\Browser\Support\GuessLocator;
@@ -74,7 +73,7 @@ final readonly class Webpage
      */
     public function submit(): self
     {
-        $this->guessLocator('[type="submit"]')->click();
+        $this->guessClickableLocator('[type="submit"]')->click();
 
         return $this;
     }
@@ -101,5 +100,25 @@ final readonly class Webpage
     private function guessLocator(string $selector, ?string $value = null): Locator
     {
         return (new GuessLocator($this->page))->for($selector, $value);
+    }
+
+    private function guessClickableLocator(string $selector): Locator
+    {
+        return (new GuessLocator($this->page))->forClickable($selector);
+    }
+
+    private function guessFieldLocator(string $selector): Locator
+    {
+        return (new GuessLocator($this->page))->forField($selector);
+    }
+
+    private function guessCheckableLocator(string $selector, ?string $value = null): Locator
+    {
+        return (new GuessLocator($this->page))->forCheckable($selector, $value);
+    }
+
+    private function guessSelectableLocator(string $selector): Locator
+    {
+        return (new GuessLocator($this->page))->forSelectable($selector);
     }
 }

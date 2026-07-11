@@ -17,6 +17,24 @@ use Throwable;
  */
 final readonly class AwaitableWebpage
 {
+    private const array NON_RETRYABLE_ACTION_METHODS = [
+        'click',
+        'press',
+        'pressAndWaitFor',
+        'submit',
+        'type',
+        'typeSlowly',
+        'fill',
+        'rightClick',
+        'select',
+        'append',
+        'clear',
+        'radio',
+        'check',
+        'uncheck',
+        'attach',
+    ];
+
     /**
      * Creates a new awaitable webpage instance.
      *
@@ -34,8 +52,6 @@ final readonly class AwaitableWebpage
     }
 
     /**
-     * Awaits for the given method to assert true or fail.
-     *
      * @param  array<int, mixed>  $arguments
      */
     public function __call(string $name, array $arguments): mixed
@@ -43,13 +59,16 @@ final readonly class AwaitableWebpage
         $webpage = new Webpage($this->page, $this->initialUrl);
 
         try {
-            if (
-                in_array($name, $this->nonAwaitableMethods, true)
-                || Playwright::timeout() <= 1000
-            ) {
-                // @phpstan-ignore-next-line
-                $result = $webpage->{$name}(...$arguments);
+            if ($this->shouldRunOnce($name)) {
+                // Actions should be attempted once.
+                // Playwright itself will wait for actionability up to the configured timeout.
+                $result = Playwright::usingTimeout(
+                    Playwright::timeout(),
+                    // @phpstan-ignore-next-line
+                    fn () => $webpage->{$name}(...$arguments),
+                );
             } else {
+                // Assertions/read expectations may be retried until the browser timeout expires.
                 $result = Execution::instance()->waitForExpectation(
                     // @phpstan-ignore-next-line
                     fn () => $webpage->{$name}(...$arguments),
@@ -60,7 +79,7 @@ final readonly class AwaitableWebpage
 
             try {
                 $browserException = BrowserExpectationFailedException::from($this->page, $e);
-            } catch (Throwable) { // @phpstan-ignore-line
+            } catch (Throwable) {
                 throw $e;
             }
 
@@ -69,16 +88,18 @@ final readonly class AwaitableWebpage
 
         ServerManager::instance()->http()->throwLastThrowableIfNeeded();
 
-        return $result === $webpage
-            ? $this
-            : $result;
+        return $result === $webpage ? $this : $result;
     }
 
-    /**
-     * Return the page instance.
-     */
     public function page(): Page
     {
         return $this->page;
+    }
+
+    private function shouldRunOnce(string $name): bool
+    {
+        return in_array($name, $this->nonAwaitableMethods, true)
+            || in_array($name, self::NON_RETRYABLE_ACTION_METHODS, true)
+            || Playwright::timeout() <= 1000;
     }
 }
