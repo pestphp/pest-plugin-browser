@@ -21,11 +21,10 @@ final readonly class AwaitableWebpage
         'click',
         'press',
         'pressAndWaitFor',
-        'keys',
+        'submit',
         'type',
         'typeSlowly',
         'fill',
-        'hover',
         'rightClick',
         'select',
         'append',
@@ -34,8 +33,6 @@ final readonly class AwaitableWebpage
         'check',
         'uncheck',
         'attach',
-        'drag',
-        'withKeyDown',
     ];
 
     /**

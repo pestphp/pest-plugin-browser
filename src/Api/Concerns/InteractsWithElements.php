@@ -16,7 +16,7 @@ trait InteractsWithElements
      */
     public function click(string $text): self
     {
-        $this->guessLocator($text)->click();
+        $this->guessClickableLocator($text)->click();
 
         return $this;
     }
@@ -62,7 +62,7 @@ trait InteractsWithElements
      */
     public function type(string $field, string $value): self
     {
-        $this->guessLocator($field)->fill($value);
+        $this->guessFieldLocator($field)->fill($value);
 
         return $this;
     }
@@ -74,7 +74,7 @@ trait InteractsWithElements
     {
         $options = ['delay' => $delay];
 
-        $this->guessLocator($field)->type($value, $options);
+        $this->guessFieldLocator($field)->type($value, $options);
 
         return $this;
     }
@@ -102,7 +102,7 @@ trait InteractsWithElements
      */
     public function rightClick(string $text): Webpage
     {
-        $this->guessLocator($text)->click([
+        $this->guessClickableLocator($text)->click([
             'button' => 'right',
         ]);
 
@@ -116,7 +116,7 @@ trait InteractsWithElements
      */
     public function select(string $field, array|string|int $option): self
     {
-        $this->guessLocator($field)->selectOption($option);
+        $this->guessSelectableLocator($field)->selectOption($option);
 
         return $this;
     }
@@ -126,7 +126,7 @@ trait InteractsWithElements
      */
     public function append(string $field, string $value): self
     {
-        $locator = $this->guessLocator($field);
+        $locator = $this->guessFieldLocator($field);
 
         $currentValue = $locator->inputValue();
 
@@ -140,7 +140,7 @@ trait InteractsWithElements
      */
     public function clear(string $field): self
     {
-        $this->guessLocator($field)->clear();
+        $this->guessFieldLocator($field)->clear();
 
         return $this;
     }
@@ -150,7 +150,7 @@ trait InteractsWithElements
      */
     public function radio(string $field, string $value): self
     {
-        $this->guessLocator($field, $value)->click();
+        $this->guessCheckableLocator($field, $value)->click();
 
         return $this;
     }
@@ -160,7 +160,7 @@ trait InteractsWithElements
      */
     public function check(string $field, ?string $value = null): self
     {
-        $this->guessLocator($field, $value)->check();
+        $this->guessCheckableLocator($field, $value)->check();
 
         return $this;
     }
@@ -170,7 +170,7 @@ trait InteractsWithElements
      */
     public function uncheck(string $field, ?string $value = null): self
     {
-        $this->guessLocator($field, $value)->uncheck();
+        $this->guessCheckableLocator($field, $value)->uncheck();
 
         return $this;
     }
@@ -180,7 +180,7 @@ trait InteractsWithElements
      */
     public function attach(string $field, string $path): self
     {
-        $this->guessLocator($field)->setInputFiles($path);
+        $this->guessFieldLocator($field)->setInputFiles($path);
 
         return $this;
     }
