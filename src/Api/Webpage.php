@@ -19,6 +19,7 @@ final readonly class Webpage
         Concerns\InteractsWithToolbar,
         Concerns\InteractsWithViewPort,
         Concerns\MakesConsoleAssertions,
+        Concerns\MakesCookieAssertions,
         Concerns\MakesElementAssertions,
         Concerns\MakesScreenshotAssertions,
         Concerns\MakesUrlAssertions;

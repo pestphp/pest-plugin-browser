@@ -464,6 +464,29 @@ final class Page
     }
 
     /**
+     * Get the cookies from the page, if any.
+     *
+     * @return array<string, string>
+     */
+    public function cookies(): array
+    {
+        $cookieString = $this->evaluate('document.cookie || []');
+
+        /** @var array<string, string> $cookies */
+        $cookies = [];
+        $cookiePairs = explode(';', is_string($cookieString) ? $cookieString : '');
+
+        foreach ($cookiePairs as $cookie) {
+            $value = explode('=', $cookie, 2);
+            if (count($value) >= 2) {
+                $cookies[mb_trim($value[0])] = mb_trim($value[1]);
+            }
+        }
+
+        return $cookies;
+    }
+
+    /**
      * Get the broken images from the page, if any.
      *
      * @return array<int, string>
