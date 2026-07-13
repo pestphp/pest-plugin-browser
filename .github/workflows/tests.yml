@@ -2,6 +2,9 @@ name: Tests
 
 on: ['push', 'pull_request']
 
+permissions:
+  contents: read
+
 jobs:
   ci:
     runs-on: ${{ matrix.os }}
@@ -16,15 +19,15 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v6
+      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
     - name: Setup Node ${{ matrix.node }}
-      uses: actions/setup-node@v6
+      uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
       with:
         node-version: ${{ matrix.node }}
 
     - name: Setup PHP
-      uses: shivammathur/setup-php@v2
+      uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
       with:
         php-version: ${{ matrix.php }}
         tools: composer:v2

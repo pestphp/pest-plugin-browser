@@ -2,6 +2,10 @@
 
 - Use `visit('/path')` to navigate to a page. Chain interactions and assertions fluently.
 - You don't need absolute URLs in `visit()`. Just use the path (e.g. `visit('/dashboard')`) and Pest will resolve it.
+- Each `visit()` is a separate global function call — you cannot chain `->visit()` from a page object. Use a semicolon to separate multiple page navigations: `visit('/login')->press('Log in'); visit('/dashboard')->assertSee('Welcome');`
+- Browser sessions persist across `visit()` calls within the same test — after logging in, subsequent `visit()` calls remain authenticated.
+- Use `$this->actingAs($user)` before `visit()` to authenticate without filling the login form. This is the preferred approach for testing authenticated pages.
+- `assertCount('selector', n)` matches all elements on the entire page, including sidebar, footer, and navigation. Use a specific CSS selector to target only the elements you care about.
 - **Note:** Always provide a descriptive `filename:` to screenshots.
 
 ### Navigation & Screenshots
