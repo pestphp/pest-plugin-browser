@@ -27,6 +27,11 @@ final class Client
     private ?WebsocketConnection $websocketConnection = null;
 
     /**
+     * Current page instance for handling events.
+     */
+    private ?Page $currentPage = null;
+
+    /**
      * Default timeout for requests in milliseconds.
      */
     private int $timeout = 5_000;
@@ -87,8 +92,10 @@ final class Client
         $this->websocketConnection->sendText($requestJson);
 
         while (true) {
+            // @phpstan-ignore-next-line
             $responseJson = $this->fetch($this->websocketConnection);
-            /** @var array{id: string|null, params: array{add: string|null}, error: array{error: array{message: string|null}}} $response */
+
+            /** @var array{id: string|null, method?: string, params: array{add: string|null, type: string|null, guid: string|null, initializer: array{type: string, message: string, defaultValue: string}|null }, error: array{error: array{message: string|null}}} $response */
             $response = json_decode($responseJson, true);
 
             if (isset($response['error']['error']['message'])) {
@@ -99,6 +106,12 @@ final class Client
                 }
 
                 throw new ExpectationFailedException($message);
+            }
+
+            if (isset($response['method']) && $response['method'] === '__create__'
+                && isset($response['params']['type']) && $response['params']['type'] === 'Dialog'
+                && isset($response['params']['guid'], $response['params']['initializer'])) {
+                $this->handleDialogCreation($response['params']['guid'], $response['params']['initializer']);
             }
 
             yield $response;
@@ -126,6 +139,33 @@ final class Client
     public function timeout(): int
     {
         return $this->timeout;
+    }
+
+    /**
+     * Sets the current page for event handling.
+     */
+    public function setCurrentPage(Page $page): void
+    {
+        $this->currentPage = $page;
+    }
+
+    /**
+     * Handles dialog creation events.
+     *
+     * @param  array{type: string, message: string, defaultValue: string}  $initializer
+     */
+    private function handleDialogCreation(string $dialogGuid, array $initializer): void
+    {
+        if ($this->currentPage instanceof Page && $this->currentPage->hasDialogHandler()) {
+            $dialog = new Dialog(
+                $dialogGuid,
+                $initializer['type'],
+                $initializer['message'],
+                $initializer['defaultValue']
+            );
+
+            $this->currentPage->handleDialogEvent($dialog);
+        }
     }
 
     /**

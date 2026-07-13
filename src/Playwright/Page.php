@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Playwright;
 
+use Closure;
+use Exception;
 use Generator;
 use Pest\Browser\Execution;
 use Pest\Browser\Support\ImageDiffView;
@@ -33,6 +35,11 @@ final class Page
     private bool $strictLocators = true;
 
     /**
+     * Dialog event handler.
+     */
+    private ?Closure $dialogHandler = null;
+
+    /**
      * Creates a new page instance.
      */
     public function __construct(
@@ -40,7 +47,7 @@ final class Page
         private readonly string $guid,
         private readonly string $frameGuid,
     ) {
-        //
+        Client::instance()->setCurrentPage($this);
     }
 
     /**
@@ -563,6 +570,68 @@ final class Page
                   - Expected? Update the snapshots with [--update-snapshots].
                 EOT,
             );
+        }
+    }
+
+    /**
+     * Sets up a dialog handler for this page.
+     */
+    public function onDialog(Closure $handler): void
+    {
+        $this->dialogHandler = $handler;
+
+        $response = Client::instance()->execute($this->guid, 'updateSubscription', [
+            'event' => 'dialog',
+            'enabled' => true,
+        ]);
+
+        $this->processVoidResponse($response);
+    }
+
+    /**
+     * Removes any previously set dialog handler.
+     */
+    public function removeDialogHandler(): void
+    {
+        $this->dialogHandler = null;
+
+        $response = Client::instance()->execute($this->guid, 'updateSubscription', [
+            'event' => 'dialog',
+            'enabled' => false,
+        ]);
+
+        $this->processVoidResponse($response);
+    }
+
+    /**
+     * Checks if a dialog handler is currently set.
+     */
+    public function hasDialogHandler(): bool
+    {
+        return $this->dialogHandler instanceof Closure;
+    }
+
+    /**
+     * Gets the current dialog handler.
+     */
+    public function getDialogHandler(): ?Closure
+    {
+        return $this->dialogHandler;
+    }
+
+    /**
+     * Handles a dialog event from the Playwright server.
+     */
+    public function handleDialogEvent(Dialog $dialog): void
+    {
+        if ($this->dialogHandler instanceof Closure) {
+            try {
+                ($this->dialogHandler)($dialog);
+            } catch (Exception $e) {
+                $dialog->dismiss();
+
+                throw $e;
+            }
         }
     }
 
