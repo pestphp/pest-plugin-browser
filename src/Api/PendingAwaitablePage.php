@@ -16,6 +16,8 @@ use Pest\Browser\Support\ComputeUrl;
  */
 final class PendingAwaitablePage
 {
+    private const string COOKIES_KEY = '__pestCookies';
+
     /**
      * The webpage instance that will be returned when the page is visited.
      */
@@ -155,6 +157,53 @@ final class PendingAwaitablePage
     }
 
     /**
+     * Sets a cookie for the browser context.
+     *
+     * @param  array<string, mixed>  $options
+     */
+    public function withCookie(string $name, string $value, array $options = []): self
+    {
+        return $this->withCookies([['name' => $name, 'value' => $value] + $options]);
+    }
+
+    /**
+     * Sets multiple cookies for the browser context.
+     *
+     * @param  array<int, array<string, mixed>>  $cookies
+     */
+    public function withCookies(array $cookies): self
+    {
+        /** @var array<int, array<string, mixed>> $existing */
+        $existing = $this->options[self::COOKIES_KEY] ?? [];
+
+        return new self($this->browserType, $this->device, $this->url, [
+            ...$this->options,
+            self::COOKIES_KEY => [...$existing, ...$cookies],
+        ]);
+    }
+
+    /**
+     * Defaults each cookie's url to the navigation target when neither
+     * url nor domain is given — Playwright requires one of them.
+     *
+     * @param  array<int, array<string, mixed>>  $cookies
+     * @return array<int, array<string, mixed>>
+     */
+    private static function resolveCookieUrls(array $cookies, string $targetUrl): array
+    {
+        return array_map(
+            static function (array $cookie) use ($targetUrl): array {
+                if (! isset($cookie['url']) && ! isset($cookie['domain'])) {
+                    $cookie['url'] = $targetUrl;
+                }
+
+                return $cookie;
+            },
+            $cookies,
+        );
+    }
+
+    /**
      * Creates the webpage instance.
      */
     private function createAwaitablePage(): AwaitableWebpage
@@ -170,6 +219,10 @@ final class PendingAwaitablePage
      */
     private function buildAwaitablePage(array $options): AwaitableWebpage
     {
+        /** @var array<int, array<string, mixed>> $cookies */
+        $cookies = $options[self::COOKIES_KEY] ?? [];
+        unset($options[self::COOKIES_KEY]);
+
         $browser = Playwright::browser($this->browserType)->launch();
 
         $context = $browser->newContext([
@@ -183,6 +236,10 @@ final class PendingAwaitablePage
         $context->addInitScript(InitScript::get());
 
         $url = ComputeUrl::from($this->url);
+
+        if ($cookies !== []) {
+            $context->addCookies(self::resolveCookieUrls($cookies, $url));
+        }
 
         return new AwaitableWebpage(
             $context->newPage()->goto($url, $options),

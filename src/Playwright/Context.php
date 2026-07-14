@@ -102,4 +102,17 @@ final class Context
 
         return $this;
     }
+
+    /**
+     * Adds cookies to the browser context.
+     *
+     * @param  array<int, array<string, mixed>>  $cookies
+     */
+    public function addCookies(array $cookies): self
+    {
+        $response = $this->sendMessage('addCookies', ['cookies' => $cookies]);
+        $this->processVoidResponse($response);
+
+        return $this;
+    }
 }
