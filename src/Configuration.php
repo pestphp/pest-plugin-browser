@@ -124,4 +124,34 @@ final readonly class Configuration
 
         return $this;
     }
+
+    public function screenshotThreshold(float $threshold): self
+    {
+        Playwright::setScreenshotThreshold($threshold);
+
+        return $this;
+    }
+
+    /**
+     * Playwright will use MaxDiffPixels if non 0 and MaxDiffPixelRatio is not set
+     * else if both are set, it will choose the lower of the two
+     * else if none set it will have zero tolerance
+     *
+     * @see node_modules/playwright-core/lib/server/utils/comparators.js:88
+     *
+     * @return $this
+     */
+    public function screenshotMaxDiffPixels(?int $maxDiffPixels): self
+    {
+        Playwright::setScreenshotMaxDiffPixels($maxDiffPixels);
+
+        return $this;
+    }
+
+    public function screenshotMaxDiffPixelRatio(float $maxDiffPixelRatio): self
+    {
+        Playwright::setScreenshotMaxDiffPixelRatio($maxDiffPixelRatio);
+
+        return $this;
+    }
 }

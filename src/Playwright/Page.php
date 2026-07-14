@@ -281,7 +281,7 @@ final class Page
     }
 
     /**
-     * Adds a script tag to the page.
+     * Adds a style tag to the page.
      */
     public function addStyleTag(string $content): self
     {
@@ -521,9 +521,9 @@ final class Page
                     'timeout' => 30000,
                     'isNot' => false,
                     'comparisonMethod' => 'pixelmatch',
-                    'threshold' => 0.3,
-                    'maxDiffPixels' => 300,
-                    'maxDiffPixelRatio' => 0.01,
+                    'threshold' => Playwright::screenshotThreshold(),
+                    'maxDiffPixels' => Playwright::screenshotMaxDiffPixels(),
+                    'maxDiffPixelRatio' => Playwright::screenshotMaxDiffPixelRatio(),
                     'detectAntialiasing' => true,
                     'forceSameDimensions' => true,
                 ]
@@ -550,19 +550,8 @@ final class Page
                 }
             }
 
-            $this->createImageDiffView(
-                $snapshotName,
-                $expectedImageBlob,
-                $actualImageBlob,
-                ImageDiffView::missingImage(),
-                $openDiff,
-            );
-
-            throw new ExpectationFailedException(<<<'EOT'
-                Screenshot does not match the last one.
-                  - Expected? Update the snapshots with [--update-snapshots].
-                EOT,
-            );
+            // if there is no diff at this point, Playwright has determined that there are no changes worthy of investigating
+            // (based on the config passed in to expectScreenshot) so we consider this a pass
         }
     }
 

@@ -60,6 +60,23 @@ final class Playwright
     private static ?string $host = null;
 
     /**
+     * The default screenshot threshold
+     */
+    private static float $screenshotThreshold = 0.3;
+
+    /**
+     * Default maximum number of total pixels that can be different
+     * ENHANCE: establish a good actual baseline for this, leaving at the current Pest default of 300 which is very generous
+     * ENHANCE: establish a way to allow this to be undefined in JS to let the pixel ratio take precedence
+     */
+    private static ?int $screenshotMaxDiffPixels = 300;
+
+    /**
+     * The maximum ratio of pixels that can differ (superseded by $screenshotMaxDiffPixels)
+     */
+    private static float $screenshotMaxDiffPixelRatio = 0.01;
+
+    /**
      * Get a browser factory for the given browser type.
      */
     public static function browser(BrowserType $browserType): BrowserFactory
@@ -211,6 +228,64 @@ final class Playwright
     public static function defaultBrowserType(): BrowserType
     {
         return self::$defaultBrowserType;
+    }
+
+    /**
+     * Set the screenshot threshold used for screenshot comparison
+     *
+     * @see https://playwright.dev/docs/api/class-locatorassertions#locator-assertions-to-have-screenshot-2-option-threshold
+     */
+    public static function setScreenshotThreshold(float $threshold): void
+    {
+        self::$screenshotThreshold = max(0, min(1, $threshold));
+    }
+
+    /**
+     * get the browser screenshot threshold
+     */
+    public static function screenshotThreshold(): float
+    {
+        return self::$screenshotThreshold;
+    }
+
+    /**
+     * An acceptable amount of pixels that could be different.
+     *
+     * @see https://playwright.dev/docs/api/class-pageassertions#page-assertions-to-have-screenshot-1-option-max-diff-pixels
+     */
+    public static function setScreenshotMaxDiffPixels(?int $maxDiffPixels): void
+    {
+        self::$screenshotMaxDiffPixels = max(0, $maxDiffPixels);
+    }
+
+    /**
+     * An acceptable ratio of pixels that are different to the total amount of pixels,
+     *
+     * get the browser screenshot maxDiffPixels
+     */
+    public static function screenshotMaxDiffPixels(): ?int
+    {
+        return self::$screenshotMaxDiffPixels;
+    }
+
+    /**
+     * An acceptable amount of pixels that could be different.
+     *
+     * @see https://playwright.dev/docs/api/class-pageassertions#page-assertions-to-have-screenshot-1-option-max-diff-pixel-ratio
+     */
+    public static function setScreenshotMaxDiffPixelRatio(float $maxDiffPixelRatio): void
+    {
+        self::$screenshotMaxDiffPixelRatio = max(0, $maxDiffPixelRatio);
+    }
+
+    /**
+     * An acceptable ratio of pixels that are different to the total amount of pixels,
+     *
+     * get the browser screenshot maxDiffPixels
+     */
+    public static function screenshotMaxDiffPixelRatio(): float
+    {
+        return self::$screenshotMaxDiffPixelRatio;
     }
 
     /**
