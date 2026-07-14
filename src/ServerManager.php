@@ -91,4 +91,14 @@ final class ServerManager
             default => new NullableHttpServer(),
         };
     }
+
+    /**
+     * Registers the HTTP server to use for browser tests. Call once from your
+     * test bootstrap (e.g. setUpBeforeClass) before the first visit(). When
+     * unset, the manager falls back to Laravel detection / NullableHttpServer.
+     */
+    public function setHttp(HttpServer $http): void
+    {
+        $this->http = $http;
+    }
 }
