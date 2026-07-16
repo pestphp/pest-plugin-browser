@@ -60,6 +60,12 @@ final class Playwright
     private static ?string $host = null;
 
     /**
+     * The URL of an already-running Playwright server (e.g. http://192.168.1.100:9999).
+     * When set, the plugin connects to this server instead of starting a local one.
+     */
+    private static ?string $playwrightServerUrl = null;
+
+    /**
      * Get a browser factory for the given browser type.
      */
     public static function browser(BrowserType $browserType): BrowserFactory
@@ -153,6 +159,22 @@ final class Playwright
     public static function host(): ?string
     {
         return self::$host;
+    }
+
+    /**
+     * Set the URL of an external already-running Playwright server.
+     */
+    public static function setPlaywrightServerUrl(?string $serverUrl): void
+    {
+        self::$playwrightServerUrl = $serverUrl;
+    }
+
+    /**
+     * Get the URL of the external Playwright server, if set.
+     */
+    public static function playwrightServerUrl(): ?string
+    {
+        return self::$playwrightServerUrl ?? getenv('PEST_BROWSER_PLAYWRIGHT_URL') ?: null;
     }
 
     /**

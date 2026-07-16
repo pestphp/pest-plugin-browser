@@ -106,6 +106,17 @@ final readonly class Configuration
     }
 
     /**
+     * Sets the URL of an already-running Playwright server (e.g. http://192.168.1.100:9999).
+     * When set, the plugin connects to this server instead of starting a local one.
+     */
+    public function withPlaywrightServer(?string $serverUrl): self
+    {
+        Playwright::setPlaywrightServerUrl($serverUrl);
+
+        return $this;
+    }
+
+    /**
      * Enables debug mode for assertions.
      */
     public function debug(): self
