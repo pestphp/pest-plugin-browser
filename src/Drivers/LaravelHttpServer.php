@@ -273,6 +273,10 @@ final class LaravelHttpServer implements HttpServer
 
         $debug = config('app.debug');
 
+        // This server reuses one container across a test's requests, so scoped() bindings must be
+        // released per request (as FPM and Octane do) — otherwise they leak like singletons.
+        app()->forgetScopedInstances();
+
         try {
             config(['app.debug' => false]);
 
