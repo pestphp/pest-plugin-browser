@@ -36,3 +36,17 @@ it('includes server variables set in the test', function (): void {
     visit('/server-variables')
         ->assertSee('"test-server-key":"test value"');
 });
+
+it('flushes scoped container bindings between requests', function (): void {
+    // A scoped() binding is released only by Application::forgetScopedInstances(). Since this
+    // server reuses one container across a test's requests, it must flush per request — otherwise
+    // the instance resolved in the first request leaks into the second (and would behave like a
+    // singleton), unlike FPM or Octane. Each request renders the resolved object's id; they differ.
+    app()->scoped('scoped-probe', fn (): object => new stdClass);
+    Route::get('/scoped-probe', fn (): string => spl_object_hash(app('scoped-probe')));
+
+    $first = visit('/scoped-probe')->content();
+    $second = visit('/scoped-probe')->content();
+
+    expect($first)->not->toBe($second);
+});
