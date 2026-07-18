@@ -21,7 +21,7 @@ final class PlaywrightNpmServer implements PlaywrightServer
     /**
      * The playwright version required to run this server.
      */
-    private const string PLAYWRIGHT_VERSION = '1.59.1';
+    private const string PLAYWRIGHT_VERSION = '1.61.1';
 
     /**
      * The underlying process instance, if any.

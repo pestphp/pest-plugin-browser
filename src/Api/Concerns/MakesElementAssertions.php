@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Api\Concerns;
 
+use Deprecated;
 use Pest\Browser\Api\Webpage;
 use PHPUnit\Framework\ExpectationFailedException;
 
@@ -583,9 +584,8 @@ trait MakesElementAssertions
 
     /**
      * Wait for the given text to appear on the page.
-     *
-     * @deprecated Use `assertSee` instead.
      */
+    #[Deprecated(message: 'Use `assertSee` instead.')]
     public function waitForText(string|int|float $text): Webpage
     {
         $text = (string) $text;
@@ -601,12 +601,6 @@ trait MakesElementAssertions
      */
     private static function strContainsAny(string $haystack, array $needles): bool
     {
-        foreach ($needles as $needle) {
-            if (str_contains($haystack, $needle)) {
-                return true;
-            }
-        }
-
-        return false;
+        return array_any($needles, fn (string $needle): bool => str_contains($haystack, $needle));
     }
 }

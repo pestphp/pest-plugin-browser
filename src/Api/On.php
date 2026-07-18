@@ -34,12 +34,12 @@ final readonly class On
     public function __call(string $name, array $arguments): mixed
     {
         // @phpstan-ignore-next-line
-        return (new PendingAwaitablePage(
+        return new PendingAwaitablePage(
             $this->browserType,
             $this->device,
             $this->url,
             $this->options,
-        ))->{$name}(...$arguments);
+        )->{$name}(...$arguments);
     }
 
     /**

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Pest\Browser\Api\Concerns;
 
 use Pest\Browser\Api\Webpage;
+use Pest\Browser\Playwright\Playwright;
 
 /**
  * @mixin Webpage
@@ -72,9 +73,15 @@ trait InteractsWithElements
      */
     public function typeSlowly(string $field, string $value, int $delay = 100): self
     {
-        $options = ['delay' => $delay];
+        // Typing takes at least `delay` milliseconds per character, so the timeout
+        // is extended accordingly. Otherwise, the action may time out midway and
+        // get retried, appending the value to what was already typed.
+        $timeout = Playwright::timeout() + ($delay * mb_strlen($value));
 
-        $this->guessLocator($field)->type($value, $options);
+        Playwright::usingTimeout(
+            $timeout,
+            fn () => $this->guessLocator($field)->type($value, ['delay' => $delay]),
+        );
 
         return $this;
     }

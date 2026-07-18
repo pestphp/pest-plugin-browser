@@ -14,12 +14,12 @@
     "require": {
         "php": "^8.4",
         "ext-sockets": "*",
-        "amphp/amp": "^3.1.1",
-        "amphp/http-server": "^3.4.4",
+        "amphp/amp": "^3.1.2",
+        "amphp/http-server": "^3.4.6",
         "amphp/websocket-client": "^2.0.2",
         "pestphp/pest": "^5.0.0",
         "pestphp/pest-plugin": "^5.0.0",
-        "symfony/process": "^8.0.5"
+        "symfony/process": "^8.1.0"
     },
     "autoload": {
         "psr-4": {
@@ -38,9 +38,9 @@
         }
     },
     "require-dev": {
-        "livewire/livewire": "^3.7.15",
-        "nunomaduro/collision": "^8.9.3",
-        "orchestra/testbench": "^10.11.0",
+        "livewire/livewire": "^3.8.2",
+        "nunomaduro/collision": "^8.9.5",
+        "orchestra/testbench": "^11.1",
         "pestphp/pest-dev-tools": "^5.0.0",
         "pestphp/pest-plugin-laravel": "^5.0.0",
         "pestphp/pest-plugin-type-coverage": "^5.0.0"

@@ -100,6 +100,6 @@ final readonly class Webpage
      */
     private function guessLocator(string $selector, ?string $value = null): Locator
     {
-        return (new GuessLocator($this->page))->for($selector, $value);
+        return new GuessLocator($this->page)->for($selector, $value);
     }
 }

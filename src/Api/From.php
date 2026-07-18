@@ -136,12 +136,12 @@ final readonly class From
      */
     private function city(City $city): PendingAwaitablePage
     {
-        return (new PendingAwaitablePage(
+        return new PendingAwaitablePage(
             $this->browserType,
             $this->device,
             $this->url,
             $this->options,
-        ))
+        )
             ->geolocation($city->geolocation()['latitude'], $city->geolocation()['longitude'])
             ->withTimezone($city->timezone())
             ->withLocale($city->locale());

@@ -654,7 +654,23 @@ final readonly class Locator
      */
     public function setInputFiles(string $path): void
     {
-        $params = ['localPaths' => [$path]];
+        $contents = @file_get_contents($path);
+
+        if ($contents === false) {
+            throw new RuntimeException(sprintf('Unable to read file [%s].', $path));
+        }
+
+        // The Playwright server runs out of process, so it may not have access to
+        // the file system of the client. Because of that, we send the contents of
+        // the file instead of its path.
+        $mimeType = mime_content_type($path);
+
+        $params = ['payloads' => [[
+            'name' => basename($path),
+            'mimeType' => $mimeType === false ? 'application/octet-stream' : $mimeType,
+            'buffer' => base64_encode($contents),
+        ]]];
+
         $response = $this->sendMessage('setInputFiles', $params);
 
         $this->processVoidResponse($response);

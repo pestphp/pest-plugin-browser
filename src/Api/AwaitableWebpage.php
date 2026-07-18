@@ -28,6 +28,8 @@ final readonly class AwaitableWebpage
         private array $nonAwaitableMethods = [
             'assertScreenshotMatches',
             'assertNoAccessibilityIssues',
+            // Retrying this action would append the value to what was already typed.
+            'typeSlowly',
         ],
     ) {
         //
@@ -60,7 +62,7 @@ final readonly class AwaitableWebpage
 
             try {
                 $browserException = BrowserExpectationFailedException::from($this->page, $e);
-            } catch (Throwable) { // @phpstan-ignore-line
+            } catch (Throwable) {
                 throw $e;
             }
 

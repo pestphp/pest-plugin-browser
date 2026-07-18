@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Playwright;
 
+use Deprecated;
 use Generator;
 use Pest\Browser\Execution;
 use Pest\Browser\Support\ImageDiffView;
@@ -113,9 +114,8 @@ final class Page
 
     /**
      * Finds an element matching the specified selector.
-     *
-     * @deprecated Use locator($selector)->elementHandle() instead for Element compatibility, or use locator($selector) for Locator-first approach
      */
+    #[Deprecated(message: 'Use locator($selector)->elementHandle() instead for Element compatibility, or use locator($selector) for Locator-first approach')]
     public function querySelector(string $selector): ?Element
     {
         return $this->locator($selector)->elementHandle();
