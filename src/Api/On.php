@@ -22,6 +22,7 @@ final readonly class On
         private Device $device,
         private string $url,
         private array $options,
+        private readonly array $routes,
     ) {
         //
     }
@@ -39,6 +40,7 @@ final readonly class On
             $this->device,
             $this->url,
             $this->options,
+            $this->routes,
         ))->{$name}(...$arguments);
     }
 
@@ -52,6 +54,7 @@ final readonly class On
             Device::DESKTOP,
             $this->url,
             $this->options,
+            $this->routes,
         );
     }
 
@@ -65,6 +68,7 @@ final readonly class On
             Device::MOBILE,
             $this->url,
             $this->options,
+            $this->routes,
         );
     }
 
@@ -78,6 +82,7 @@ final readonly class On
             Device::MACBOOK_16,
             $this->url,
             $this->options,
+            $this->routes,
         );
     }
 
@@ -91,6 +96,7 @@ final readonly class On
             Device::MACBOOK_14,
             $this->url,
             $this->options,
+            $this->routes,
         );
     }
 
@@ -104,6 +110,7 @@ final readonly class On
             Device::MACBOOK_AIR,
             $this->url,
             $this->options,
+            $this->routes,
         );
     }
 
@@ -117,6 +124,7 @@ final readonly class On
             Device::IPHONE_15_PRO,
             $this->url,
             $this->options,
+            $this->routes,
         );
     }
 
@@ -130,6 +138,7 @@ final readonly class On
             Device::IPHONE_15,
             $this->url,
             $this->options,
+            $this->routes,
         );
     }
 
@@ -143,6 +152,7 @@ final readonly class On
             Device::IPHONE_14_PRO,
             $this->url,
             $this->options,
+            $this->routes,
         );
     }
 
@@ -156,6 +166,7 @@ final readonly class On
             Device::IPHONE_SE,
             $this->url,
             $this->options,
+            $this->routes,
         );
     }
 
@@ -169,6 +180,7 @@ final readonly class On
             Device::IPAD_PRO,
             $this->url,
             $this->options,
+            $this->routes,
         );
     }
 
@@ -182,6 +194,7 @@ final readonly class On
             Device::IPAD_MINI,
             $this->url,
             $this->options,
+            $this->routes,
         );
     }
 
@@ -195,6 +208,7 @@ final readonly class On
             Device::PIXEL_8,
             $this->url,
             $this->options,
+            $this->routes,
         );
     }
 
@@ -208,6 +222,7 @@ final readonly class On
             Device::PIXEL_7,
             $this->url,
             $this->options,
+            $this->routes,
         );
     }
 
@@ -221,6 +236,7 @@ final readonly class On
             Device::PIXEL_6A,
             $this->url,
             $this->options,
+            $this->routes,
         );
     }
 
@@ -234,6 +250,7 @@ final readonly class On
             Device::GALAXY_S24_ULTRA,
             $this->url,
             $this->options,
+            $this->routes,
         );
     }
 
@@ -247,6 +264,7 @@ final readonly class On
             Device::GALAXY_S23,
             $this->url,
             $this->options,
+            $this->routes,
         );
     }
 
@@ -260,6 +278,7 @@ final readonly class On
             Device::GALAXY_S22,
             $this->url,
             $this->options,
+            $this->routes,
         );
     }
 
@@ -273,6 +292,7 @@ final readonly class On
             Device::GALAXY_NOTE_20,
             $this->url,
             $this->options,
+            $this->routes,
         );
     }
 
@@ -286,6 +306,7 @@ final readonly class On
             Device::GALAXY_TAB_S8,
             $this->url,
             $this->options,
+            $this->routes,
         );
     }
 
@@ -299,6 +320,7 @@ final readonly class On
             Device::SURFACE_PRO_9,
             $this->url,
             $this->options,
+            $this->routes,
         );
     }
 
@@ -312,6 +334,7 @@ final readonly class On
             Device::SURFACE_LAPTOP_5,
             $this->url,
             $this->options,
+            $this->routes,
         );
     }
 
@@ -325,6 +348,7 @@ final readonly class On
             Device::ONEPLUS_11,
             $this->url,
             $this->options,
+            $this->routes,
         );
     }
 
@@ -337,7 +361,8 @@ final readonly class On
             $this->browserType,
             Device::XIAOMI_13,
             $this->url,
-            $this->options
+            $this->options,
+            $this->routes,
         );
     }
 
@@ -351,6 +376,7 @@ final readonly class On
             Device::HUAWEI_P50,
             $this->url,
             $this->options,
+            $this->routes,
         );
     }
 }
