@@ -7,6 +7,7 @@ namespace Pest\Browser\Drivers;
 use Amp\ByteStream\ReadableResourceStream;
 use Amp\Http\Cookie\RequestCookie;
 use Amp\Http\Server\DefaultErrorHandler;
+use Amp\Http\Server\Driver\DefaultHttpDriverFactory;
 use Amp\Http\Server\HttpServer as AmpHttpServer;
 use Amp\Http\Server\HttpServerStatus;
 use Amp\Http\Server\Request as AmpRequest;
@@ -70,7 +71,7 @@ final class LaravelHttpServer implements HttpServer
     }
 
     /**
-     * Rewrite the given URL to match the server's host and port.
+     * Rewrite the given URL to match the server's canonical host and port.
      */
     public function rewrite(string $url): string
     {
@@ -85,7 +86,7 @@ final class LaravelHttpServer implements HttpServer
         $path = $parts['path'] ?? '/';
         parse_str($parts['query'] ?? '', $queryParameters);
 
-        return (string) Uri::of($this->url())
+        return (string) Uri::of($this->canonicalUrl())
             ->withPath($path)
             ->withQuery($queryParameters);
     }
@@ -99,7 +100,16 @@ final class LaravelHttpServer implements HttpServer
             return;
         }
 
-        $this->socket = $server = SocketHttpServer::createForDirectAccess(new NullLogger());
+        // Increase the body size limit beyond Amp's 128-KiB
+        // default to prevent deadlocks when reading large
+        // JSON payloads in POST, PUT, and PATCH requests.
+        $this->socket = $server = SocketHttpServer::createForDirectAccess(
+            logger: $logger = new NullLogger(),
+            httpDriverFactory: new DefaultHttpDriverFactory(
+                logger: $logger,
+                bodySizeLimit: 64 * 1024 * 1024,
+            ),
+        );
 
         $server->expose("{$this->host}:{$this->port}");
         $server->start(
@@ -148,10 +158,6 @@ final class LaravelHttpServer implements HttpServer
     {
         $this->start();
 
-        $url = $this->url();
-
-        config(['app.url' => $url]);
-
         config(['cors.paths' => ['*']]);
 
         if (app()->bound('url')) {
@@ -160,10 +166,41 @@ final class LaravelHttpServer implements HttpServer
             assert($urlGenerator instanceof UrlGenerator);
 
             $this->setOriginalAssetUrl($urlGenerator->asset(''));
+            $urlGenerator->forceScheme('http');
+        }
 
+        $this->syncCanonicalUrl();
+    }
+
+    /**
+     * Re-sync Laravel's `app.url` and the URL generator's origin to the canonical URL, so that `route()`,
+     * `asset()`, and `config('app.url')` stay consistent with the host the browser is navigating to.
+     */
+    public function syncCanonicalUrl(): void
+    {
+        if (! $this->socket instanceof AmpHttpServer) {
+            return;
+        }
+
+        // Guard against being called when the Laravel container is not (yet) bootstrapped,
+        // e.g. from a Pest `beforeAll` hook, or between test files in a parallel worker
+        // after the previous test's app has been torn down.
+        if (! app()->bound('config')) {
+            return;
+        }
+
+        $url = $this->canonicalUrl();
+
+        config(['app.url' => $url]);
+
+        if (app()->bound('url')) {
+            $urlGenerator = app('url');
+
+            assert($urlGenerator instanceof UrlGenerator);
+
+            $urlGenerator->setRequest(Request::create($url));
             $urlGenerator->useOrigin($url);
             $urlGenerator->useAssetOrigin($url);
-            $urlGenerator->forceScheme('http');
         }
     }
 
@@ -194,7 +231,7 @@ final class LaravelHttpServer implements HttpServer
     }
 
     /**
-     * Get the public path for the given path.
+     * Get the URL of the bound socket (always 127.0.0.1:<port>).
      */
     private function url(): string
     {
@@ -203,6 +240,28 @@ final class LaravelHttpServer implements HttpServer
         }
 
         return sprintf('http://%s:%d', $this->host, $this->port);
+    }
+
+    /**
+     * Get the canonical host the user expects URLs to use.
+     *
+     * Defaults to the bound IP unless the test configured a host with `withHost(...)`.
+     */
+    private function canonicalHost(): string
+    {
+        return Playwright::host() ?? $this->host;
+    }
+
+    /**
+     * Get the canonical base URL used for generated links and request URIs.
+     */
+    private function canonicalUrl(): string
+    {
+        if (! $this->socket instanceof AmpHttpServer) {
+            throw new ServerNotFoundException('The HTTP server is not running.');
+        }
+
+        return sprintf('http://%s:%d', $this->canonicalHost(), $this->port);
     }
 
     /**
@@ -224,11 +283,17 @@ final class LaravelHttpServer implements HttpServer
             Execution::instance()->tick();
         }
 
+        // Re-sync per request as a safety net — if the configured host changes
+        // mid-test, the URL generator and config should reflect it before the
+        // app handles the request.
+        $this->syncCanonicalUrl();
+        $canonicalUrl = $this->canonicalUrl();
+
         $uri = $request->getUri();
         $path = in_array($uri->getPath(), ['', '0'], true) ? '/' : $uri->getPath();
         $query = $uri->getQuery() ?? ''; // @phpstan-ignore-line
         $fullPath = $path.($query !== '' ? '?'.$query : '');
-        $absoluteUrl = mb_rtrim($this->url(), '/').$fullPath;
+        $absoluteUrl = mb_rtrim($canonicalUrl, '/').$fullPath;
 
         $filepath = public_path($path);
         if (file_exists($filepath) && ! is_dir($filepath)) {
@@ -261,15 +326,13 @@ final class LaravelHttpServer implements HttpServer
 
         $symfonyRequest->headers->add($request->getHeaders());
 
-        // Set the Host header to match the configured host for subdomain routing
-        $configuredHost = Playwright::host();
-        if ($configuredHost !== null) {
-            $hostHeader = sprintf('%s:%d', $configuredHost, $this->port);
-            $symfonyRequest->headers->set('Host', $hostHeader);
-            // Also set SERVER_NAME for Laravel routing
-            $symfonyRequest->server->set('SERVER_NAME', $configuredHost);
-            $symfonyRequest->server->set('HTTP_HOST', $hostHeader);
-        }
+        // Ensure the framework sees the canonical host (e.g. for subdomain routing)
+        // even when the browser arrived via a different network host (e.g. 127.0.0.1).
+        $canonicalHost = $this->canonicalHost();
+        $hostHeader = sprintf('%s:%d', $canonicalHost, $this->port);
+        $symfonyRequest->headers->set('Host', $hostHeader);
+        $symfonyRequest->server->set('SERVER_NAME', $canonicalHost);
+        $symfonyRequest->server->set('HTTP_HOST', $hostHeader);
 
         $debug = config('app.debug');
 
