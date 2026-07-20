@@ -198,6 +198,7 @@ final class LaravelHttpServer implements HttpServer
 
             assert($urlGenerator instanceof UrlGenerator);
 
+            $urlGenerator->setRequest(Request::create($url));
             $urlGenerator->useOrigin($url);
             $urlGenerator->useAssetOrigin($url);
         }
