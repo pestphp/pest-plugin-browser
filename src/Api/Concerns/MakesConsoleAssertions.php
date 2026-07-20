@@ -20,7 +20,7 @@ trait MakesConsoleAssertions
     /**
      * Asserts there are no console logs or JavaScript errors on the page.
      */
-    public function assertNoSmoke(): Webpage
+    public function assertNoSmoke(): self
     {
         $this->assertNoConsoleLogs();
         $this->assertNoJavaScriptErrors();
@@ -31,7 +31,7 @@ trait MakesConsoleAssertions
     /**
      * Asserts there are no broken images on the page.
      */
-    public function assertNoBrokenImages(): Webpage
+    public function assertNoBrokenImages(): self
     {
         $this->page->waitForLoadState('load');
 
@@ -50,7 +50,7 @@ trait MakesConsoleAssertions
     /**
      * Asserts there are no missing images on the page.
      */
-    public function assertNoMissingImages(): Webpage
+    public function assertNoMissingImages(): self
     {
         return $this->assertNoBrokenImages();
     }
@@ -58,7 +58,7 @@ trait MakesConsoleAssertions
     /**
      * Asserts there are no console logs on the page.
      */
-    public function assertNoConsoleLogs(): Webpage
+    public function assertNoConsoleLogs(): self
     {
         $consoleLogs = $this->page->consoleLogs();
 
@@ -75,7 +75,7 @@ trait MakesConsoleAssertions
     /**
      * Asserts there are no JavaScript errors on the page.
      */
-    public function assertNoJavaScriptErrors(): Webpage
+    public function assertNoJavaScriptErrors(): self
     {
         $javaScriptErrors = $this->page->javaScriptErrors();
 
@@ -92,7 +92,7 @@ trait MakesConsoleAssertions
     /**
      * Asserts the accessibility of the page.
      */
-    public function assertNoAccessibilityIssues(int $level = 1): Webpage
+    public function assertNoAccessibilityIssues(int $level = 1): self
     {
         $this->page->waitForLoadState('networkidle');
         $this->page->waitForFunction('document.readyState === "complete"');

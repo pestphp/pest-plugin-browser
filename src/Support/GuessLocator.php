@@ -18,6 +18,7 @@ final readonly class GuessLocator
      */
     public function __construct(
         private Page $page,
+        private ?string $scope = null,
     ) {
         //
     }
@@ -32,16 +33,18 @@ final readonly class GuessLocator
                 $selector .= sprintf('[value=%s]', Selector::escapeForAttributeSelectorOrRegex($value, true));
             }
 
-            return $this->page->locator($selector);
+            return $this->applyScopeToLocator($this->page->locator($selector));
         }
 
         if (Selector::isDataTest($selector)) {
             $id = Selector::escapeForAttributeSelectorOrRegex(str_replace('@', '', $selector), true);
 
-            return $this->page->unstrict(
-                fn (): Locator => $this->page->locator(
-                    "[data-testid=$id], [data-test=$id]",
-                ),
+            return $this->applyScopeToLocator(
+                $this->page->unstrict(
+                    fn (): Locator => $this->page->locator(
+                        "[data-testid=$id], [data-test=$id]",
+                    ),
+                )
             );
         }
 
@@ -52,8 +55,10 @@ final readonly class GuessLocator
                 $formattedSelector .= sprintf('[value=%s]', Selector::escapeForAttributeSelectorOrRegex($value, true));
             }
 
-            $locator = $this->page->unstrict(
-                fn (): Locator => $this->page->locator($formattedSelector),
+            $locator = $this->applyScopeToLocator(
+                $this->page->unstrict(
+                    fn (): Locator => $this->page->locator($formattedSelector),
+                )
             );
 
             if ($locator->count() > 0) {
@@ -67,8 +72,24 @@ final readonly class GuessLocator
             );
         }
 
-        return $this->page->unstrict(
-            fn (): Locator => $this->page->getByText($selector, true),
+        return $this->applyScopeToLocator(
+            $this->page->unstrict(
+                fn (): Locator => $this->page->getByText($selector, true),
+            )
         );
+    }
+
+    /**
+     * Applies scope to a locator if scope is defined.
+     */
+    private function applyScopeToLocator(Locator $locator): Locator
+    {
+        if ($this->scope === null) {
+            return $locator;
+        }
+
+        $scopedParent = $this->page->locator($this->scope);
+
+        return $scopedParent->locator($locator->selector());
     }
 }
