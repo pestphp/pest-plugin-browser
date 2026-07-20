@@ -6,6 +6,7 @@ namespace Pest\Browser\Playwright;
 
 use Generator;
 use Pest\Browser\Playwright\Concerns\InteractsWithPlaywright;
+use Pest\Browser\Support\FilePayload;
 use Pest\Browser\Support\Selector;
 use RuntimeException;
 
@@ -651,10 +652,13 @@ final readonly class Locator
 
     /**
      * Set input files for a file input element.
+     *
+     * The file is sent by value rather than by path, as Playwright 1.61.0
+     * and above reject `localPaths` for websocket clients.
      */
     public function setInputFiles(string $path): void
     {
-        $params = ['localPaths' => [$path]];
+        $params = ['payloads' => [FilePayload::fromPath($path)->toArray()]];
         $response = $this->sendMessage('setInputFiles', $params);
 
         $this->processVoidResponse($response);
