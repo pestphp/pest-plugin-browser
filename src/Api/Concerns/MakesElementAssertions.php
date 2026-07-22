@@ -13,6 +13,50 @@ use PHPUnit\Framework\ExpectationFailedException;
 trait MakesElementAssertions
 {
     /**
+     * Assert that the given element is focused.
+     */
+    public function assertFocused(string $selector): Webpage
+    {
+        $selector = $this->guessLocator($selector)->selector();
+
+        $escapedSelector = json_encode($selector);
+
+        $isFocused = $this->page->evaluate("
+            () => {
+                const element = document.querySelector({$escapedSelector});
+                const focusedElement = document.activeElement;
+                return element && focusedElement ? element === focusedElement : false;
+            }
+        ");
+
+        expect($isFocused)->toBeTrue("Expected element [{$selector}] to be focused on the page [{$this->initialUrl}], but it was not.");
+
+        return $this;
+    }
+
+    /**
+     * Assert that the given element is not focused.
+     */
+    public function assertNotFocused(string $selector): Webpage
+    {
+        $selector = $this->guessLocator($selector)->selector();
+
+        $escapedSelector = json_encode($selector);
+
+        $isNotFocused = $this->page->evaluate("
+            () => {
+                const element = document.querySelector({$escapedSelector});
+                const focusedElement = document.activeElement;
+                return element && focusedElement ? element !== focusedElement : true;
+            }
+        ");
+
+        expect($isNotFocused)->toBeTrue("Expected element [{$selector}] not to be focused on the page [{$this->initialUrl}], but it was.");
+
+        return $this;
+    }
+
+    /**
      * Assert that the page title matches the given text.
      */
     public function assertTitle(string|int|float $title): Webpage
