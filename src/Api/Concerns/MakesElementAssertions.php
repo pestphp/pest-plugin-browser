@@ -95,9 +95,19 @@ trait MakesElementAssertions
 
         $locator = $this->guessLocator($selector);
 
-        expect($locator->getByText($text)->isVisible())->toBeTrue("Expected to see text [{$text}] within element [{$selector}] on the page initially with the url [{$this->initialUrl}], but it was not found or not visible.");
+        $entries = $this->page->unstrict(fn () => $locator->getByText($text));
 
-        return $this;
+        foreach ($entries->all() as $entry) {
+            if ($entry->isVisible()) {
+                expect(true)->toBeTrue();
+
+                return $this;
+            }
+        }
+
+        throw new ExpectationFailedException(
+            "Expected to see text [{$text}] within element [{$selector}] on the page initially with the url [{$this->initialUrl}], but it was not found or not visible.",
+        );
     }
 
     /**
@@ -478,7 +488,7 @@ trait MakesElementAssertions
     {
         $value = (string) $value;
 
-        return $this->assertAttribute($selector, 'aria-'.$attribute, $value);
+        return $this->assertAttribute($selector, 'aria-' . $attribute, $value);
     }
 
     /**
@@ -488,7 +498,7 @@ trait MakesElementAssertions
     {
         $value = (string) $value;
 
-        return $this->assertAttribute($selector, 'data-'.$attribute, $value);
+        return $this->assertAttribute($selector, 'data-' . $attribute, $value);
     }
 
     /**
