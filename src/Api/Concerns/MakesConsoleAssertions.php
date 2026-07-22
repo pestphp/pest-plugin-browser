@@ -73,6 +73,29 @@ trait MakesConsoleAssertions
     }
 
     /**
+     * Asserts there are no console messages at given levels on the page.
+     *
+     * @param  array<int, string>|string  $levels  Console message level(s) to check for (debug, info, error, warning).
+     */
+    public function assertNoConsoleMessages(array|string $levels = ['info', 'error', 'warning']): Webpage
+    {
+        if (is_string($levels)) {
+            $levels = [$levels];
+        }
+        $messages = $this->page->consoleMessages($levels);
+
+        expect($messages)->toBeEmpty(sprintf(
+            'Expected no console messages at levels [%s] on the page initially with the url [%s], but found %d: %s',
+            implode(', ', $levels),
+            $this->initialUrl,
+            count($messages),
+            implode(', ', array_map(fn (array $log): string => "{$log['level']}: {$log['message']}", $messages)),
+        ));
+
+        return $this;
+    }
+
+    /**
      * Asserts there are no JavaScript errors on the page.
      */
     public function assertNoJavaScriptErrors(): Webpage

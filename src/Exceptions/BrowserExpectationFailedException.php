@@ -39,6 +39,15 @@ final class BrowserExpectationFailedException
             ));
         }
 
+        $consoleMessages = $page->consoleMessages();
+
+        if (count($consoleMessages) > 0) {
+            $message .= "\n\nThe following console messages were found:\n".implode("\n", array_map(
+                fn (array $error): string => $error['level'] . ': ' . $error['message'],
+                $consoleMessages,
+            ));
+        }
+
         $javaScriptErrors = $page->javaScriptErrors();
 
         if (count($javaScriptErrors) > 0) {

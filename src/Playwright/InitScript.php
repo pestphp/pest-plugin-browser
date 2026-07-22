@@ -23,7 +23,8 @@ final class InitScript
 
             window.__pestBrowser = {
                 jsErrors: [],
-                consoleLogs: []
+                consoleLogs: [],
+                consoleMessages: []
             };
 
             const originalConsoleLog = console.log;
@@ -34,6 +35,19 @@ final class InitScript
                 });
                 originalConsoleLog.apply(console, args);
             };
+
+            ['debug', 'error', 'info', 'warning'].forEach(function (level) {
+                const methodName = level === 'warning' ? 'warn' : level;
+                const originalConsoleMethod = console[methodName];
+                console[methodName] = function(...args) {
+                    window.__pestBrowser.consoleMessages.push({
+                        timestamp: new Date().getTime(),
+                        level: level,
+                        message: args.map(arg => String(arg)).join(' ')
+                    });
+                    originalConsoleMethod.apply(console, args);
+                };
+            });
 
             window.addEventListener('error', (e) => {
                 window.__pestBrowser.jsErrors.push({
