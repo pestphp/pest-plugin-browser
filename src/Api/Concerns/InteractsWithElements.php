@@ -12,11 +12,11 @@ use Pest\Browser\Api\Webpage;
 trait InteractsWithElements
 {
     /**
-     * Click the link with the given text.
+     * Click an element using smart selector detection (id, class, data-test, submit, text, etc).
      */
-    public function click(string $text): self
+    public function click(string $selector): self
     {
-        $this->guessLocator($text)->click();
+        $this->guessLocator($selector)->click();
 
         return $this;
     }
