@@ -60,6 +60,11 @@ final class Playwright
     private static ?string $host = null;
 
     /**
+     * The default locale.
+     */
+    private static string $defaultLocale = 'en-US';
+
+    /**
      * Get a browser factory for the given browser type.
      */
     public static function browser(BrowserType $browserType): BrowserFactory
@@ -153,6 +158,22 @@ final class Playwright
     public static function host(): ?string
     {
         return self::$host;
+    }
+
+    /**
+     * Set the default locale.
+     */
+    public static function setDefaultLocale(string $locale): void
+    {
+        self::$defaultLocale = $locale;
+    }
+
+    /**
+     * Get the default locale.
+     */
+    public static function defaultLocale(): string
+    {
+        return self::$defaultLocale;
     }
 
     /**

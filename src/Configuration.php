@@ -106,6 +106,16 @@ final readonly class Configuration
     }
 
     /**
+     * Sets the default locale for the browser context.
+     */
+    public function withLocale(string $locale): self
+    {
+        Playwright::setDefaultLocale($locale);
+
+        return $this;
+    }
+
+    /**
      * Enables debug mode for assertions.
      */
     public function debug(): self
