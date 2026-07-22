@@ -19,6 +19,20 @@ trait InteractsWithScreen
     }
 
     /**
+     * Performs a series of screenshots at different browser sizes to emulate different devices.
+     *
+     * @param  array<string, array{width: int, height: int}>  $responsiveScreenSizes
+     */
+    public function responsiveScreenshots(?string $filename = null, array $responsiveScreenSizes = []): self
+    {
+        $filename = $this->getFilename($filename);
+
+        $this->page->responsiveScreenshots($filename, $responsiveScreenSizes);
+
+        return $this;
+    }
+
+    /**
      * Performs a screenshot of an element and saves it to the given path.
      */
     public function screenshotElement(string $selector, ?string $filename = null): self
