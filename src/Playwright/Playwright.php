@@ -192,12 +192,12 @@ final class Playwright
      */
     public static function reset(): void
     {
-        Request::reset();
-        Route::reset();
-
         foreach (self::$browserTypes as $browserType) {
             $browserType->reset();
         }
+
+        Request::reset();
+        Route::reset();
     }
 
     /**

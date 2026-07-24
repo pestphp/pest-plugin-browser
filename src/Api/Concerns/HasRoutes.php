@@ -19,6 +19,7 @@ trait HasRoutes
         string $pattern,
         callable $handler,
     ): void {
+        Route::registerRouteHandler($pattern, $handler);
         $this->page->context()->setNetworkInterceptionPatterns([
             'patterns' => [
                 [
@@ -26,6 +27,5 @@ trait HasRoutes
                 ],
             ],
         ]);
-        Route::registerRouteHandler($pattern, $handler);
     }
 }
