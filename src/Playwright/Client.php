@@ -101,6 +101,22 @@ final class Client
                 throw new ExpectationFailedException($message);
             }
 
+            if (
+                isset($response['method']) && $response['method'] === '__create__'
+                && isset($response['params']['type'])
+            ) {
+                if ($response['params']['type'] === 'Request') {
+                    Request::register(Request::fromArray($response['params']));
+
+                    continue;
+                }
+                if ($response['params']['type'] === 'Route') {
+                    Route::handle(Route::fromArray($response['params']));
+
+                    continue;
+                }
+            }
+
             yield $response;
 
             if (
@@ -110,6 +126,30 @@ final class Client
                 break;
             }
         }
+    }
+
+    /**
+     * Executes a method on the Playwright instance without expecting a response.
+     * Useful for nested execute calls which should not consume the outer loops messages.
+     *
+     * @param  array<string, mixed>  $params
+     * @param  array<string, mixed>  $meta
+     */
+    public function executeWithoutResponse(string $guid, string $method, array $params = [], array $meta = []): void
+    {
+        assert($this->websocketConnection instanceof WebsocketConnection, 'WebSocket client is not connected.');
+
+        $requestId = uniqid();
+
+        $requestJson = (string) json_encode([
+            'id' => $requestId,
+            'guid' => $guid,
+            'method' => $method,
+            'params' => ['timeout' => $this->timeout, ...$params],
+            'metadata' => $meta,
+        ]);
+
+        $this->websocketConnection->sendText($requestJson);
     }
 
     /**

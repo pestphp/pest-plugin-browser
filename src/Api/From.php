@@ -23,6 +23,7 @@ final readonly class From
         private Device $device,
         private string $url,
         private array $options,
+        private array $routes,
     ) {
         //
     }
@@ -141,6 +142,7 @@ final readonly class From
             $this->device,
             $this->url,
             $this->options,
+            $this->routes,
         ))
             ->geolocation($city->geolocation()['latitude'], $city->geolocation()['longitude'])
             ->withTimezone($city->timezone())

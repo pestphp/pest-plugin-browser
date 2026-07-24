@@ -31,6 +31,7 @@ final class PendingAwaitablePage
         private readonly Device $device,
         private readonly string $url,
         private readonly array $options,
+        private readonly array $routes = [],
     ) {
         //
     }
@@ -49,6 +50,23 @@ final class PendingAwaitablePage
     }
 
     /**
+     * @param  callable(Route): bool  $handler
+     */
+    public function withRoute(string $pattern, callable $handler): self
+    {
+        return new self(
+            $this->browserType,
+            $this->device,
+            $this->url,
+            $this->options,
+            [
+                ...$this->routes,
+                $pattern => $handler,
+            ],
+        );
+    }
+
+    /**
      * Sets the color scheme to dark mode.
      */
     public function inDarkMode(): self
@@ -56,7 +74,7 @@ final class PendingAwaitablePage
         return new self($this->browserType, $this->device, $this->url, [
             'colorScheme' => ColorScheme::DARK->value,
             ...$this->options,
-        ]);
+        ], $this->routes);
     }
 
     /**
@@ -67,7 +85,7 @@ final class PendingAwaitablePage
         return new self($this->browserType, $this->device, $this->url, [
             'colorScheme' => ColorScheme::LIGHT->value,
             ...$this->options,
-        ]);
+        ], $this->routes);
     }
 
     /**
@@ -80,6 +98,7 @@ final class PendingAwaitablePage
             $this->device,
             $this->url,
             $this->options,
+            $this->routes,
         );
     }
 
@@ -93,6 +112,7 @@ final class PendingAwaitablePage
             $this->device,
             $this->url,
             $this->options,
+            $this->routes,
         );
     }
 
@@ -104,7 +124,7 @@ final class PendingAwaitablePage
         return new self($this->browserType, $this->device, $this->url, [
             'locale' => $locale,
             ...$this->options,
-        ]);
+        ], $this->routes);
     }
 
     /**
@@ -115,7 +135,7 @@ final class PendingAwaitablePage
         return new self($this->browserType, $this->device, $this->url, [
             'userAgent' => $userAgent,
             ...$this->options,
-        ]);
+        ], $this->routes);
     }
 
     /**
@@ -126,7 +146,7 @@ final class PendingAwaitablePage
         return new self($this->browserType, $this->device, $this->url, [
             'host' => $host,
             ...$this->options,
-        ]);
+        ], $this->routes);
     }
 
     /**
@@ -137,7 +157,7 @@ final class PendingAwaitablePage
         return new self($this->browserType, $this->device, $this->url, [
             'timezoneId' => $timezone,
             ...$this->options,
-        ]);
+        ], $this->routes);
     }
 
     /**
@@ -151,7 +171,7 @@ final class PendingAwaitablePage
             'geolocation' => $geolocation,
             'permissions' => ['geolocation'],
             ...$this->options,
-        ]);
+        ], $this->routes);
     }
 
     /**
@@ -184,10 +204,18 @@ final class PendingAwaitablePage
 
         $url = ComputeUrl::from($this->url);
 
-        return new AwaitableWebpage(
-            $context->newPage()->goto($url, $options),
+        $awaitableWebPage = new AwaitableWebpage(
+            $context->newPage(),
             $url,
         );
+
+        foreach ($this->routes as $pattern => $handler) {
+            $awaitableWebPage->route($pattern, $handler);
+        }
+
+        $awaitableWebPage->page()->goto($url, $options);
+
+        return $awaitableWebPage;
     }
 
     /**

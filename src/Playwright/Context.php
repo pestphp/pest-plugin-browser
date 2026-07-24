@@ -61,6 +61,16 @@ final class Context
     }
 
     /**
+     * Sets network interception patterns
+     */
+    public function setNetworkInterceptionPatterns(array $options): void
+    {
+        $response = $this->sendMessage('setNetworkInterceptionPatterns', $options);
+
+        $this->processVoidResponse($response);
+    }
+
+    /**
      * Closes the browser context.
      */
     public function close(): void

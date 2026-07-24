@@ -195,6 +195,9 @@ final class Playwright
         foreach (self::$browserTypes as $browserType) {
             $browserType->reset();
         }
+
+        Request::reset();
+        Route::reset();
     }
 
     /**
