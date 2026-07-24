@@ -22,7 +22,7 @@ final readonly class On
         private Device $device,
         private string $url,
         private array $options,
-        private readonly array $routes,
+        private array $routes,
     ) {
         //
     }

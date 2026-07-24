@@ -63,7 +63,7 @@ final class Context
     /**
      * Sets network interception patterns
      */
-    public function setNetworkInterceptionPatterns($options): void
+    public function setNetworkInterceptionPatterns(array $options): void
     {
         $response = $this->sendMessage('setNetworkInterceptionPatterns', $options);
 
