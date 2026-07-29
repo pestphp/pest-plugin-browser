@@ -9,6 +9,7 @@ use Pest\Browser\Plugin;
 use Pest\Browser\ServerManager;
 use Pest\Browser\Support\BrowserTestIdentifier;
 use Pest\Browser\Support\Screenshot;
+use Pest\Browser\Support\Source;
 use Pest\Contracts\TestCaseMethodFilter;
 use Pest\Factories\TestCaseMethodFactory;
 use Pest\Plugins\Only;
@@ -59,6 +60,7 @@ final readonly class UsesBrowserTestCaseMethodFilter implements TestCaseMethodFi
 
             ServerManager::instance()->playwright()->start();
             Screenshot::cleanup();
+            Source::cleanup();
         }
 
         return true;

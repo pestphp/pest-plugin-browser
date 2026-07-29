@@ -35,6 +35,11 @@ final class Playwright
     private static bool $shouldDiffOnScreenshotAssertions = false;
 
     /**
+     * Whether to save the page source on failed assertions.
+     */
+    private static bool $shouldSaveSourceOnFailedAssertions = false;
+
+    /**
      * The default browser type.
      */
     private static BrowserType $defaultBrowserType = BrowserType::CHROME;
@@ -185,6 +190,22 @@ final class Playwright
     public static function shouldDebugAssertions(): bool
     {
         return self::$shouldDebugAssertions;
+    }
+
+    /**
+     * Set whether to save the page source on failed assertions.
+     */
+    public static function setShouldSaveSourceOnFailedAssertions(): void
+    {
+        self::$shouldSaveSourceOnFailedAssertions = true;
+    }
+
+    /**
+     * Whether to save the page source on failed assertions.
+     */
+    public static function shouldSaveSourceOnFailedAssertions(): bool
+    {
+        return self::$shouldSaveSourceOnFailedAssertions;
     }
 
     /**

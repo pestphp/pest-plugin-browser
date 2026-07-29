@@ -7,6 +7,7 @@ namespace Pest\Browser\Exceptions;
 use Pest\Browser\Playwright\Page;
 use Pest\Browser\Playwright\Playwright;
 use Pest\Browser\ServerManager;
+use Pest\Browser\Support\Source;
 use PHPUnit\Framework\ExpectationFailedException;
 use Throwable;
 
@@ -27,6 +28,16 @@ final class BrowserExpectationFailedException
 
             if ($filename !== null) {
                 $message .= " A screenshot of the page has been saved to [Tests/Browser/Screenshots/$filename].";
+            }
+
+            if (Playwright::shouldSaveSourceOnFailedAssertions()) {
+                try {
+                    $filename = Source::save($page->content());
+
+                    $message .= " The source of the page has been saved to [Tests/Browser/Source/$filename].";
+                } catch (Throwable) {
+                    // saving the source must never mask the original failure...
+                }
             }
         }
 

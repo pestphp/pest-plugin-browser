@@ -124,4 +124,14 @@ final readonly class Configuration
 
         return $this;
     }
+
+    /**
+     * Saves the page source when a browser assertion fails.
+     */
+    public function source(): self
+    {
+        Playwright::setShouldSaveSourceOnFailedAssertions();
+
+        return $this;
+    }
 }
