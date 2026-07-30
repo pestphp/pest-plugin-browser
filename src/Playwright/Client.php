@@ -4,10 +4,15 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Playwright;
 
+use Amp\Cancellation;
+use Amp\CancelledException;
+use Amp\TimeoutCancellation;
 use Amp\Websocket\Client\WebsocketConnection;
+use Amp\Websocket\WebsocketMessage;
 use Generator;
 use Pest\Browser\Exceptions\PlaywrightOutdatedException;
 use PHPUnit\Framework\ExpectationFailedException;
+use RuntimeException;
 
 use function Amp\Websocket\Client\connect;
 
@@ -30,6 +35,11 @@ final class Client
      * Default timeout for requests in milliseconds.
      */
     private int $timeout = 5_000;
+
+    /**
+     * Seconds allowed on top of the timeout before a request is given up on.
+     */
+    private float $requestGraceSeconds = 30.0;
 
     /**
      * Returns the current client instance.
@@ -88,8 +98,24 @@ final class Client
 
         $this->websocketConnection->sendText($requestJson);
 
+        $allowance = ($this->timeout / 1000) + $this->requestGraceSeconds;
+        $deadline = microtime(true) + $allowance;
+
+        // The cancellation bounds a request the server never answers, and the deadline
+        // bounds one that only ever receives unrelated messages. Neither covers both.
+        $cancellation = new TimeoutCancellation($allowance);
+
         while (true) {
-            $responseJson = $this->fetch($this->websocketConnection);
+            if (microtime(true) > $deadline) {
+                throw $this->unanswered($method, $allowance);
+            }
+
+            try {
+                $responseJson = $this->fetch($this->websocketConnection, $cancellation);
+            } catch (CancelledException) {
+                throw $this->unanswered($method, $allowance);
+            }
+
             /** @var array{id: string|null, params: array{add: string|null}, error: array{error: array{message: string|null}}} $response */
             $response = json_decode($responseJson, true);
 
@@ -131,10 +157,30 @@ final class Client
     }
 
     /**
+     * Builds the failure raised when a request is never answered.
+     */
+    private function unanswered(string $method, float $allowance): RuntimeException
+    {
+        return new RuntimeException(sprintf(
+            'The Playwright server did not answer [%s] within %.1f seconds.',
+            $method,
+            $allowance,
+        ));
+    }
+
+    /**
      * Fetches the response from the Playwright server.
      */
-    private function fetch(WebsocketConnection $client): string
+    private function fetch(WebsocketConnection $client, Cancellation $cancellation): string
     {
-        return (string) $client->receive()?->read();
+        $message = $client->receive($cancellation);
+
+        // Without this, the null returned once the connection closes casts to an empty
+        // string and leaves the caller waiting on a response that can never arrive.
+        if (! $message instanceof WebsocketMessage) {
+            throw new RuntimeException('The Playwright server closed the connection unexpectedly.');
+        }
+
+        return (string) $message->read($cancellation);
     }
 }
