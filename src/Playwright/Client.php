@@ -81,7 +81,9 @@ final class Client
             'guid' => $guid,
             'method' => $method,
             'params' => ['timeout' => $this->timeout, ...$params],
-            'metadata' => $meta,
+            // Playwright reads the timeout from the metadata since 1.62.0, where an
+            // absent value means no timeout at all. Older servers read it from params.
+            'metadata' => ['timeout' => $this->timeout, ...$meta],
         ]);
 
         $this->websocketConnection->sendText($requestJson);
