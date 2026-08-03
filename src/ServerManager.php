@@ -62,9 +62,15 @@ final class ServerManager
         $port = Port::find();
         $host = Playwright::host() ?? self::DEFAULT_HOST;
 
+        $command = '.'.DIRECTORY_SEPARATOR.'node_modules'.DIRECTORY_SEPARATOR.'.bin'.DIRECTORY_SEPARATOR.'playwright run-server --host %s --port %d --mode launchServer';
+
+        if (Playwright::executablePath() !== null) {
+            $command .= ' --unsafe';
+        }
+
         $this->playwright ??= PlaywrightNpmServer::create(
             PackageJsonDirectory::find(),
-            '.'.DIRECTORY_SEPARATOR.'node_modules'.DIRECTORY_SEPARATOR.'.bin'.DIRECTORY_SEPARATOR.'playwright run-server --host %s --port %d --mode launchServer',
+            $command,
             $host,
             $port,
             'Listening on',

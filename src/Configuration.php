@@ -46,6 +46,27 @@ final readonly class Configuration
     }
 
     /**
+     * Uses a system-installed branded browser via its Playwright channel,
+     * e.g. "chrome", "chrome-beta", "msedge" or "msedge-dev".
+     */
+    public function usingChannel(string $channel): self
+    {
+        Playwright::setChannel($channel);
+
+        return $this;
+    }
+
+    /**
+     * Uses the browser executable at the given path, e.g. "/usr/bin/firefox".
+     */
+    public function usingExecutablePath(string $executablePath): self
+    {
+        Playwright::setExecutablePath($executablePath);
+
+        return $this;
+    }
+
+    /**
      * Sets the theme to light mode.
      */
     public function inLightMode(): self
