@@ -171,7 +171,6 @@ final class Execution
         $reflector = new ReflectionClass(Assert::class);
         $property = $reflector->getProperty('count');
 
-        // @phpstan-ignore-next-line
-        $property->setValue(Assert::class, $originalCount);
+        $property->setValue(null, $originalCount);
     }
 }
