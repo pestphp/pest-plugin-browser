@@ -76,12 +76,17 @@ final class Client
 
         $requestId = uniqid();
 
+        $timeout = is_numeric($params['timeout'] ?? null) ? (int) $params['timeout'] : $this->timeout;
+
         $requestJson = (string) json_encode([
             'id' => $requestId,
             'guid' => $guid,
             'method' => $method,
-            'params' => ['timeout' => $this->timeout, ...$params],
-            'metadata' => $meta,
+            // Playwright reads the action timeout from the metadata since 1.62, and read it
+            // from the params before that. Both are validated with a schema that silently
+            // drops unknown keys, so sending it twice also covers an older install.
+            'params' => ['timeout' => $timeout, ...$params],
+            'metadata' => ['timeout' => $timeout, ...$meta],
         ]);
 
         $this->websocketConnection->sendText($requestJson);
