@@ -121,19 +121,17 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
         if ($this->hasArgument('--slow-mo', $arguments)) {
             $index = array_search('--slow-mo', $arguments, true);
 
-            // `--slow-mo` may be passed bare (uses a sensible default) or with an
-            // explicit millisecond value: `--slow-mo 250`.
-            if ($index !== false && isset($arguments[$index + 1]) && is_numeric($arguments[$index + 1])) {
-                Playwright::setSlowMo((int) $arguments[$index + 1]);
+            $value = $index === false
+                ? $this->popArgumentValue('--slow-mo', $arguments)
+                : $arguments[$index + 1] ?? null;
 
-                unset($arguments[$index], $arguments[$index + 1]);
-            } else {
-                Playwright::setSlowMo(Playwright::DEFAULT_SLOW_MO);
-
-                unset($arguments[$index]);
+            if ($index !== false && is_numeric($value)) {
+                unset($arguments[$index + 1]);
             }
 
-            $arguments = array_values($arguments);
+            Playwright::setSlowMo(is_numeric($value) ? (int) $value : Playwright::DEFAULT_SLOW_MO);
+
+            $arguments = $this->popArgument('--slow-mo', $arguments);
         }
 
         $this->validateNonSupportedParallelFeatures();
@@ -199,6 +197,12 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
         if (Playwright::shouldDebugAssertions()) {
             throw new OptionNotSupportedInParallelException(
                 'Debugging assertions is not supported when running tests in parallel.',
+            );
+        }
+
+        if (Playwright::slowMo() > 0) {
+            throw new OptionNotSupportedInParallelException(
+                'Running tests in slow motion is not supported when running tests in parallel.',
             );
         }
     }
