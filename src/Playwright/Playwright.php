@@ -13,6 +13,12 @@ use Pest\Browser\Enums\ColorScheme;
 final class Playwright
 {
     /**
+     * The default slow-motion delay, in milliseconds, used when `--slow-mo` is
+     * passed without a value.
+     */
+    public const int DEFAULT_SLOW_MO = 500;
+
+    /**
      * Browser types
      *
      * @var array<string, BrowserFactory>
@@ -48,6 +54,11 @@ final class Playwright
      * The timeout in milliseconds.
      */
     private static int $timeout = 5_000;
+
+    /**
+     * The delay, in milliseconds, applied before each browser action.
+     */
+    private static int $slowMo = 0;
 
     /**
      * The default userAgent.
@@ -129,6 +140,22 @@ final class Playwright
     public static function timeout(): int
     {
         return self::$timeout;
+    }
+
+    /**
+     * Set the delay, in milliseconds, applied before each browser action.
+     */
+    public static function setSlowMo(int $milliseconds): void
+    {
+        self::$slowMo = $milliseconds;
+    }
+
+    /**
+     * Get the delay, in milliseconds, applied before each browser action.
+     */
+    public static function slowMo(): int
+    {
+        return self::$slowMo;
     }
 
     /**

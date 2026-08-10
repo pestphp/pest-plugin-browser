@@ -118,6 +118,24 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
             $arguments = array_values($arguments);
         }
 
+        if ($this->hasArgument('--slow-mo', $arguments)) {
+            $index = array_search('--slow-mo', $arguments, true);
+
+            // `--slow-mo` may be passed bare (uses a sensible default) or with an
+            // explicit millisecond value: `--slow-mo 250`.
+            if ($index !== false && isset($arguments[$index + 1]) && is_numeric($arguments[$index + 1])) {
+                Playwright::setSlowMo((int) $arguments[$index + 1]);
+
+                unset($arguments[$index], $arguments[$index + 1]);
+            } else {
+                Playwright::setSlowMo(Playwright::DEFAULT_SLOW_MO);
+
+                unset($arguments[$index]);
+            }
+
+            $arguments = array_values($arguments);
+        }
+
         $this->validateNonSupportedParallelFeatures();
 
         return $arguments;
