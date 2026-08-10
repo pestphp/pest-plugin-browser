@@ -317,33 +317,30 @@ final class LaravelHttpServer implements HttpServer
      */
     private function asset(string $filepath): Response
     {
-        $file = fopen($filepath, 'r');
-
-        if ($file === false) {
-            return new Response(404);
-        }
-
         $mimeTypes = new MimeTypes();
         $contentType = $mimeTypes->getMimeTypes(pathinfo($filepath, PATHINFO_EXTENSION));
 
         $contentType = $contentType[0] ?? 'application/octet-stream';
 
         if (str_ends_with($filepath, '.js')) {
-            $temporaryStream = fopen('php://temp', 'r+');
-            assert($temporaryStream !== false, 'Failed to open temporary stream.');
+            $content = file_get_contents($filepath);
 
-            // @phpstan-ignore-next-line
-            $temporaryContent = fread($file, (int) filesize($filepath));
+            if ($content === false) {
+                return new Response(404);
+            }
 
-            assert($temporaryContent !== false, 'Failed to open temporary stream.');
+            // The content is sent as a string instead of a stream because a
+            // "php://temp" stream is set to non-blocking mode, which makes
+            // the event loop deliver the first 8192 bytes chunk only.
+            return new Response(200, [
+                'Content-Type' => $contentType,
+            ], $this->rewriteAssetUrl($content));
+        }
 
-            $content = $this->rewriteAssetUrl($temporaryContent);
+        $file = fopen($filepath, 'r');
 
-            fwrite($temporaryStream, $content);
-
-            rewind($temporaryStream);
-
-            $file = $temporaryStream;
+        if ($file === false) {
+            return new Response(404);
         }
 
         return new Response(200, [
