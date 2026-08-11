@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Pest\Browser;
 
+use InvalidArgumentException;
 use Pest\Browser\Enums\BrowserType;
 use Pest\Browser\Enums\ColorScheme;
 use Pest\Browser\Playwright\Playwright;
@@ -41,6 +42,43 @@ final readonly class Configuration
     public function inSafari(): self
     {
         Playwright::setDefaultBrowserType(BrowserType::SAFARI);
+
+        return $this;
+    }
+
+    /**
+     * Uses a system-installed branded Chromium browser via its Playwright channel.
+     *
+     * Supported channels are "chrome", "chrome-beta", "chrome-dev",
+     * "chrome-canary", "msedge", "msedge-beta", "msedge-dev" and
+     * "msedge-canary".
+     *
+     * Channels are only supported for Chromium-family browsers (Google Chrome
+     * and Microsoft Edge) and cannot be combined with usingExecutablePath().
+     */
+    public function usingChannel(string $channel): self
+    {
+        $this->ensureExecutablePathIsNotSet();
+
+        Playwright::setChannel($channel);
+
+        return $this;
+    }
+
+    /**
+     * Uses the browser executable at the given path.
+     *
+     * Note that Playwright only supports Chromium-family binaries via an
+     * executable path. Branded Firefox and Safari builds are not supported,
+     * since Playwright relies on patched builds of those browsers.
+     *
+     * This cannot be combined with usingChannel().
+     */
+    public function usingExecutablePath(string $executablePath): self
+    {
+        $this->ensureChannelIsNotSet();
+
+        Playwright::setExecutablePath($executablePath);
 
         return $this;
     }
@@ -123,5 +161,25 @@ final readonly class Configuration
         Playwright::setShouldDiffOnScreenshotAssertions();
 
         return $this;
+    }
+
+    /**
+     * Ensures that no channel has been configured yet.
+     */
+    private function ensureChannelIsNotSet(): void
+    {
+        if (Playwright::channel() !== null) {
+            throw new InvalidArgumentException('The "channel" and "executablePath" options are mutually exclusive.');
+        }
+    }
+
+    /**
+     * Ensures that no executable path has been configured yet.
+     */
+    private function ensureExecutablePathIsNotSet(): void
+    {
+        if (Playwright::executablePath() !== null) {
+            throw new InvalidArgumentException('The "channel" and "executablePath" options are mutually exclusive.');
+        }
     }
 }

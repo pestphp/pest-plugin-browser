@@ -44,6 +44,35 @@ final class Client
     }
 
     /**
+     * The launch options forwarded to the Playwright server.
+     *
+     * @return array<string, mixed>
+     */
+    public static function launchOptions(): array
+    {
+        return array_filter([
+            'headless' => Playwright::isHeadless(),
+            'ignoreHTTPSErrors' => true,
+            'bypassCSP' => true,
+            'channel' => Playwright::channel(),
+            'executablePath' => Playwright::executablePath(),
+        ], fn (mixed $value): bool => $value !== null);
+    }
+
+    /**
+     * Builds the connection query string for the given browser and launch options.
+     *
+     * @param  array<string, mixed>  $launchOptions
+     */
+    public static function connectionQuery(string $browser, array $launchOptions): string
+    {
+        return http_build_query([
+            'browser' => $browser,
+            'launch-options' => json_encode($launchOptions),
+        ]);
+    }
+
+    /**
      * Connects to the Playwright server.
      */
     public function connectTo(string $url): void
@@ -51,14 +80,8 @@ final class Client
         if (! $this->websocketConnection instanceof WebsocketConnection) {
             $browser = Playwright::defaultBrowserType()->toPlaywrightName();
 
-            $launchOptions = json_encode([
-                'headless' => Playwright::isHeadless(),
-                'ignoreHTTPSErrors' => true,
-                'bypassCSP' => true,
-            ]);
-
             $this->websocketConnection = connect(
-                "ws://$url?browser=$browser&launch-options=$launchOptions",
+                'ws://'.$url.'?'.self::connectionQuery($browser, self::launchOptions()),
             );
         }
     }

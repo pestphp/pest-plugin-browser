@@ -60,6 +60,16 @@ final class Playwright
     private static ?string $host = null;
 
     /**
+     * The browser channel to use, e.g. "chrome" or "msedge".
+     */
+    private static ?string $channel = null;
+
+    /**
+     * The path to a browser executable to use.
+     */
+    private static ?string $executablePath = null;
+
+    /**
      * Get a browser factory for the given browser type.
      */
     public static function browser(BrowserType $browserType): BrowserFactory
@@ -153,6 +163,38 @@ final class Playwright
     public static function host(): ?string
     {
         return self::$host;
+    }
+
+    /**
+     * Set the browser channel to use.
+     */
+    public static function setChannel(?string $channel): void
+    {
+        self::$channel = $channel;
+    }
+
+    /**
+     * Get the browser channel to use.
+     */
+    public static function channel(): ?string
+    {
+        return self::$channel;
+    }
+
+    /**
+     * Set the browser executable path to use.
+     */
+    public static function setExecutablePath(?string $executablePath): void
+    {
+        self::$executablePath = $executablePath;
+    }
+
+    /**
+     * Get the browser executable path to use.
+     */
+    public static function executablePath(): ?string
+    {
+        return self::$executablePath;
     }
 
     /**
