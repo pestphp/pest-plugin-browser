@@ -86,6 +86,16 @@ final readonly class Configuration
     }
 
     /**
+     * Slows down each browser action by the given number of milliseconds.
+     */
+    public function slowMo(int $milliseconds = Playwright::DEFAULT_SLOW_MO): self
+    {
+        Playwright::setSlowMo($milliseconds);
+
+        return $this;
+    }
+
+    /**
      * Sets the browsers userAgent.
      */
     public function userAgent(string $userAgent): self

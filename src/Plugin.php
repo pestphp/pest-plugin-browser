@@ -118,6 +118,22 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
             $arguments = array_values($arguments);
         }
 
+        if ($this->hasArgument('--slow-mo', $arguments)) {
+            $index = array_search('--slow-mo', $arguments, true);
+
+            $value = $index === false
+                ? $this->popArgumentValue('--slow-mo', $arguments)
+                : $arguments[$index + 1] ?? null;
+
+            if ($index !== false && is_numeric($value)) {
+                unset($arguments[$index + 1]);
+            }
+
+            Playwright::setSlowMo(is_numeric($value) ? (int) $value : Playwright::DEFAULT_SLOW_MO);
+
+            $arguments = $this->popArgument('--slow-mo', $arguments);
+        }
+
         $this->validateNonSupportedParallelFeatures();
 
         return $arguments;
@@ -181,6 +197,12 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
         if (Playwright::shouldDebugAssertions()) {
             throw new OptionNotSupportedInParallelException(
                 'Debugging assertions is not supported when running tests in parallel.',
+            );
+        }
+
+        if (Playwright::slowMo() > 0) {
+            throw new OptionNotSupportedInParallelException(
+                'Running tests in slow motion is not supported when running tests in parallel.',
             );
         }
     }
