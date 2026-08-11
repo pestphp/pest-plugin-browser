@@ -14,6 +14,23 @@ use RuntimeException;
 final readonly class AlreadyStartedPlaywrightServer implements PlaywrightServer
 {
     /**
+     * The environment variable carrying the identifier of the current test run.
+     *
+     * The main process mints it and exports it before spawning any worker, so
+     * every worker resolves the same state file as the run that spawned it,
+     * while a second, unrelated test run in the same project resolves its own.
+     */
+    private const string RUN_ID_ENV = 'PEST_BROWSER_RUN_ID';
+
+    /**
+     * How long a state file may go untouched before it is considered abandoned.
+     *
+     * A run killed by a stall watchdog or a CI timeout never reaches its
+     * teardown, so its file would otherwise stay behind forever.
+     */
+    private const int STALE_AFTER_SECONDS = 21600;
+
+    /**
      * Creates a new already started playwright server instance.
      */
     public function __construct(
@@ -32,14 +49,14 @@ final readonly class AlreadyStartedPlaywrightServer implements PlaywrightServer
     {
         $path = self::path();
 
-        $path = file_get_contents($path);
+        $contents = file_get_contents($path);
 
-        if ($path === false) {
+        if ($contents === false) {
             throw new RuntimeException('Could not read Playwright server data from file.');
         }
 
         // @phpstan-ignore-next-line
-        ['host' => $host, 'port' => $port] = json_decode($path, true, 512, JSON_THROW_ON_ERROR);
+        ['host' => $host, 'port' => $port] = json_decode($contents, true, 512, JSON_THROW_ON_ERROR);
 
         assert(is_string($host) && is_numeric($port), 'Invalid Playwright server data persisted.');
 
@@ -61,16 +78,36 @@ final readonly class AlreadyStartedPlaywrightServer implements PlaywrightServer
         ];
 
         $path = self::path();
+        $directory = dirname($path);
 
-        if (! file_exists(dirname($path))) {
-            mkdir(dirname($path), 0755, true);
+        // Two runs may reach this at the same moment, so the result is checked
+        // rather than the precondition -- "is_dir" before "mkdir" is a race.
+        if (! is_dir($directory) && ! mkdir($directory, 0755, true) && ! is_dir($directory)) {
+            throw new RuntimeException(sprintf('Could not create the directory [%s].', $directory));
         }
 
-        file_put_contents($path, json_encode($data, JSON_THROW_ON_ERROR));
+        self::removeAbandonedStateFiles($path);
+
+        // Written through a temporary file and moved into place, so a worker
+        // can never observe a half-written description.
+        $temporary = $path.'.'.getmypid().'.tmp';
+
+        if (file_put_contents($temporary, json_encode($data, JSON_THROW_ON_ERROR)) === false) {
+            throw new RuntimeException(sprintf('Could not write Playwright server data to [%s].', $temporary));
+        }
+
+        if (! rename($temporary, $path)) {
+            @unlink($temporary);
+
+            throw new RuntimeException(sprintf('Could not move Playwright server data into [%s].', $path));
+        }
     }
 
     /**
      * Marks the Playwright server a stopped by removing the persisted state file.
+     *
+     * The file is scoped to the current run, so a test run that finishes while
+     * another one is still going can only ever remove its own description.
      */
     public static function markAsStopped(): void
     {
@@ -114,10 +151,75 @@ final readonly class AlreadyStartedPlaywrightServer implements PlaywrightServer
     }
 
     /**
-     * Returns the state file of the Playwright server.
+     * Returns the state file of the Playwright server for the current run.
      */
     private static function path(): string
     {
-        return dirname(__DIR__, 3).'/.temp/playwright-server.json';
+        return dirname(__DIR__, 3).'/.temp/playwright-server-'.self::runId().'.json';
+    }
+
+    /**
+     * Returns the identifier of the current test run, minting one if this is
+     * the process that starts the server.
+     */
+    private static function runId(): string
+    {
+        foreach ([$_SERVER, $_ENV] as $source) {
+            if (isset($source[self::RUN_ID_ENV]) && is_string($source[self::RUN_ID_ENV]) && $source[self::RUN_ID_ENV] !== '') {
+                return self::sanitize($source[self::RUN_ID_ENV]);
+            }
+        }
+
+        $inherited = getenv(self::RUN_ID_ENV);
+
+        if (is_string($inherited) && $inherited !== '') {
+            return self::sanitize($inherited);
+        }
+
+        // The random suffix matters as much as the process id: a killed run can
+        // leave a state file behind, and process ids are reused.
+        $runId = getmypid().'-'.bin2hex(random_bytes(4));
+
+        putenv(self::RUN_ID_ENV.'='.$runId);
+        $_SERVER[self::RUN_ID_ENV] = $runId;
+        $_ENV[self::RUN_ID_ENV] = $runId;
+
+        return $runId;
+    }
+
+    /**
+     * Reduces the run identifier to characters that are safe in a file name.
+     *
+     * It arrives from the environment, so it is not assumed to be well-formed.
+     */
+    private static function sanitize(string $runId): string
+    {
+        $sanitized = preg_replace('/[^A-Za-z0-9_-]/', '', $runId);
+
+        return match (true) {
+            $sanitized === null, $sanitized === '' => 'default',
+            default => mb_substr($sanitized, 0, 64),
+        };
+    }
+
+    /**
+     * Removes state files left behind by runs that never reached their teardown.
+     */
+    private static function removeAbandonedStateFiles(string $currentPath): void
+    {
+        // A missing directory answers with an empty array rather than false.
+        $files = glob(dirname($currentPath).'/playwright-server-*.json');
+
+        foreach ($files === false ? [] : $files as $file) {
+            if ($file === $currentPath) {
+                continue;
+            }
+
+            $modifiedAt = @filemtime($file);
+
+            if ($modifiedAt !== false && (time() - $modifiedAt) > self::STALE_AFTER_SECONDS) {
+                @unlink($file);
+            }
+        }
     }
 }
