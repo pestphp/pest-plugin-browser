@@ -24,6 +24,7 @@ use Pest\Browser\Exceptions\ServerNotFoundException;
 use Pest\Browser\Execution;
 use Pest\Browser\GlobalState;
 use Pest\Browser\Playwright\Playwright;
+use Pest\Browser\Support\MultipartFormDataParser;
 use Psr\Log\NullLogger;
 use Symfony\Component\Mime\MimeTypes;
 use Throwable;
@@ -241,8 +242,12 @@ final class LaravelHttpServer implements HttpServer
         $method = mb_strtoupper($request->getMethod());
         $rawBody = (string) $request->getBody();
         $parameters = [];
-        if ($method !== 'GET' && str_starts_with(mb_strtolower($contentType), 'application/x-www-form-urlencoded')) {
+        $files = [];
+        $normalizedContentType = mb_strtolower($contentType);
+        if ($method !== 'GET' && str_starts_with($normalizedContentType, 'application/x-www-form-urlencoded')) {
             parse_str($rawBody, $parameters);
+        } elseif ($method !== 'GET' && str_starts_with($normalizedContentType, 'multipart/form-data')) {
+            [$parameters, $files] = MultipartFormDataParser::parse($rawBody, $contentType);
         }
         $cookies = array_map(fn (RequestCookie $cookie): string => urldecode($cookie->getValue()), $request->getCookies());
         $cookies = array_merge($cookies, test()->prepareCookiesForRequest()); // @phpstan-ignore-line
@@ -254,7 +259,7 @@ final class LaravelHttpServer implements HttpServer
             $method,
             $parameters,
             $cookies,
-            [], // @TODO files...
+            $files,
             $serverVariables,
             $rawBody
         );
