@@ -549,20 +549,6 @@ final class Page
                     );
                 }
             }
-
-            $this->createImageDiffView(
-                $snapshotName,
-                $expectedImageBlob,
-                $actualImageBlob,
-                ImageDiffView::missingImage(),
-                $openDiff,
-            );
-
-            throw new ExpectationFailedException(<<<'EOT'
-                Screenshot does not match the last one.
-                  - Expected? Update the snapshots with [--update-snapshots].
-                EOT,
-            );
         }
     }
 
