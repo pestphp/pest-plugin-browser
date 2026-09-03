@@ -305,9 +305,22 @@ final class LaravelHttpServer implements HttpServer
             }
         }
 
+        $headers = $response->headers->all();
+
+        if ($response->isInformational() || $response->isEmpty()) {
+            // Symfony strips Content-Length from 1xx/204/304 responses and amphp
+            // chunk-encodes any HTTP/1.1 response without one, which appends a
+            // terminating chunk to a response that must not carry a body. Browsers
+            // consider such a response complete after the headers, so the stray
+            // bytes corrupt the next request on the same keep-alive connection.
+            unset($headers['transfer-encoding']);
+            $headers['content-length'] = ['0'];
+            $content = '';
+        }
+
         return new Response(
             $response->getStatusCode(),
-            $response->headers->all(), // @phpstan-ignore-line
+            $headers, // @phpstan-ignore-line
             $content,
         );
     }
