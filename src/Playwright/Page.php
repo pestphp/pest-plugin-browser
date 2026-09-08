@@ -236,11 +236,12 @@ final class Page
      */
     public function waitForLoadState(string $state = 'load'): self
     {
-        Client::instance()->execute(
+        $response = Client::instance()->execute(
             $this->guid,
             'waitForLoadState',
             ['state' => $state]
         );
+        $this->processVoidResponse($response);
 
         return $this;
     }
@@ -257,11 +258,12 @@ final class Page
             'arg' => JavaScriptSerializer::serializeArgument($arg),
         ];
 
-        Client::instance()->execute(
+        $response = Client::instance()->execute(
             $this->guid,
             'waitForFunction',
             $params
         );
+        $this->processVoidResponse($response);
 
         return $this;
     }
@@ -271,11 +273,12 @@ final class Page
      */
     public function waitForURL(string $url): self
     {
-        Client::instance()->execute(
+        $response = Client::instance()->execute(
             $this->guid,
             'waitForURL',
             ['url' => $url]
         );
+        $this->processVoidResponse($response);
 
         return $this;
     }
