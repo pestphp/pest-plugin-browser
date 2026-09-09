@@ -43,6 +43,15 @@ final class InitScript
                     colno: e.colno
                 });
             });
+
+            window.addEventListener('unhandledrejection', (e) => {
+                window.__pestBrowser.jsErrors.push({
+                    message: e.reason instanceof Error ? e.reason.message : String(e.reason),
+                    filename: '',
+                    lineno: 0,
+                    colno: 0
+                });
+            });
             JS;
     }
 }
