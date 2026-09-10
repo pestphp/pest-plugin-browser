@@ -2,7 +2,12 @@
 
 declare(strict_types=1);
 
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use Illuminate\Foundation\Http\Events\RequestHandled;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Route;
 
 use function Pest\Laravel\withServerVariables;
 use function Pest\Laravel\withUnencryptedCookie;
@@ -56,4 +61,31 @@ it('includes server variables set in the test', function (): void {
     withServerVariables(['test-server-key' => 'test value']);
     visit('/server-variables')
         ->assertSee('"test-server-key":"test value"');
+});
+
+it('does not re-send a cookie queued in an earlier request', function (): void {
+    // AddQueuedCookiesToResponse attaches every cookie in the CookieJar singleton but never
+    // removes it. FPM drops the jar with the process and Octane flushes it per request; this
+    // server reuses one container for all requests of a test, so without a flush a cookie queued
+    // by the first request would be re-sent on every later response.
+    Route::get('/queue-cookie', function (): string {
+        Cookie::queue('queued-probe', 'first-request', 5);
+
+        return 'queued';
+    })->middleware(AddQueuedCookiesToResponse::class);
+    Route::get('/no-cookie', fn (): string => 'plain')->middleware(AddQueuedCookiesToResponse::class);
+
+    $queued = [];
+    Event::listen(RequestHandled::class, function (RequestHandled $event) use (&$queued): void {
+        foreach ($event->response->headers->getCookies() as $cookie) {
+            if ($cookie->getName() === 'queued-probe') {
+                $queued[] = $event->request->path();
+            }
+        }
+    });
+
+    visit('/queue-cookie')->assertSee('queued');
+    visit('/no-cookie')->assertSee('plain');
+
+    expect($queued)->toBe(['queue-cookie']);
 });
