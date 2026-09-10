@@ -274,10 +274,7 @@ final class LaravelHttpServer implements HttpServer
 
         $debug = config('app.debug');
 
-        // Cookies queued through the CookieJar singleton are attached to a response by the
-        // AddQueuedCookiesToResponse middleware but never removed from the jar. FPM discards the jar
-        // with the process and Octane flushes it per request; this server reuses one container for
-        // every request of a test, so a cookie queued once would be re-sent on every later response.
+        // The container is reused, so flush stale queued cookies (FPM/Octane start fresh).
         app()->make(CookieJar::class)->flushQueuedCookies();
 
         try {

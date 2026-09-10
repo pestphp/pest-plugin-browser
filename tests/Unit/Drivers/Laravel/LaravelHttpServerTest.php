@@ -64,10 +64,7 @@ it('includes server variables set in the test', function (): void {
 });
 
 it('does not re-send a cookie queued in an earlier request', function (): void {
-    // AddQueuedCookiesToResponse attaches every cookie in the CookieJar singleton but never
-    // removes it. FPM drops the jar with the process and Octane flushes it per request; this
-    // server reuses one container for all requests of a test, so without a flush a cookie queued
-    // by the first request would be re-sent on every later response.
+    // Without flush the second response would re-send the queued cookie.
     Route::get('/queue-cookie', function (): string {
         Cookie::queue('queued-probe', 'first-request', 5);
 
