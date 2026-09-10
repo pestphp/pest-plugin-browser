@@ -7,7 +7,6 @@ namespace Pest\Browser\Drivers;
 use Amp\ByteStream\ReadableResourceStream;
 use Amp\Http\Cookie\RequestCookie;
 use Amp\Http\Server\DefaultErrorHandler;
-use Amp\Http\Server\Driver\DefaultHttpDriverFactory;
 use Amp\Http\Server\HttpServer as AmpHttpServer;
 use Amp\Http\Server\HttpServerStatus;
 use Amp\Http\Server\Request as AmpRequest;
@@ -101,16 +100,7 @@ final class LaravelHttpServer implements HttpServer
             return;
         }
 
-        // Increase the body size limit beyond Amp's 128-KiB
-        // default to prevent deadlocks when reading large
-        // JSON payloads in POST, PUT, and PATCH requests.
-        $this->socket = $server = SocketHttpServer::createForDirectAccess(
-            logger: $logger = new NullLogger(),
-            httpDriverFactory: new DefaultHttpDriverFactory(
-                logger: $logger,
-                bodySizeLimit: 64 * 1024 * 1024,
-            ),
-        );
+        $this->socket = $server = SocketHttpServer::createForDirectAccess(new NullLogger());
 
         $server->expose("{$this->host}:{$this->port}");
         $server->start(
