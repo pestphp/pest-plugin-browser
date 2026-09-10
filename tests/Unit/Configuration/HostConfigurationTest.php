@@ -4,9 +4,14 @@ declare(strict_types=1);
 
 use Pest\Browser\Configuration;
 use Pest\Browser\Playwright\Playwright;
+use Pest\Browser\ServerManager;
 
 beforeEach(function (): void {
     // Reset Playwright state before each test
+    Playwright::setHost(null);
+});
+
+afterEach(function (): void {
     Playwright::setHost(null);
 });
 
@@ -63,4 +68,12 @@ it('handles various host formats', function (): void {
         Playwright::setHost($host);
         expect(Playwright::host())->toBe($host);
     }
+});
+
+it('does not create the http server when setting a host', function (): void {
+    $hadServer = ServerManager::instance()->hasHttp();
+
+    new Configuration()->withHost('tenant.localhost');
+
+    expect(ServerManager::instance()->hasHttp())->toBe($hadServer);
 });

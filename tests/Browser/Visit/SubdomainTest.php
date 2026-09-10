@@ -5,6 +5,10 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Route;
 use Pest\Browser\Playwright\Playwright;
 
+afterEach(function (): void {
+    pest()->browser()->withHost(null);
+});
+
 it('can visit non-subdomain routes with subdomain host browser testing', function (): void {
     Route::get('/app-test', fn (): string => '
         <html>

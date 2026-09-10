@@ -25,6 +25,7 @@ use Pest\Browser\Exceptions\ServerNotFoundException;
 use Pest\Browser\Execution;
 use Pest\Browser\GlobalState;
 use Pest\Browser\Playwright\Playwright;
+use Psr\Http\Message\UriInterface;
 use Psr\Log\NullLogger;
 use Symfony\Component\Mime\MimeTypes;
 use Throwable;
@@ -86,7 +87,7 @@ final class LaravelHttpServer implements HttpServer
         $path = $parts['path'] ?? '/';
         parse_str($parts['query'] ?? '', $queryParameters);
 
-        return (string) Uri::of($this->canonicalUrl())
+        return (string) Uri::of($this->url())
             ->withPath($path)
             ->withQuery($queryParameters);
     }
@@ -169,39 +170,7 @@ final class LaravelHttpServer implements HttpServer
             $urlGenerator->forceScheme('http');
         }
 
-        $this->syncCanonicalUrl();
-    }
-
-    /**
-     * Re-sync Laravel's `app.url` and the URL generator's origin to the canonical URL, so that `route()`,
-     * `asset()`, and `config('app.url')` stay consistent with the host the browser is navigating to.
-     */
-    public function syncCanonicalUrl(): void
-    {
-        if (! $this->socket instanceof AmpHttpServer) {
-            return;
-        }
-
-        // Guard against being called when the Laravel container is not (yet) bootstrapped,
-        // e.g. from a Pest `beforeAll` hook, or between test files in a parallel worker
-        // after the previous test's app has been torn down.
-        if (! app()->bound('config')) {
-            return;
-        }
-
-        $url = $this->canonicalUrl();
-
-        config(['app.url' => $url]);
-
-        if (app()->bound('url')) {
-            $urlGenerator = app('url');
-
-            assert($urlGenerator instanceof UrlGenerator);
-
-            $urlGenerator->setRequest(Request::create($url));
-            $urlGenerator->useOrigin($url);
-            $urlGenerator->useAssetOrigin($url);
-        }
+        $this->syncGeneratedUrls();
     }
 
     /**
@@ -231,7 +200,42 @@ final class LaravelHttpServer implements HttpServer
     }
 
     /**
-     * Get the URL of the bound socket (always 127.0.0.1:<port>).
+     * Point Laravel's `app.url` and the URL generator's origin at the given URL, so that `route()`,
+     * `asset()` and `config('app.url')` stay consistent with the host the browser is navigating to.
+     */
+    public function syncGeneratedUrls(?string $url = null): void
+    {
+        if (! $this->socket instanceof AmpHttpServer) {
+            return;
+        }
+
+        // Guard against being called when the Laravel container is not (yet) bootstrapped,
+        // e.g. from a Pest `beforeAll` hook, or between test files in a parallel worker
+        // after the previous test's app has been torn down.
+        if (! app()->bound('config')) {
+            return;
+        }
+
+        $url ??= $this->url();
+
+        config(['app.url' => $url]);
+
+        if (app()->bound('url')) {
+            $urlGenerator = app('url');
+
+            assert($urlGenerator instanceof UrlGenerator);
+
+            $urlGenerator->setRequest(Request::create($url));
+            $urlGenerator->useOrigin($url);
+            $urlGenerator->useAssetOrigin($url);
+        }
+    }
+
+    /**
+     * Get the base URL of the server.
+     *
+     * Uses the host configured with `withHost(...)` when set, so generated links
+     * match the host the browser navigates to, and falls back to the bound IP.
      */
     private function url(): string
     {
@@ -239,29 +243,19 @@ final class LaravelHttpServer implements HttpServer
             throw new ServerNotFoundException('The HTTP server is not running.');
         }
 
-        return sprintf('http://%s:%d', $this->host, $this->port);
+        return sprintf('http://%s:%d', Playwright::host() ?? $this->host, $this->port);
     }
 
     /**
-     * Get the canonical host the user expects URLs to use.
-     *
-     * Defaults to the bound IP unless the test configured a host with `withHost(...)`.
+     * Get the origin (scheme, host and port) the given request URI arrived on.
      */
-    private function canonicalHost(): string
+    private function originOf(UriInterface $uri): string
     {
-        return Playwright::host() ?? $this->host;
-    }
-
-    /**
-     * Get the canonical base URL used for generated links and request URIs.
-     */
-    private function canonicalUrl(): string
-    {
-        if (! $this->socket instanceof AmpHttpServer) {
-            throw new ServerNotFoundException('The HTTP server is not running.');
+        if ($uri->getHost() === '') {
+            return mb_rtrim($this->url(), '/');
         }
 
-        return sprintf('http://%s:%d', $this->canonicalHost(), $this->port);
+        return sprintf('http://%s:%d', $uri->getHost(), $uri->getPort() ?? $this->port);
     }
 
     /**
@@ -269,7 +263,10 @@ final class LaravelHttpServer implements HttpServer
      */
     private function setOriginalAssetUrl(string $url): void
     {
-        $this->originalAssetUrl = mb_rtrim($url, '/');
+        // Captured once, before any sync re-points the generator's asset origin at this
+        // server. Re-capturing later would record our own origin as the "original" and
+        // stop asset rewriting from matching anything.
+        $this->originalAssetUrl ??= mb_rtrim($url, '/');
     }
 
     /**
@@ -283,17 +280,21 @@ final class LaravelHttpServer implements HttpServer
             Execution::instance()->tick();
         }
 
-        // Re-sync per request as a safety net — if the configured host changes
-        // mid-test, the URL generator and config should reflect it before the
-        // app handles the request.
-        $this->syncCanonicalUrl();
-        $canonicalUrl = $this->canonicalUrl();
-
         $uri = $request->getUri();
         $path = in_array($uri->getPath(), ['', '0'], true) ? '/' : $uri->getPath();
         $query = $uri->getQuery() ?? ''; // @phpstan-ignore-line
         $fullPath = $path.($query !== '' ? '?'.$query : '');
-        $absoluteUrl = mb_rtrim($canonicalUrl, '/').$fullPath;
+
+        // The browser reaches us on the host the test asked for, so trust the
+        // request's own origin rather than the globally configured one. This
+        // keeps a per-visit `withHost(...)` intact for the page's later
+        // fetch/XHR requests, after the global host has been restored.
+        $origin = $this->originOf($uri);
+        $absoluteUrl = $origin.$fullPath;
+
+        // Keep `route()`, `asset()` and `config('app.url')` aligned with the
+        // origin the app is answering on for this request.
+        $this->syncGeneratedUrls($origin);
 
         $filepath = public_path($path);
         if (file_exists($filepath) && ! is_dir($filepath)) {
@@ -325,14 +326,6 @@ final class LaravelHttpServer implements HttpServer
         );
 
         $symfonyRequest->headers->add($request->getHeaders());
-
-        // Ensure the framework sees the canonical host (e.g. for subdomain routing)
-        // even when the browser arrived via a different network host (e.g. 127.0.0.1).
-        $canonicalHost = $this->canonicalHost();
-        $hostHeader = sprintf('%s:%d', $canonicalHost, $this->port);
-        $symfonyRequest->headers->set('Host', $hostHeader);
-        $symfonyRequest->server->set('SERVER_NAME', $canonicalHost);
-        $symfonyRequest->server->set('HTTP_HOST', $hostHeader);
 
         $debug = config('app.debug');
 

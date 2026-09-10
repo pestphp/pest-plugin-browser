@@ -103,10 +103,11 @@ final readonly class Configuration
     {
         Playwright::setHost($host);
 
-        $http = ServerManager::instance()->http();
+        // If the server is already running, re-point generated URLs at the new host straight away
+        $serverManager = ServerManager::instance();
 
-        if ($http instanceof LaravelHttpServer) {
-            $http->syncCanonicalUrl();
+        if ($serverManager->hasHttp() && ($http = $serverManager->http()) instanceof LaravelHttpServer) {
+            $http->syncGeneratedUrls();
         }
 
         return $this;
