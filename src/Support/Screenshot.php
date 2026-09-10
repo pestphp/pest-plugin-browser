@@ -42,10 +42,8 @@ final class Screenshot
     {
         $decodedBinary = (string) base64_decode($binary, true);
 
-        if ($filename === null) {
-            // @phpstan-ignore-next-line
-            $filename = str_replace('__pest_evaluable_', '', test()->name());
-        }
+        // @phpstan-ignore-next-line
+        $filename ??= str_replace('__pest_evaluable_', '', test()->name());
 
         if (is_dir(self::dir()) === false) {
             @mkdir(self::dir(), 0755, true);
