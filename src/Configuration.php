@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Pest\Browser;
 
+use Pest\Browser\Drivers\LaravelHttpServer;
 use Pest\Browser\Enums\BrowserType;
 use Pest\Browser\Enums\ColorScheme;
 use Pest\Browser\Playwright\Playwright;
@@ -101,6 +102,13 @@ final readonly class Configuration
     public function withHost(?string $host): self
     {
         Playwright::setHost($host);
+
+        // If the server is already running, re-point generated URLs at the new host straight away
+        $serverManager = ServerManager::instance();
+
+        if ($serverManager->hasHttp() && ($http = $serverManager->http()) instanceof LaravelHttpServer) {
+            $http->syncGeneratedUrls();
+        }
 
         return $this;
     }

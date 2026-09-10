@@ -24,6 +24,7 @@ use Pest\Browser\Exceptions\ServerNotFoundException;
 use Pest\Browser\Execution;
 use Pest\Browser\GlobalState;
 use Pest\Browser\Playwright\Playwright;
+use Psr\Http\Message\UriInterface;
 use Psr\Log\NullLogger;
 use Symfony\Component\Mime\MimeTypes;
 use Throwable;
@@ -70,7 +71,7 @@ final class LaravelHttpServer implements HttpServer
     }
 
     /**
-     * Rewrite the given URL to match the server's host and port.
+     * Rewrite the given URL to match the server's canonical host and port.
      */
     public function rewrite(string $url): string
     {
@@ -148,10 +149,6 @@ final class LaravelHttpServer implements HttpServer
     {
         $this->start();
 
-        $url = $this->url();
-
-        config(['app.url' => $url]);
-
         config(['cors.paths' => ['*']]);
 
         if (app()->bound('url')) {
@@ -160,11 +157,10 @@ final class LaravelHttpServer implements HttpServer
             assert($urlGenerator instanceof UrlGenerator);
 
             $this->setOriginalAssetUrl($urlGenerator->asset(''));
-
-            $urlGenerator->useOrigin($url);
-            $urlGenerator->useAssetOrigin($url);
             $urlGenerator->forceScheme('http');
         }
+
+        $this->syncGeneratedUrls();
     }
 
     /**
@@ -194,7 +190,42 @@ final class LaravelHttpServer implements HttpServer
     }
 
     /**
-     * Get the public path for the given path.
+     * Point Laravel's `app.url` and the URL generator's origin at the given URL, so that `route()`,
+     * `asset()` and `config('app.url')` stay consistent with the host the browser is navigating to.
+     */
+    public function syncGeneratedUrls(?string $url = null): void
+    {
+        if (! $this->socket instanceof AmpHttpServer) {
+            return;
+        }
+
+        // Guard against being called when the Laravel container is not (yet) bootstrapped,
+        // e.g. from a Pest `beforeAll` hook, or between test files in a parallel worker
+        // after the previous test's app has been torn down.
+        if (! app()->bound('config')) {
+            return;
+        }
+
+        $url ??= $this->url();
+
+        config(['app.url' => $url]);
+
+        if (app()->bound('url')) {
+            $urlGenerator = app('url');
+
+            assert($urlGenerator instanceof UrlGenerator);
+
+            $urlGenerator->setRequest(Request::create($url));
+            $urlGenerator->useOrigin($url);
+            $urlGenerator->useAssetOrigin($url);
+        }
+    }
+
+    /**
+     * Get the base URL of the server.
+     *
+     * Uses the host configured with `withHost(...)` when set, so generated links
+     * match the host the browser navigates to, and falls back to the bound IP.
      */
     private function url(): string
     {
@@ -202,7 +233,19 @@ final class LaravelHttpServer implements HttpServer
             throw new ServerNotFoundException('The HTTP server is not running.');
         }
 
-        return sprintf('http://%s:%d', $this->host, $this->port);
+        return sprintf('http://%s:%d', Playwright::host() ?? $this->host, $this->port);
+    }
+
+    /**
+     * Get the origin (scheme, host and port) the given request URI arrived on.
+     */
+    private function originOf(UriInterface $uri): string
+    {
+        if ($uri->getHost() === '') {
+            return mb_rtrim($this->url(), '/');
+        }
+
+        return sprintf('http://%s:%d', $uri->getHost(), $uri->getPort() ?? $this->port);
     }
 
     /**
@@ -210,7 +253,10 @@ final class LaravelHttpServer implements HttpServer
      */
     private function setOriginalAssetUrl(string $url): void
     {
-        $this->originalAssetUrl = mb_rtrim($url, '/');
+        // Captured once, before any sync re-points the generator's asset origin at this
+        // server. Re-capturing later would record our own origin as the "original" and
+        // stop asset rewriting from matching anything.
+        $this->originalAssetUrl ??= mb_rtrim($url, '/');
     }
 
     /**
@@ -228,7 +274,17 @@ final class LaravelHttpServer implements HttpServer
         $path = in_array($uri->getPath(), ['', '0'], true) ? '/' : $uri->getPath();
         $query = $uri->getQuery() ?? ''; // @phpstan-ignore-line
         $fullPath = $path.($query !== '' ? '?'.$query : '');
-        $absoluteUrl = mb_rtrim($this->url(), '/').$fullPath;
+
+        // The browser reaches us on the host the test asked for, so trust the
+        // request's own origin rather than the globally configured one. This
+        // keeps a per-visit `withHost(...)` intact for the page's later
+        // fetch/XHR requests, after the global host has been restored.
+        $origin = $this->originOf($uri);
+        $absoluteUrl = $origin.$fullPath;
+
+        // Keep `route()`, `asset()` and `config('app.url')` aligned with the
+        // origin the app is answering on for this request.
+        $this->syncGeneratedUrls($origin);
 
         $filepath = public_path($path);
         if (file_exists($filepath) && ! is_dir($filepath)) {
@@ -260,16 +316,6 @@ final class LaravelHttpServer implements HttpServer
         );
 
         $symfonyRequest->headers->add($request->getHeaders());
-
-        // Set the Host header to match the configured host for subdomain routing
-        $configuredHost = Playwright::host();
-        if ($configuredHost !== null) {
-            $hostHeader = sprintf('%s:%d', $configuredHost, $this->port);
-            $symfonyRequest->headers->set('Host', $hostHeader);
-            // Also set SERVER_NAME for Laravel routing
-            $symfonyRequest->server->set('SERVER_NAME', $configuredHost);
-            $symfonyRequest->server->set('HTTP_HOST', $hostHeader);
-        }
 
         $debug = config('app.debug');
 
