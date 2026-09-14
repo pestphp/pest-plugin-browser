@@ -7,6 +7,12 @@ use Illuminate\Http\Request;
 use function Pest\Laravel\withServerVariables;
 use function Pest\Laravel\withUnencryptedCookie;
 
+// These assertions pin the bound IP, so make the host explicit rather than
+// inheriting whatever an earlier test file configured globally.
+beforeEach(function (): void {
+    pest()->browser()->withHost(null);
+});
+
 it('rewrites the URLs on JS files', function (): void {
     @file_put_contents(
         public_path('app.js'),

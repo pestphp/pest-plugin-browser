@@ -79,6 +79,14 @@ final class ServerManager
     }
 
     /**
+     * Determines whether the HTTP server instance has already been created.
+     */
+    public function hasHttp(): bool
+    {
+        return $this->http instanceof HttpServer;
+    }
+
+    /**
      * Returns the HTTP server process instance.
      */
     public function http(): HttpServer
