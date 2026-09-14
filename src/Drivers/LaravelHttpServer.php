@@ -17,6 +17,7 @@ use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Illuminate\Foundation\Testing\Concerns\WithoutExceptionHandlingHandler;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Routing\UrlGenerator;
 use Illuminate\Support\Uri;
 use Pest\Browser\Contracts\HttpServer;
@@ -241,8 +242,12 @@ final class LaravelHttpServer implements HttpServer
         $method = mb_strtoupper($request->getMethod());
         $rawBody = (string) $request->getBody();
         $parameters = [];
+        $files = [];
         if ($method !== 'GET' && str_starts_with(mb_strtolower($contentType), 'application/x-www-form-urlencoded')) {
             parse_str($rawBody, $parameters);
+        }
+        if ($method !== 'GET' && preg_match('/^multipart\/form-data;.*boundary="?([^";]+)"?/i', $contentType, $boundary) === 1) {
+            [$parameters, $files] = $this->parseMultipartBody($rawBody, $boundary[1]);
         }
         $cookies = array_map(fn (RequestCookie $cookie): string => urldecode($cookie->getValue()), $request->getCookies());
         $cookies = array_merge($cookies, test()->prepareCookiesForRequest()); // @phpstan-ignore-line
@@ -254,7 +259,7 @@ final class LaravelHttpServer implements HttpServer
             $method,
             $parameters,
             $cookies,
-            [], // @TODO files...
+            $files,
             $serverVariables,
             $rawBody
         );
@@ -279,6 +284,7 @@ final class LaravelHttpServer implements HttpServer
             $response = $kernel->handle($laravelRequest = Request::createFromBase($symfonyRequest));
         } catch (Throwable $e) {
             $this->lastThrowable = $e;
+            $this->removeUploads($files);
 
             throw $e;
         } finally {
@@ -286,6 +292,9 @@ final class LaravelHttpServer implements HttpServer
         }
 
         $kernel->terminate($laravelRequest, $response);
+
+        // PHP removes the temporary files at shutdown, after terminate: a listener reading an upload there still finds it.
+        $this->removeUploads($files);
 
         if (property_exists($response, 'exception') && $response->exception !== null) {
             assert($response->exception instanceof Throwable);
@@ -358,5 +367,63 @@ final class LaravelHttpServer implements HttpServer
         }
 
         return str_replace($this->originalAssetUrl, $this->url(), $content);
+    }
+
+    /**
+     * Remove the temporary files of the uploads.
+     *
+     * @param  array<string, UploadedFile>  $files
+     */
+    private function removeUploads(array $files): void
+    {
+        foreach ($files as $file) {
+            @unlink($file->getPathname());
+        }
+    }
+
+    /**
+     * Reads a multipart body the way PHP does for a real upload: the fields
+     * into the parameters, each file into a temporary file wrapped in an
+     * upload in test mode (there is no real upload for `is_uploaded_file()`
+     * to recognise here). Two parts with the same name keep the last file,
+     * and a nested name such as `files[avatar]` stays flat where PHP would
+     * nest it.
+     *
+     * @return array{0: array<int|string, mixed>, 1: array<string, UploadedFile>}
+     */
+    private function parseMultipartBody(string $body, string $boundary): array
+    {
+        $fields = '';
+        $files = [];
+
+        foreach (explode("--{$boundary}", $body) as $part) {
+            $part = mb_ltrim($part, "\r\n");
+            if ($part === '' || str_starts_with($part, '--')) {
+                continue;
+            }
+
+            [$rawHeaders, $content] = array_pad(explode("\r\n\r\n", $part, 2), 2, '');
+            $content = preg_replace('/\r\n$/', '', $content) ?? $content;
+            if (preg_match('/;\s*name="([^"]*)"/', $rawHeaders, $name) !== 1) {
+                continue;
+            }
+
+            if (preg_match('/filename="([^"]*)"/', $rawHeaders, $fileName) === 1) {
+                $path = (string) tempnam(sys_get_temp_dir(), 'pest-upload-');
+                file_put_contents($path, $content);
+                $mimeType = preg_match('/Content-Type:\s*([^\r\n]+)/i', $rawHeaders, $type) === 1 ? mb_trim($type[1]) : null;
+                $files[$name[1]] = new UploadedFile($path, $fileName[1], $mimeType, null, true);
+
+                continue;
+            }
+
+            // Encoded then parsed as a query string, so that `items[]` and `a[b]` nest as they would.
+            $fields .= ($fields === '' ? '' : '&').rawurlencode($name[1]).'='.rawurlencode($content);
+        }
+
+        $parameters = [];
+        parse_str($fields, $parameters);
+
+        return [$parameters, $files];
     }
 }
