@@ -96,6 +96,15 @@ final class Client
             /** @var array{id: string|null, params: array{add: string|null}, error: array{error: array{message: string|null}}} $response */
             $response = json_decode($responseJson, true);
 
+            // A response addressed to another request was stranded by a generator
+            // abandoned before its final frame was read — goto() breaks on its
+            // waitUntil event, leaving its response unconsumed. Processing it here
+            // would desynchronize the stream, and the TargetClosedError a context
+            // close sends to a still-settling goto would fail an unrelated command.
+            if (isset($response['id']) && $response['id'] !== $requestId) {
+                continue;
+            }
+
             if (isset($response['error']['error']['message'])) {
                 $message = $response['error']['error']['message'];
 
