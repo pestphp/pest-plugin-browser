@@ -506,9 +506,20 @@ final class Page
     {
         $jsErrors = $this->evaluate('window.__pestBrowser.jsErrors || []');
 
-        /** @var array<int, array{message: string}> $jsErrors */
-
-        return $jsErrors;
+        // Normalised here so the declared shape is a promise the caller can rely on.
+        // `assertNoJavaScriptErrors()` builds its failure message with
+        // `array_map(fn (array $log) => $log['message'], …)` *before* the expectation runs, so a
+        // single entry of another shape used to throw a `TypeError` from inside the assertion —
+        // even when it would have passed — and the value that was read never reached the
+        // developer. Entries are kept rather than dropped: an unexpected shape is worth seeing.
+        return array_values(array_map(
+            fn (mixed $error): array => match (true) {
+                is_array($error) && is_string($error['message'] ?? null) => ['message' => $error['message']],
+                is_scalar($error) => ['message' => (string) $error],
+                default => ['message' => get_debug_type($error)],
+            },
+            is_array($jsErrors) ? $jsErrors : [],
+        ));
     }
 
     /**
