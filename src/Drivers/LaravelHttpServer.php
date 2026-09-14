@@ -16,6 +16,7 @@ use Amp\Http\Server\Response;
 use Amp\Http\Server\SocketHttpServer;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Http\Kernel as HttpKernel;
+use Illuminate\Cookie\CookieJar;
 use Illuminate\Foundation\Testing\Concerns\WithoutExceptionHandlingHandler;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -333,6 +334,9 @@ final class LaravelHttpServer implements HttpServer
         $symfonyRequest->headers->add($request->getHeaders());
 
         $debug = config('app.debug');
+
+        // The container is reused, so flush stale queued cookies (FPM/Octane start fresh).
+        app()->make(CookieJar::class)->flushQueuedCookies();
 
         try {
             config(['app.debug' => false]);
