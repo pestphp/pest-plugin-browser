@@ -369,14 +369,24 @@ final class Page
 
         $response = $this->sendMessage('evaluateExpressionHandle', $params);
 
+        $handle = null;
+
+        // The generator is consumed to the end on purpose: returning early leaves this call's
+        // own response frame unread in the socket, and the next call then reads it as its own.
         foreach ($response as $message) {
+            if ($handle instanceof JSHandle) {
+                continue;
+            }
+
             if (
                 is_array($message) && is_array($message['params'] ?? null)
                 && isset($message['method'], $message['params']['type'], $message['params']['guid'])
                 && $message['method'] === '__create__'
                 && $message['params']['type'] === 'JSHandle'
             ) {
-                return new JSHandle((string) $message['params']['guid']); // @phpstan-ignore-line
+                $handle = new JSHandle((string) $message['params']['guid']); // @phpstan-ignore-line
+
+                continue;
             }
 
             if (
@@ -384,11 +394,15 @@ final class Page
                 && is_array($message['result'] ?? null)
                 && isset($message['result']['handle'])
             ) {
-                return new JSHandle($message['result']['handle']['guid']); // @phpstan-ignore-line
+                $handle = new JSHandle($message['result']['handle']['guid']); // @phpstan-ignore-line
             }
         }
 
-        throw new RuntimeException('Failed to create JSHandle from evaluate response');
+        if (! $handle instanceof JSHandle) {
+            throw new RuntimeException('Failed to create JSHandle from evaluate response');
+        }
+
+        return $handle;
     }
 
     /**
