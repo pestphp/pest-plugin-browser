@@ -39,13 +39,4 @@ final class ImageDiffView
             </html>
             HTML;
     }
-
-    /**
-     * Create a fake image for when Playwright does not return a diff.
-     */
-    public static function missingImage(): string
-    {
-        /** @phpstan-ignore-next-line */
-        return file_get_contents(__DIR__.'/../../resources/images/missing.snap');
-    }
 }

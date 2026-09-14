@@ -93,7 +93,7 @@ final class Client
 
         while (true) {
             $responseJson = $this->fetch($this->websocketConnection);
-            /** @var array{id: string|null, params: array{add: string|null}, error: array{error: array{message: string|null}}} $response */
+            /** @var array{id: string|null, params: array{add: string|null}, error: array{error: array{message: string|null}}, errorDetails: array{customErrorMessage: string|null}} $response */
             $response = json_decode($responseJson, true);
 
             if (isset($response['error']['error']['message'])) {
@@ -101,6 +101,12 @@ final class Client
 
                 if (str_contains($message, 'Playwright was just installed or updated')) {
                     throw new PlaywrightOutdatedException();
+                }
+
+                // Since 1.61 a failed screenshot expectation reports only "Expect failed"
+                // here, and sends what actually differs in the error details instead.
+                if (is_string($response['errorDetails']['customErrorMessage'] ?? null)) {
+                    $message = $response['errorDetails']['customErrorMessage'];
                 }
 
                 throw new ExpectationFailedException($message);
