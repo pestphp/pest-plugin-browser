@@ -6,9 +6,6 @@ namespace Pest\Browser\Contracts;
 
 use Throwable;
 
-/**
- * @internal
- */
 interface HttpServer
 {
     /**
