@@ -28,8 +28,21 @@ final readonly class AwaitableWebpage
         private array $nonAwaitableMethods = [
             'assertScreenshotMatches',
             'assertNoAccessibilityIssues',
-            // Retrying this action would append the value to what was already typed.
+            // Retrying these actions would repeat their effect: a re-fired click aims at
+            // a page its first attempt already changed, a re-sent Enter submits the form
+            // again, a re-run drag starts from an element the first attempt already
+            // moved, and typing again appends to what was already typed. A single direct
+            // call gets Playwright's full actionability wait with the whole timeout
+            // budget on that one attempt.
+            'append',
+            'click',
+            'drag',
+            'keys',
+            'press',
+            'pressAndWaitFor',
+            'rightClick',
             'typeSlowly',
+            'withKeyDown',
         ],
     ) {
         //
