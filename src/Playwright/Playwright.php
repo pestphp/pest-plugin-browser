@@ -60,11 +60,19 @@ final class Playwright
     private static ?string $host = null;
 
     /**
+     * The Chrome DevTools Protocol endpoint to attach to, if any.
+     */
+    private static ?string $cdpEndpoint = null;
+
+    /**
      * Get a browser factory for the given browser type.
      */
     public static function browser(BrowserType $browserType): BrowserFactory
     {
-        $name = $browserType->toPlaywrightName();
+        // Playwright can only attach over CDP to Chromium-compatible browsers.
+        $name = self::usesCdpEndpoint()
+            ? BrowserType::CHROME->toPlaywrightName()
+            : $browserType->toPlaywrightName();
 
         return self::$browserTypes[$name] ?? self::initialize($name);
     }
@@ -153,6 +161,37 @@ final class Playwright
     public static function host(): ?string
     {
         return self::$host;
+    }
+
+    /**
+     * Sets the Chrome DevTools Protocol endpoint of an already running browser
+     * to attach to instead of launching one, e.g. `ws://127.0.0.1:9222`.
+     */
+    public static function setCdpEndpoint(?string $endpoint): void
+    {
+        self::$cdpEndpoint = $endpoint;
+    }
+
+    /**
+     * Get the Chrome DevTools Protocol endpoint to attach to, if any.
+     */
+    public static function cdpEndpoint(): ?string
+    {
+        if (self::$cdpEndpoint !== null) {
+            return self::$cdpEndpoint;
+        }
+
+        $endpoint = getenv('PEST_BROWSER_CDP_ENDPOINT');
+
+        return is_string($endpoint) && $endpoint !== '' ? $endpoint : null;
+    }
+
+    /**
+     * Whether browsers are reached through a Chrome DevTools Protocol endpoint.
+     */
+    public static function usesCdpEndpoint(): bool
+    {
+        return self::cdpEndpoint() !== null;
     }
 
     /**
