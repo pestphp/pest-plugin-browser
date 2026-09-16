@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Api;
 
+use Pest\Browser\Enums\BrowserType;
+use Pest\Browser\Exceptions\BrowserNotSupportedException;
 use Pest\Browser\Execution;
 use Pest\Browser\Playwright\Locator;
 use Pest\Browser\Playwright\Page;
+use Pest\Browser\Playwright\Playwright;
 use Pest\Browser\Support\GuessLocator;
 
 final readonly class Webpage
@@ -93,6 +96,38 @@ final readonly class Webpage
     public function value(string $selector): string
     {
         return $this->guessLocator($selector)->inputValue();
+    }
+
+    /**
+     * Adds a WebAuthn virtual authenticator to the page, for testing passkey ceremonies.
+     *
+     * @param  array<string, mixed>  $options
+     */
+    public function addVirtualAuthenticator(array $options = []): VirtualAuthenticator
+    {
+        if (Playwright::defaultBrowserType() !== BrowserType::CHROME) {
+            throw new BrowserNotSupportedException('Virtual authenticators are only available in Chrome.');
+        }
+
+        $session = $this->page->context()->newCDPSession($this->page);
+        $session->send('WebAuthn.enable');
+
+        $result = $session->send('WebAuthn.addVirtualAuthenticator', [
+            'options' => [
+                'protocol' => 'ctap2',
+                'transport' => 'internal',
+                'hasResidentKey' => true,
+                'hasUserVerification' => true,
+                'isUserVerified' => true,
+                'automaticPresenceSimulation' => true,
+                ...$options,
+            ],
+        ]);
+
+        /** @var string $authenticatorId */
+        $authenticatorId = $result['authenticatorId'];
+
+        return new VirtualAuthenticator($session, $authenticatorId);
     }
 
     /**

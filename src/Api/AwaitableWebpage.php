@@ -30,6 +30,8 @@ final readonly class AwaitableWebpage
             'assertNoAccessibilityIssues',
             // Retrying this action would append the value to what was already typed.
             'typeSlowly',
+            // Retrying this action would add a second authenticator.
+            'addVirtualAuthenticator',
         ],
     ) {
         //

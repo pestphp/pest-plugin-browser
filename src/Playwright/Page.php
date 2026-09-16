@@ -53,6 +53,14 @@ final class Page
     }
 
     /**
+     * Get the unique identifier for this page.
+     */
+    public function guid(): string
+    {
+        return $this->guid;
+    }
+
+    /**
      * Get the current URL of the page.
      */
     public function url(): string
