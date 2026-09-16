@@ -102,4 +102,25 @@ final class Context
 
         return $this;
     }
+
+    /**
+     * Opens a Chrome DevTools Protocol session bound to the given page.
+     */
+    public function newCDPSession(Page $page): CDPSession
+    {
+        $response = Client::instance()->execute($this->guid, 'newCDPSession', [
+            'page' => (object) ['guid' => $page->guid()],
+        ]);
+
+        $sessionGuid = '';
+
+        /** @var array{result: array{session: array{guid: string|null}}} $message */
+        foreach ($response as $message) {
+            if (isset($message['result']['session']['guid'])) {
+                $sessionGuid = $message['result']['session']['guid'];
+            }
+        }
+
+        return new CDPSession($sessionGuid);
+    }
 }
