@@ -51,6 +51,25 @@ final class ServerManager
     }
 
     /**
+     * Builds the command that starts the Playwright server. When a CDP endpoint
+     * is configured, the server attaches to that browser instead of launching one.
+     */
+    public static function playwrightCommand(): string
+    {
+        $endpoint = Playwright::cdpEndpoint();
+
+        if ($endpoint !== null) {
+            return sprintf(
+                'node %s --endpoint %s --host %%s --port %%d',
+                escapeshellarg(dirname(__DIR__).DIRECTORY_SEPARATOR.'resources'.DIRECTORY_SEPARATOR.'js'.DIRECTORY_SEPARATOR.'cdp-server.js'),
+                escapeshellarg($endpoint),
+            );
+        }
+
+        return '.'.DIRECTORY_SEPARATOR.'node_modules'.DIRECTORY_SEPARATOR.'.bin'.DIRECTORY_SEPARATOR.'playwright run-server --host %s --port %d --mode launchServer';
+    }
+
+    /**
      * Returns the Playwright server process instance.
      */
     public function playwright(): PlaywrightServer
@@ -64,7 +83,7 @@ final class ServerManager
 
         $this->playwright ??= PlaywrightNpmServer::create(
             PackageJsonDirectory::find(),
-            '.'.DIRECTORY_SEPARATOR.'node_modules'.DIRECTORY_SEPARATOR.'.bin'.DIRECTORY_SEPARATOR.'playwright run-server --host %s --port %d --mode launchServer',
+            self::playwrightCommand(),
             $host,
             $port,
             'Listening on',
