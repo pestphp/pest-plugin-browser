@@ -18,6 +18,10 @@ function pageWithStubbedWaitClient(WebsocketConnection $connection): Page
     return new Page($context, 'page@1', 'frame@1');
 }
 
+afterEach(function (): void {
+    new ReflectionProperty(Client::class, 'websocketConnection')->setValue(Client::instance(), null);
+});
+
 it('sends waitForLoadState to Playwright', function (): void {
     $sent = null;
     $connection = $this->createStub(WebsocketConnection::class);
