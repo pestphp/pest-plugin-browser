@@ -60,7 +60,7 @@ final class BrowserExpectationFailedException
         return new ExpectationFailedException(
             $message,
             $e->getComparisonFailure(),
-            $e->getPrevious(), // @phpstan-ignore-line
+            $e,
         );
     }
 }
