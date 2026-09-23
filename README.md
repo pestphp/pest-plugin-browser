@@ -2,6 +2,16 @@ This repository contains the Pest Plugin for Browser.
 
 > If you want to start testing your application with Pest, visit the main **[Pest Repository](https://github.com/pestphp/pest)**.
 
+### Recording Tests
+
+Generate browser-tests by recording your interactions in the browser:
+
+```bash
+vendor/bin/pest --record
+```
+
+See **[RECORDING.md](RECORDING.md)** for more information.
+
 - Explore our docs at **[pestphp.com »](https://pestphp.com)**
 - Follow the creator Nuno Maduro:
     - YouTube: **[youtube.com/@nunomaduro](https://www.youtube.com/@nunomaduro)** — Videos every weekday

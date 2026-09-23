@@ -59,7 +59,7 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
     /**
      * Handles the arguments passed to the plugin.
      *
-     * @param  array<int, string>  $arguments}
+     * @param array<int, string> $arguments }
      */
     public function handleArguments(array $arguments): array
     {
@@ -93,7 +93,7 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
             $arguments = $this->popArgument('--light', $arguments);
         }
 
-        if ($this->hasArgument('--browser', $arguments)) {
+        if ($this->hasArgument('--browser', $arguments) && ! $this->hasArgument('--record', $arguments)) {
             $index = array_search('--browser', $arguments, true);
 
             if ($index === false || ! isset($arguments[$index + 1])) {
@@ -106,8 +106,8 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
 
             if (($browser = BrowserType::tryFrom($browser)) === null) {
                 throw new BrowserNotSupportedException(
-                    'The specified browser type is not supported. Supported types are: '.
-                    implode(', ', array_map(fn (BrowserType $type): string => mb_strtolower($type->name), BrowserType::cases()))
+                    'The specified browser type is not supported. Supported types are: ' .
+                    implode(', ', array_map(fn(BrowserType $type): string => mb_strtolower($type->name), BrowserType::cases()))
                 );
             }
 
@@ -152,7 +152,7 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
      */
     private function in(): string
     {
-        return TestSuite::getInstance()->rootPath.DIRECTORY_SEPARATOR.TestSuite::getInstance()->testPath;
+        return TestSuite::getInstance()->rootPath . DIRECTORY_SEPARATOR . TestSuite::getInstance()->testPath;
     }
 
     /**
