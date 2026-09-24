@@ -105,8 +105,6 @@ final readonly class AlreadyStartedPlaywrightServer implements PlaywrightServer
 
     /**
      * Returns the URL of the process.
-     *
-     * @throws RuntimeException If the process has not been started yet or has stopped unexpectedly.
      */
     public function url(): string
     {
