@@ -7,6 +7,7 @@ namespace Pest\Browser\Playwright;
 use Amp\Websocket\Client\WebsocketConnection;
 use Generator;
 use Pest\Browser\Exceptions\PlaywrightOutdatedException;
+use Pest\Browser\Exceptions\ServerNotFoundException;
 use PHPUnit\Framework\ExpectationFailedException;
 
 use function Amp\Websocket\Client\connect;
@@ -93,9 +94,14 @@ final class Client
 
         while (true) {
             $responseJson = $this->fetch($this->websocketConnection);
-            /** @var array{id: string|null, params: array{add: string|null}, error: array{error: array{message: string|null}}} $response */
             $response = json_decode($responseJson, true);
 
+            // A closed connection reads as an empty frame, and nothing below could ever match it.
+            if (! is_array($response)) {
+                throw new ServerNotFoundException('The Playwright server closed the connection before it answered.');
+            }
+
+            /** @var array{id: string|null, params: array{add: string|null}, error: array{error: array{message: string|null}}} $response */
             if (isset($response['error']['error']['message'])) {
                 $message = $response['error']['error']['message'];
 
