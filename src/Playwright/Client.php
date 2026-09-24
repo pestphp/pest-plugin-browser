@@ -112,9 +112,16 @@ final class Client
             $response = json_decode($responseJson, true);
 
             // Handle JSON decode failure
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new RuntimeException(
+                    'Invalid JSON response from Playwright server: '.json_last_error_msg().' - '.substr($responseJson, 0, 100)
+                );
+            }
+
+            // A literal JSON `null` is valid JSON but not a usable protocol response
             if ($response === null) {
                 throw new RuntimeException(
-                    'Invalid JSON response from Playwright server: '.substr($responseJson, 0, 100)
+                    "Empty JSON response from Playwright server while executing '$method' on '$guid'"
                 );
             }
 

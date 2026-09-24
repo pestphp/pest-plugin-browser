@@ -143,7 +143,7 @@ final class Context
      */
     public function cookies(array $urls = []): array
     {
-        $response = $this->sendMessage('cookies', $urls !== [] ? ['urls' => $urls] : []);
+        $response = $this->sendMessage('cookies', ['urls' => $urls]);
 
         /** @var array{result: array{cookies: array}} $message */
         foreach ($response as $message) {

@@ -191,8 +191,14 @@ final class PendingAwaitablePage
         /** @var array{cookies?: array, origins?: array}|null $storageState */
         $storageState = json_decode($contents, true);
 
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new InvalidArgumentException(
+                "Invalid storage state JSON in: $path. Error: ".json_last_error_msg()
+            );
+        }
+
         if ($storageState === null) {
-            throw new InvalidArgumentException("Invalid storage state JSON in: $path");
+            throw new InvalidArgumentException("Storage state JSON must not be null in: $path");
         }
 
         return $this->withStorageState($storageState);
