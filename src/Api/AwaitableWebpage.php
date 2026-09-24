@@ -30,6 +30,16 @@ final readonly class AwaitableWebpage
             'assertNoAccessibilityIssues',
             // Retrying this action would append the value to what was already typed.
             'typeSlowly',
+            // An attempt that times out after the page received the input would be
+            // repeated: a second click closes the menu the first one opened, a second
+            // "add row" adds two. Playwright already waits for the element itself.
+            'click',
+            'rightClick',
+            'press',
+            'pressAndWaitFor',
+            'keys',
+            'drag',
+            'append',
         ],
     ) {
         //
