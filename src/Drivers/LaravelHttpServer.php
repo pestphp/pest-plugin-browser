@@ -422,11 +422,42 @@ final class LaravelHttpServer implements HttpServer
      */
     private function rewriteAssetUrl(string $content): string
     {
-        if ($this->originalAssetUrl === null) {
-            return $content;
+        $current = $this->url();
+
+        if ($this->originalAssetUrl === null && app()->bound('config')) {
+            $fallback = config('app.url', 'http://localhost');
+            $fallback = is_string($fallback) ? $fallback : 'http://localhost';
+            $this->originalAssetUrl = mb_rtrim($fallback, '/');
+
+            if (app()->bound('url')) {
+                try {
+                    $urlGenerator = app('url');
+                    assert($urlGenerator instanceof UrlGenerator);
+                    $generated = $urlGenerator->asset('');
+                    if ($generated !== '') {
+                        $this->originalAssetUrl = mb_rtrim($generated, '/');
+                    }
+                } catch (Throwable) {
+                    // Keep fallback.
+                }
+            }
         }
 
-        return str_replace($this->originalAssetUrl, $this->url(), $content);
+        if ($this->originalAssetUrl !== null && $this->originalAssetUrl !== $current) {
+            $content = str_replace($this->originalAssetUrl, $current, $content);
+        }
+
+        $content = (string) preg_replace(
+            '#https?://localhost(?::\d+)?#',
+            $current,
+            $content,
+        );
+
+        return str_replace(
+            ['https://my-app.test', 'http://my-app.test'],
+            $current,
+            $content,
+        );
     }
 
     /**
