@@ -108,10 +108,7 @@ final class Client
 
             yield $response;
 
-            if (
-                (isset($response['id']) && $response['id'] === $requestId)
-                || (isset($params['waitUntil']) && isset($response['params']['add']) && $params['waitUntil'] === $response['params']['add'])
-            ) {
+            if (isset($response['id']) && $response['id'] === $requestId) {
                 break;
             }
         }
