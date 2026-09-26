@@ -59,21 +59,28 @@ final class ServerManager
             return AlreadyStartedPlaywrightServer::fromPersisted();
         }
 
-        $port = Port::find();
-        $host = Playwright::host() ?? self::DEFAULT_HOST;
+        // Finding the port and persisting the description belong inside the
+        // guard, not beside it. Only the first call creates the server, but
+        // every call used to allocate a fresh port and then persist THAT one --
+        // so the second call described the running server by a port nothing was
+        // listening on.
+        if (! $this->playwright instanceof PlaywrightServer) {
+            $port = Port::find();
+            $host = Playwright::host() ?? self::DEFAULT_HOST;
 
-        $this->playwright ??= PlaywrightNpmServer::create(
-            PackageJsonDirectory::find(),
-            '.'.DIRECTORY_SEPARATOR.'node_modules'.DIRECTORY_SEPARATOR.'.bin'.DIRECTORY_SEPARATOR.'playwright run-server --host %s --port %d --mode launchServer',
-            $host,
-            $port,
-            'Listening on',
-        );
+            $this->playwright = PlaywrightNpmServer::create(
+                PackageJsonDirectory::find(),
+                '.'.DIRECTORY_SEPARATOR.'node_modules'.DIRECTORY_SEPARATOR.'.bin'.DIRECTORY_SEPARATOR.'playwright run-server --host %s --port %d --mode launchServer',
+                $host,
+                $port,
+                'Listening on',
+            );
 
-        AlreadyStartedPlaywrightServer::persist(
-            $host,
-            $port,
-        );
+            AlreadyStartedPlaywrightServer::persist(
+                $host,
+                $port,
+            );
+        }
 
         return $this->playwright;
     }
