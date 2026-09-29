@@ -6,12 +6,21 @@ namespace Pest\Browser\Playwright;
 
 use Pest\Browser\Enums\BrowserType;
 use Pest\Browser\Enums\ColorScheme;
+use Throwable;
 
 /**
  * @internal
  */
 final class Playwright
 {
+    /**
+     * Timeout for the one-time browser launch, in milliseconds.
+     *
+     * Kept apart from the action timeout so a slow Chromium start does not
+     * fail the limit used for page actions.
+     */
+    private const int LAUNCH_TIMEOUT = 30_000;
+
     /**
      * Browser types
      *
@@ -234,49 +243,66 @@ final class Playwright
     }
 
     /**
-     * Initialize Playwright
+     * Initializes Playwright on the current connection.
+     *
+     * Launch uses its own timeout, separate from the action timeout. A failed
+     * initialize drops the connection: Playwright accepts that call only once.
      */
     private static function initialize(string $browser): BrowserFactory
     {
-        $response = Client::instance()->execute(
-            '',
-            'initialize',
-            [
-                'sdkLanguage' => 'javascript',
-            ]
-        );
+        $client = Client::instance();
 
-        /** @var array{method: string|null, params: array{type: string|null, guid: string, initializer: array{name: string|null, preLaunchedBrowser?: array{guid: string}}}} $message */
-        foreach ($response as $message) {
-            if (
-                isset($message['method'])
-                && $message['method'] === '__create__'
-                && isset($message['params']['type'])
-                && $message['params']['type'] === 'Playwright'
-                && isset($message['params']['initializer']['preLaunchedBrowser'])
-            ) {
-                self::$browserTypes[$browser]->prelaunch(
-                    $message['params']['initializer']['preLaunchedBrowser']['guid'],
-                );
-            }
+        try {
+            return self::usingTimeout(
+                max($client->timeout(), self::LAUNCH_TIMEOUT),
+                function () use ($browser, $client): BrowserFactory {
+                    $response = $client->execute(
+                        '',
+                        'initialize',
+                        [
+                            'sdkLanguage' => 'javascript',
+                        ]
+                    );
 
-            if (
-                isset($message['method'])
-                && $message['method'] === '__create__'
-                && isset($message['params']['type'])
-                && $message['params']['type'] === 'BrowserType'
-            ) {
-                $name = $message['params']['initializer']['name'] ?? '';
+                    /** @var array{method: string|null, params: array{type: string|null, guid: string, initializer: array{name: string|null, preLaunchedBrowser?: array{guid: string}}}} $message */
+                    foreach ($response as $message) {
+                        if (
+                            isset($message['method'])
+                            && $message['method'] === '__create__'
+                            && isset($message['params']['type'])
+                            && $message['params']['type'] === 'Playwright'
+                            && isset($message['params']['initializer']['preLaunchedBrowser'])
+                        ) {
+                            self::$browserTypes[$browser]->prelaunch(
+                                $message['params']['initializer']['preLaunchedBrowser']['guid'],
+                            );
+                        }
 
-                self::$browserTypes[$name] = new BrowserFactory(
-                    $message['params']['guid'],
-                    $name,
-                    self::$headless,
-                    self::$userAgent
-                );
-            }
+                        if (
+                            isset($message['method'])
+                            && $message['method'] === '__create__'
+                            && isset($message['params']['type'])
+                            && $message['params']['type'] === 'BrowserType'
+                        ) {
+                            $name = $message['params']['initializer']['name'] ?? '';
+
+                            self::$browserTypes[$name] = new BrowserFactory(
+                                $message['params']['guid'],
+                                $name,
+                                self::$headless,
+                                self::$userAgent
+                            );
+                        }
+                    }
+
+                    return self::$browserTypes[$browser];
+                }
+            );
+        } catch (Throwable $throwable) {
+            self::$browserTypes = [];
+            $client->disconnect();
+
+            throw $throwable;
         }
-
-        return self::$browserTypes[$browser];
     }
 }
