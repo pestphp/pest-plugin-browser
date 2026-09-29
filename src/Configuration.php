@@ -114,6 +114,18 @@ final readonly class Configuration
     }
 
     /**
+     * Connects to an already running browser over the Chrome DevTools Protocol
+     * instead of launching one, e.g. `ws://127.0.0.1:9222`. Only Chromium-compatible
+     * endpoints are supported, so the configured browser type is ignored.
+     */
+    public function connectOverCdp(?string $endpoint): self
+    {
+        Playwright::setCdpEndpoint($endpoint);
+
+        return $this;
+    }
+
+    /**
      * Enables debug mode for assertions.
      */
     public function debug(): self
