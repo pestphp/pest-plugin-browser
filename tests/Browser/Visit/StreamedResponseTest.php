@@ -64,3 +64,29 @@ it('may serve a textual streamed response without altering its whitespace', func
         json_encode("\n  Hello World  \n"),
     );
 });
+
+it('delivers every server-sent event to the browser', function (): void {
+    Route::get('/', fn (): string => '<div id="received">-</div>
+        <script>
+            window.events = [];
+
+            new EventSource("/events").onmessage = (event) => {
+                window.events.push(event.data);
+                document.getElementById("received").textContent = window.events.join(",");
+            };
+        </script>');
+    Route::get('/events', fn (): StreamedResponse => response()->stream(
+        function (): void {
+            echo "data: first\n\n";
+            echo "data: second\n\n";
+        },
+        200,
+        ['Content-Type' => 'text/event-stream', 'Cache-Control' => 'no-cache'],
+    ));
+
+    $page = visit('/');
+
+    $page->assertSee('first');
+
+    expect($page->text('#received'))->toBe('first,second');
+});
