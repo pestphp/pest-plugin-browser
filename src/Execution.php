@@ -145,8 +145,14 @@ final class Execution
         $end = $start + ($timeout / 1_000);
 
         while (microtime(true) < $end) {
+            // Each attempt gets what is left of the configured timeout, not a fixed
+            // second. An operation that fits the timeout then finishes on its first
+            // attempt instead of being cut off and run again, and the loop still ends
+            // when the timeout does.
+            $remaining = (int) max(1, ($end - microtime(true)) * 1_000);
+
             try {
-                return Playwright::usingTimeout(1_000, $callback);
+                return Playwright::usingTimeout(min($timeout, $remaining), $callback);
             } catch (ExpectationFailedException) {
                 //
             }

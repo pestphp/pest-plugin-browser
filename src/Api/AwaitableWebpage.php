@@ -40,6 +40,8 @@ final readonly class AwaitableWebpage
             'keys',
             'drag',
             'append',
+            // submit() is a click on the form's submit button.
+            'submit',
         ],
     ) {
         //
