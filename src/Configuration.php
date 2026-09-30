@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Pest\Browser;
 
+use Closure;
+use Pest\Browser\Contracts\HttpServer;
 use Pest\Browser\Drivers\LaravelHttpServer;
 use Pest\Browser\Enums\BrowserType;
 use Pest\Browser\Enums\ColorScheme;
@@ -16,6 +18,18 @@ use Pest\Browser\Playwright\Playwright;
  */
 final readonly class Configuration
 {
+    /**
+     * Uses a custom HTTP server implementation.
+     *
+     * @param  Closure(): HttpServer  $factory
+     */
+    public function httpServer(Closure $factory): self
+    {
+        ServerManager::instance()->setHttpServerFactory($factory);
+
+        return $this;
+    }
+
     /**
      * Defaults the browser to Chrome.
      */
