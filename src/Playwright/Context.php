@@ -93,6 +93,17 @@ final class Context
     }
 
     /**
+     * Toggles the browser context's offline mode.
+     */
+    public function setOffline(bool $offline): self
+    {
+        $response = $this->sendMessage('setOffline', ['offline' => $offline]);
+        $this->processVoidResponse($response);
+
+        return $this;
+    }
+
+    /**
      * Adds a script which will be evaluated.
      */
     public function addInitScript(string $script): self
