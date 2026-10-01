@@ -8,7 +8,9 @@ use Pest\Browser\Exceptions\BrowserExpectationFailedException;
 use Pest\Browser\Execution;
 use Pest\Browser\Playwright\Page;
 use Pest\Browser\Playwright\Playwright;
+use Pest\Browser\Playwright\Tracing;
 use Pest\Browser\ServerManager;
+use Pest\Browser\Support\Step;
 use PHPUnit\Framework\ExpectationFailedException;
 use Throwable;
 
@@ -54,18 +56,28 @@ final readonly class AwaitableWebpage
     {
         $webpage = new Webpage($this->page, $this->initialUrl);
 
-        try {
-            if (
-                in_array($name, $this->nonAwaitableMethods, true)
-                || Playwright::timeout() <= 1000
-            ) {
+        $call = in_array($name, $this->nonAwaitableMethods, true) || Playwright::timeout() <= 1000
+            // @phpstan-ignore-next-line
+            ? fn (): mixed => $webpage->{$name}(...$arguments)
+            : fn (): mixed => Execution::instance()->waitForExpectation(
                 // @phpstan-ignore-next-line
-                $result = $webpage->{$name}(...$arguments);
-            } else {
-                $result = Execution::instance()->waitForExpectation(
-                    // @phpstan-ignore-next-line
-                    fn () => $webpage->{$name}(...$arguments),
+                fn () => $webpage->{$name}(...$arguments),
+            );
+
+        try {
+            $tracing = $this->page->context()->tracing();
+
+            if ($tracing instanceof Tracing && $tracing->path() !== null) {
+                $caller = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1)[0];
+
+                $result = $tracing->group(
+                    Step::title($name, $arguments),
+                    $caller['file'] ?? null,
+                    $caller['line'] ?? null,
+                    $call,
                 );
+            } else {
+                $result = $call();
             }
         } catch (ExpectationFailedException $e) {
             ServerManager::instance()->http()->throwLastThrowableIfNeeded();

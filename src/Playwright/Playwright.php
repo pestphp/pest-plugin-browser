@@ -35,6 +35,16 @@ final class Playwright
     private static bool $shouldDiffOnScreenshotAssertions = false;
 
     /**
+     * Whether to record a trace of each test, kept when the test fails.
+     */
+    private static bool $shouldTrace = false;
+
+    /**
+     * Whether to open the trace of a failed test once the test suite has finished, when not running on CI.
+     */
+    private static bool $shouldOpenTraces = true;
+
+    /**
      * The default browser type.
      */
     private static BrowserType $defaultBrowserType = BrowserType::CHROME;
@@ -185,6 +195,34 @@ final class Playwright
     public static function shouldDebugAssertions(): bool
     {
         return self::$shouldDebugAssertions;
+    }
+
+    /**
+     * Set whether to record a trace of each test, kept when the test fails.
+     */
+    public static function setShouldTrace(?bool $open = null): void
+    {
+        self::$shouldTrace = true;
+
+        if ($open !== null) {
+            self::$shouldOpenTraces = $open;
+        }
+    }
+
+    /**
+     * Whether to open the trace of a failed test once the test suite has finished, when not running on CI.
+     */
+    public static function shouldOpenTraces(): bool
+    {
+        return self::$shouldOpenTraces;
+    }
+
+    /**
+     * Whether to record a trace of each test, kept when the test fails.
+     */
+    public static function shouldTrace(): bool
+    {
+        return self::$shouldTrace;
     }
 
     /**

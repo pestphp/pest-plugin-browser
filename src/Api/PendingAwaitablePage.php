@@ -182,6 +182,11 @@ final class PendingAwaitablePage
 
         $context->addInitScript(InitScript::get());
 
+        if (Playwright::shouldTrace()) {
+            // @phpstan-ignore-next-line
+            $context->tracing()?->start(str_replace('__pest_evaluable_', '', test()->name()));
+        }
+
         $url = ComputeUrl::from($this->url);
 
         return new AwaitableWebpage(

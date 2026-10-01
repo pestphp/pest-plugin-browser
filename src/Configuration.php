@@ -124,6 +124,17 @@ final readonly class Configuration
     }
 
     /**
+     * Records a trace of each test, and keeps it when the test fails. Unless running on CI,
+     * the trace of a failed test is opened once the test suite has finished.
+     */
+    public function trace(bool $open = true): self
+    {
+        Playwright::setShouldTrace($open);
+
+        return $this;
+    }
+
+    /**
      * Enables diff mode for screenshot assertions.
      */
     public function diff(): self

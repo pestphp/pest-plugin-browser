@@ -19,13 +19,31 @@ final class Context
     private bool $closed = false;
 
     /**
+     * The tracing instance of the browser context.
+     */
+    private ?Tracing $tracing = null;
+
+    /**
      * Creates a new context instance.
      */
     public function __construct(
         private readonly Browser $browser,
-        private readonly string $guid
+        private readonly string $guid,
+        private readonly ?string $tracingGuid = null,
     ) {
         //
+    }
+
+    /**
+     * Gets the tracing of the browser context.
+     */
+    public function tracing(): ?Tracing
+    {
+        if ($this->tracingGuid === null) {
+            return null;
+        }
+
+        return $this->tracing ??= new Tracing($this->tracingGuid);
     }
 
     /**
