@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Pest\Browser\Playwright;
 
 use Amp\Websocket\Client\WebsocketConnection;
+use Amp\Websocket\WebsocketMessage;
 use Generator;
 use Pest\Browser\Exceptions\PlaywrightOutdatedException;
 use PHPUnit\Framework\ExpectationFailedException;
+use RuntimeException;
 
 use function Amp\Websocket\Client\connect;
 
@@ -197,6 +199,15 @@ final class Client
      */
     private function fetch(WebsocketConnection $client): string
     {
-        return (string) $client->receive()?->read();
+        $message = $client->receive();
+
+        // Once the connection closes, receive() returns null. Cast to an empty string,
+        // that response has neither an `error` nor an `id`, so execute() would keep
+        // waiting on a connection that can never answer, at full CPU.
+        if (! $message instanceof WebsocketMessage) {
+            throw new RuntimeException('The Playwright server closed the connection unexpectedly.');
+        }
+
+        return (string) $message->read();
     }
 }
