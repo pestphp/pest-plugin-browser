@@ -116,7 +116,7 @@ it('can interact with iframe from external URL content', function (): void {
         ->assertSee('Cross-Origin Iframe Behavior Test')
         ->wait(1)
         ->withinFrame('.iframe-container', function (AwaitableWebpage $frame): void {
-            $frame->assertSee('Example Domain');
+            $frame->assertSee('This domain is for use in documentation examples');
         });
 });
 
@@ -147,10 +147,10 @@ it('can interact with two iframes from external URL content', function (): void 
         ->assertSee('Cross-Origin Iframe Behavior Test');
 
     $page->withinFrame('.iframe-container', function (AwaitableWebpage $frame): void {
-        $frame->assertSee('Example Domain');
+        $frame->assertSee('This domain is for use in documentation examples');
     });
 
     $page->withinFrame('.another-iframe-container', function (AwaitableWebpage $frame): void {
-        $frame->assertSee('Example Domain');
+        $frame->assertSee('This domain is for use in documentation examples');
     });
 });
