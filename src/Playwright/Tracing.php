@@ -72,8 +72,8 @@ final class Tracing
     public function start(string $title): void
     {
         $this->processVoidResponse($this->sendMessage('tracingStart', [
-            'screenshots' => true,
-            'snapshots' => true,
+            'screencast' => true,
+            'snapshotDom' => true,
         ]));
 
         $this->processVoidResponse($this->sendMessage('tracingStartChunk', [

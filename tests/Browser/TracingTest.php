@@ -29,6 +29,8 @@ it('saves a trace with the steps and the test source', function (): void {
     $stacks = json_decode((string) $zip->getFromName('trace.stacks'), true);
 
     expect($trace)->toContain("assertSee('Hello Universe')")
+        ->and($trace)->toContain('"type":"frame-snapshot"')
+        ->and($trace)->toContain('"type":"screencast-frame"')
         ->and($stacks['files'])->toBe([__FILE__])
         ->and($zip->getFromName('resources/src@'.sha1(__FILE__).'.txt'))->toBe(file_get_contents(__FILE__));
 
