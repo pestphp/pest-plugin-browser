@@ -43,18 +43,28 @@ trait InteractsWithPlaywright
     }
 
     /**
-     * Process response and extract result value
+     * Process response and extract result value.
+     *
+     * The generator is always consumed to the end, and the LAST value wins.
+     *
+     * `Client::execute()` yields every frame it reads and stops on the one whose id matches the
+     * request it sent, so that final frame is this call's own response. Returning on the first
+     * frame that happens to carry a `result.value` did two harmful things: it could return a
+     * value that belongs to another call, and it abandoned the generator, leaving this call's
+     * own response frame unread in the socket for the next call to pick up.
      */
     private function processResultResponse(Generator $response): mixed
     {
+        $value = null;
+
         /** @var array{result?: array{value: mixed}} $message */
         foreach ($response as $message) {
             if (isset($message['result']['value'])) {
-                return JavaScriptSerializer::parseValue($message['result']['value']);
+                $value = JavaScriptSerializer::parseValue($message['result']['value']);
             }
         }
 
-        return null;
+        return $value;
     }
 
     /**
@@ -128,19 +138,22 @@ trait InteractsWithPlaywright
      */
     private function processElementCreationResponse(Generator $response): ?Element
     {
+        $element = null;
+
         /** @var array{method: string|null, params: array{type: string|null, guid: string}} $message */
         foreach ($response as $message) {
             if (
+                ! $element instanceof Element
                 // @phpstan-ignore-next-line
-                isset($message['method'], $message['params']['type'], $message['params']['guid'])
+                && isset($message['method'], $message['params']['type'], $message['params']['guid'])
                 && $message['method'] === '__create__'
                 && $message['params']['type'] === 'ElementHandle'
             ) {
-                return new Element($message['params']['guid']);
+                $element = new Element($message['params']['guid']);
             }
         }
 
-        return null;
+        return $element;
     }
 
     /**
@@ -187,14 +200,16 @@ trait InteractsWithPlaywright
      */
     private function processBinaryResponse(Generator $response): string
     {
+        $binary = '';
+
         /** @var array{result: array{binary: string|null}} $message */
         foreach ($response as $message) {
             if (isset($message['result']['binary'])) {
-                return $message['result']['binary'];
+                $binary = $message['result']['binary'];
             }
         }
 
-        return '';
+        return $binary;
     }
 
     /**
@@ -203,13 +218,15 @@ trait InteractsWithPlaywright
      */
     private function processFrameCreationResponse(Generator $response): ?string
     {
+        $guid = null;
+
         /** @var array{result?: array{frame?: array{guid?: string}}} $message */
         foreach ($response as $message) {
             if (isset($message['result']['frame']['guid'])) {
-                return $message['result']['frame']['guid'];
+                $guid = $message['result']['frame']['guid'];
             }
         }
 
-        return null;
+        return $guid;
     }
 }

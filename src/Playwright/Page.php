@@ -369,14 +369,24 @@ final class Page
 
         $response = $this->sendMessage('evaluateExpressionHandle', $params);
 
+        $handle = null;
+
+        // The generator is consumed to the end on purpose: returning early leaves this call's
+        // own response frame unread in the socket, and the next call then reads it as its own.
         foreach ($response as $message) {
+            if ($handle instanceof JSHandle) {
+                continue;
+            }
+
             if (
                 is_array($message) && is_array($message['params'] ?? null)
                 && isset($message['method'], $message['params']['type'], $message['params']['guid'])
                 && $message['method'] === '__create__'
                 && $message['params']['type'] === 'JSHandle'
             ) {
-                return new JSHandle((string) $message['params']['guid']); // @phpstan-ignore-line
+                $handle = new JSHandle((string) $message['params']['guid']); // @phpstan-ignore-line
+
+                continue;
             }
 
             if (
@@ -384,11 +394,15 @@ final class Page
                 && is_array($message['result'] ?? null)
                 && isset($message['result']['handle'])
             ) {
-                return new JSHandle($message['result']['handle']['guid']); // @phpstan-ignore-line
+                $handle = new JSHandle($message['result']['handle']['guid']); // @phpstan-ignore-line
             }
         }
 
-        throw new RuntimeException('Failed to create JSHandle from evaluate response');
+        if (! $handle instanceof JSHandle) {
+            throw new RuntimeException('Failed to create JSHandle from evaluate response');
+        }
+
+        return $handle;
     }
 
     /**
@@ -492,9 +506,20 @@ final class Page
     {
         $jsErrors = $this->evaluate('window.__pestBrowser.jsErrors || []');
 
-        /** @var array<int, array{message: string}> $jsErrors */
-
-        return $jsErrors;
+        // Normalised here so the declared shape is a promise the caller can rely on.
+        // `assertNoJavaScriptErrors()` builds its failure message with
+        // `array_map(fn (array $log) => $log['message'], …)` *before* the expectation runs, so a
+        // single entry of another shape used to throw a `TypeError` from inside the assertion —
+        // even when it would have passed — and the value that was read never reached the
+        // developer. Entries are kept rather than dropped: an unexpected shape is worth seeing.
+        return array_values(array_map(
+            fn (mixed $error): array => match (true) {
+                is_array($error) && is_string($error['message'] ?? null) => ['message' => $error['message']],
+                is_scalar($error) => ['message' => (string) $error],
+                default => ['message' => get_debug_type($error)],
+            },
+            is_array($jsErrors) ? $jsErrors : [],
+        ));
     }
 
     /**
