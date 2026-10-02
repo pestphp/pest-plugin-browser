@@ -233,20 +233,24 @@ final class Page
 
     /**
      * Waits for the specified load state.
+     *
+     * Playwright tracks load states on the client side, so the wire protocol has
+     * no `waitForLoadState` method; the state is read from the document instead:
+     * `domcontentloaded` once parsing has finished, `load` once the load event has
+     * fired. `networkidle` cannot be observed by this synchronous client and is
+     * treated as `load`.
      */
     public function waitForLoadState(string $state = 'load'): self
     {
-        Client::instance()->execute(
-            $this->guid,
-            'waitForLoadState',
-            ['state' => $state]
-        );
+        $expression = $state === 'domcontentloaded'
+            ? "document.readyState !== 'loading'"
+            : "document.readyState === 'complete'";
 
-        return $this;
+        return $this->waitForFunction($expression);
     }
 
     /**
-     * Waits for a JavaScript function to return true.
+     * Waits for a JavaScript expression, or a function of the given argument, to return a truthy value.
      *
      * @param  mixed  $arg  Optional argument to pass to the function
      */
@@ -257,27 +261,30 @@ final class Page
             'arg' => JavaScriptSerializer::serializeArgument($arg),
         ];
 
-        Client::instance()->execute(
-            $this->guid,
-            'waitForFunction',
-            $params
-        );
+        $response = $this->sendMessage('waitForFunction', $params);
+
+        $this->processVoidResponse($response);
 
         return $this;
     }
 
     /**
      * Waits for navigation to the specified URL.
+     *
+     * A `*` matches any run of characters, as in `assertUrlIs()`. A URL that
+     * starts with `/` is matched against the path alone, anything else against
+     * `scheme://host[:port]/path`.
      */
     public function waitForURL(string $url): self
     {
-        Client::instance()->execute(
-            $this->guid,
-            'waitForURL',
-            ['url' => $url]
-        );
+        return $this->waitForFunction(<<<'JS'
+            (url) => {
+                const pattern = url.split('*').map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('.*');
+                const subject = url.startsWith('/') ? location.pathname : location.origin + location.pathname;
 
-        return $this;
+                return new RegExp(`^${pattern}$`).test(subject);
+            }
+            JS, $url);
     }
 
     /**
@@ -637,8 +644,6 @@ final class Page
             'goBack',
             'reload',
             'screenshot',
-            'waitForLoadState',
-            'waitForURL',
             'keyboardDown',
             'keyboardUp',
             'setViewportSize',
