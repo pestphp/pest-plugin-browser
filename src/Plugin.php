@@ -46,7 +46,7 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
             /** @var TestStatus $status */
             $status = $this->status(); // @phpstan-ignore-line
 
-            if (Playwright::shouldDebugAssertions() && ($status->isFailure() || $status->isError())) {
+            if (Playwright::shouldDebugAssertions() && ($status->isFailure() || $status->isError()) && Playwright::hasContexts()) {
                 Execution::instance()->debug($status);
             }
 

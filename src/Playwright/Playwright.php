@@ -226,6 +226,14 @@ final class Playwright
     }
 
     /**
+     * Checks if any browser type has open contexts, meaning the current test has visited a page.
+     */
+    public static function hasContexts(): bool
+    {
+        return array_any(self::$browserTypes, fn (BrowserFactory $browserType): bool => $browserType->hasContexts());
+    }
+
+    /**
      * Reset playwright state, reset browser types, without closing them.
      */
     public static function reset(): void
