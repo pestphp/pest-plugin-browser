@@ -60,6 +60,7 @@ final class Client
 
             $launchOptions = json_encode([
                 'headless' => Playwright::isHeadless(),
+                'slowMo' => Playwright::slowMo(),
                 'ignoreHTTPSErrors' => true,
                 'bypassCSP' => true,
             ]);
