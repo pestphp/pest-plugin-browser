@@ -107,6 +107,15 @@ final class Client
             /** @var array{id: string|null, params: array{add: string|null}, error: array{error: array{message: string|null}}} $response */
             $response = json_decode($responseJson, true);
 
+            // A response to another request is the late answer of one whose consumer stopped
+            // reading before it arrived: a navigation once it reached its waitUntil state, a
+            // querySelector once the handle was created. Its result and its error belong to that
+            // request. Taken as this one's, the error fails an assertion that passed, and the
+            // result reaches whichever call reads the next value, an evaluate() included.
+            if (isset($response['id']) && $response['id'] !== $requestId) {
+                continue;
+            }
+
             if (isset($response['error']['error']['message'])) {
                 $message = $response['error']['error']['message'];
 
