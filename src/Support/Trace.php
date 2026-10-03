@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Support;
 
+use FilesystemIterator;
 use Pest\TestSuite;
 use ZipArchive;
 
@@ -136,6 +137,10 @@ final class Trace
             }
         }
 
-        @rmdir(self::dir());
+        $dir = self::dir();
+
+        if (is_dir($dir) && ! new FilesystemIterator($dir)->valid()) {
+            rmdir($dir);
+        }
     }
 }
