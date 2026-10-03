@@ -42,6 +42,13 @@ final readonly class AwaitableWebpage
             'keys',
             'drag',
             'append',
+            // A repeated navigation restarts the page load the previous attempt was waiting
+            // for, so on a slow runner none of them ever finishes within an attempt. Playwright
+            // already waits for the load state itself.
+            'navigate',
+            'refresh',
+            'back',
+            'forward',
         ],
     ) {
         //
