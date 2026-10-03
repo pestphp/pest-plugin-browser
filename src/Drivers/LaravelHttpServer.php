@@ -488,7 +488,9 @@ final class LaravelHttpServer implements HttpServer
         $files = [];
 
         foreach (explode("--{$boundary}", $body) as $part) {
-            $part = mb_ltrim($part, "\r\n");
+            // Byte for byte, not mb_ltrim(): that replaces every byte which is not valid UTF-8, and a
+            // file part is binary.
+            $part = (string) preg_replace('/^[\r\n]+/', '', $part);
             if ($part === '' || str_starts_with($part, '--')) {
                 continue;
             }
