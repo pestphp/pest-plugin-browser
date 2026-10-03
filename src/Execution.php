@@ -126,9 +126,14 @@ final class Execution
         $start = microtime(true);
         $end = $start + ($timeout / 1_000);
 
+        // Each attempt bounds the Playwright calls it makes, so a page that loads or paints slowly
+        // gets a longer attempt when the configured timeout is longer, instead of every attempt
+        // failing at the same one second on a busy CI runner.
+        $attempt = max(1_000, intdiv($timeout, 5));
+
         while (microtime(true) < $end) {
             try {
-                return Playwright::usingTimeout(1_000, $callback);
+                return Playwright::usingTimeout($attempt, $callback);
             } catch (ExpectationFailedException) {
                 //
             }
