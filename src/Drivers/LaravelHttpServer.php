@@ -374,11 +374,15 @@ final class LaravelHttpServer implements HttpServer
             }
         }
 
-        return new Response(
-            $response->getStatusCode(),
-            $response->headers->all(), // @phpstan-ignore-line
-            $content,
-        );
+        // Headers before the body: the constructor sets the body first and then replaces every
+        // header with the given ones, which drops the Content-Length the body had just set. Without
+        // one, a 204 or 304 is framed chunked and its terminator reaches Chromium as the start of the
+        // next response on the socket.
+        $ampResponse = new Response($response->getStatusCode());
+        $ampResponse->setHeaders($response->headers->all()); // @phpstan-ignore-line
+        $ampResponse->setBody($content);
+
+        return $ampResponse;
     }
 
     /**
