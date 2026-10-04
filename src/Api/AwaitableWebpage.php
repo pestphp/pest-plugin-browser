@@ -42,6 +42,12 @@ final readonly class AwaitableWebpage
             'keys',
             'drag',
             'append',
+            // Retrying can start another load or traverse another history entry. Let
+            // Playwright wait within a single navigation attempt.
+            'navigate',
+            'refresh',
+            'back',
+            'forward',
         ],
     ) {
         //
