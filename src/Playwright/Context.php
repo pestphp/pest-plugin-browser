@@ -102,4 +102,20 @@ final class Context
 
         return $this;
     }
+
+    /**
+     * Returns the current storage state (cookies and localStorage) as a JSON string.
+     */
+    public function storageState(): string
+    {
+        $response = $this->sendMessage('storageState');
+
+        foreach ($response as $message) {
+            if (isset($message['result'])) {
+                return (string) json_encode($message['result']);
+            }
+        }
+
+        return '{"cookies":[],"origins":[]}';
+    }
 }
