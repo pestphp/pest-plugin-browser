@@ -60,6 +60,21 @@ final class Playwright
     private static ?string $host = null;
 
     /**
+     * Whether to record video on failure.
+     */
+    private static bool $recordVideoOnFailure = false;
+
+    /**
+     * The page being recorded for the current test.
+     */
+    private static ?Page $pendingVideoPage = null;
+
+    /**
+     * The sanitized test name used as the video destination filename.
+     */
+    private static ?string $pendingVideoDestName = null;
+
+    /**
      * Get a browser factory for the given browser type.
      */
     public static function browser(BrowserType $browserType): BrowserFactory
@@ -185,6 +200,56 @@ final class Playwright
     public static function shouldDebugAssertions(): bool
     {
         return self::$shouldDebugAssertions;
+    }
+
+    /**
+     * Enable video recording on failure.
+     */
+    public static function setRecordVideoOnFailure(): void
+    {
+        self::$recordVideoOnFailure = true;
+    }
+
+    /**
+     * Whether video recording on failure is enabled.
+     */
+    public static function shouldRecordVideoOnFailure(): bool
+    {
+        return self::$recordVideoOnFailure;
+    }
+
+    /**
+     * Register a video recording for the current test.
+     */
+    public static function registerVideoRecording(Page $page, string $destName): void
+    {
+        self::$pendingVideoPage = $page;
+        self::$pendingVideoDestName = $destName;
+    }
+
+    /**
+     * Get the pending video page.
+     */
+    public static function pendingVideoPage(): ?Page
+    {
+        return self::$pendingVideoPage;
+    }
+
+    /**
+     * Get the pending video destination filename (without extension).
+     */
+    public static function pendingVideoDestName(): ?string
+    {
+        return self::$pendingVideoDestName;
+    }
+
+    /**
+     * Clear the pending video recording state.
+     */
+    public static function clearVideoRecording(): void
+    {
+        self::$pendingVideoPage = null;
+        self::$pendingVideoDestName = null;
     }
 
     /**
