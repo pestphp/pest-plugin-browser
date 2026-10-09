@@ -96,7 +96,8 @@
     "extra": {
         "pest": {
             "plugins": [
-                "Pest\\Browser\\Plugin"
+                "Pest\\Browser\\Plugin",
+                "Pest\\Browser\\Record"
             ]
         }
     }
