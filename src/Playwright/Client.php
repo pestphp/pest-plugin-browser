@@ -107,6 +107,14 @@ final class Client
             /** @var array{id: string|null, params: array{add: string|null}, error: array{error: array{message: string|null}}} $response */
             $response = json_decode($responseJson, true);
 
+            // A request that stopped reading before its own reply arrived - a navigation
+            // that returns on its load event, or an attempt the retry loop gave up on -
+            // leaves that reply in the socket. It answers nothing this request asked, so
+            // it must neither fail this request nor be taken as its result.
+            if (isset($response['id']) && $response['id'] !== $requestId) {
+                continue;
+            }
+
             if (isset($response['error']['error']['message'])) {
                 $message = $response['error']['error']['message'];
 
