@@ -59,22 +59,7 @@ final class Execution
             "\n  <info>Test [{$testName}] failed with the message:</info> {$message}\n"
         );
 
-        // @phpstan-ignore-next-line
-        Container::getInstance()->get(OutputInterface::class)->writeln(
-            '  <info>Press any key to continue...</info>'
-        );
-
-        $stdin = new ReadableResourceStream(STDIN);
-
-        async(function () use ($stdin): void {
-            while ($stdin->read() !== null) {
-                $stdin->close();
-
-                delay(0.1);
-
-                break;
-            }
-        })->await();
+        $this->waitForKey();
     }
 
     /**
@@ -119,16 +104,13 @@ final class Execution
             '  <info>Press any key to continue...</info>'
         );
 
+        // The stream is not closed, as doing so would close the process' STDIN for the rest of the test suite...
         $stdin = new ReadableResourceStream(STDIN);
 
         async(function () use ($stdin): void {
-            while ($stdin->read() !== null) {
-                $stdin->close();
+            $stdin->read();
 
-                delay(0.1);
-
-                break;
-            }
+            delay(0.1);
         })->await();
     }
 
