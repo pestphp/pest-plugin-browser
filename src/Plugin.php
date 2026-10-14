@@ -52,7 +52,9 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
 
             Tracing::stopAll(save: $status->isFailure() || $status->isError());
 
-            ServerManager::instance()->http()->flush();
+            if (ServerManager::instance()->hasHttp()) {
+                ServerManager::instance()->http()->flush();
+            }
 
             Playwright::reset();
         })->in($this->in());
@@ -138,13 +140,17 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
     {
         try {
             if (Parallel::isWorker() || Parallel::isEnabled() === false) {
-                ServerManager::instance()->http()->stop();
+                if (ServerManager::instance()->hasHttp()) {
+                    ServerManager::instance()->http()->stop();
+                }
 
                 Playwright::close();
             }
 
             if (Parallel::isWorker() === false) {
-                ServerManager::instance()->playwright()->stop();
+                if (ServerManager::instance()->hasPlaywright()) {
+                    ServerManager::instance()->playwright()->stop();
+                }
 
                 // Only browser tests clean up the traces of previous runs, so they are reported only when they ran.
                 if (self::$booted && Playwright::shouldTrace()) {
