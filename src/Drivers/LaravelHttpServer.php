@@ -463,12 +463,59 @@ final class LaravelHttpServer implements HttpServer
     /**
      * Remove the temporary files of the uploads.
      *
-     * @param  array<string, UploadedFile>  $files
+     * @param  array<string, mixed>  $files
      */
     private function removeUploads(array $files): void
     {
-        foreach ($files as $file) {
-            @unlink($file->getPathname());
+        array_walk_recursive($files, function (mixed $file): void {
+            if ($file instanceof UploadedFile) {
+                @unlink($file->getPathname());
+            }
+        });
+    }
+
+    /**
+     * Puts a file under its field name the way PHP does: `files[]` appends to
+     * a list, `files[avatar]` sets a key, and a plain name sets the key.
+     *
+     * @param  array<string, mixed>  $files
+     */
+    private function addFile(array &$files, string $name, UploadedFile $file): void
+    {
+        if (preg_match('/^([^\[]+)((?:\[[^\]]*\])+)$/', $name, $matches) !== 1) {
+            $files[$name] = $file;
+
+            return;
+        }
+
+        preg_match_all('/\[([^\]]*)\]/', $matches[2], $segments);
+
+        $target = &$files;
+        foreach ([$matches[1], ...$segments[1]] as $index => $segment) {
+            $isLast = $index === count($segments[1]);
+
+            if ($segment === '') {
+                if ($isLast) {
+                    $target[] = $file;
+
+                    return;
+                }
+
+                $target[] = [];
+                $segment = array_key_last($target);
+            }
+
+            if ($isLast) {
+                $target[$segment] = $file;
+
+                return;
+            }
+
+            if (! isset($target[$segment]) || ! is_array($target[$segment])) {
+                $target[$segment] = [];
+            }
+
+            $target = &$target[$segment];
         }
     }
 
@@ -476,11 +523,11 @@ final class LaravelHttpServer implements HttpServer
      * Reads a multipart body the way PHP does for a real upload: the fields
      * into the parameters, each file into a temporary file wrapped in an
      * upload in test mode (there is no real upload for `is_uploaded_file()`
-     * to recognise here). Two parts with the same name keep the last file,
-     * and a nested name such as `files[avatar]` stays flat where PHP would
-     * nest it.
+     * to recognise here). File names nest as PHP nests them: `files[]` gives
+     * a list and `files[avatar]` a keyed array; two parts with the same plain
+     * name keep the last file.
      *
-     * @return array{0: array<int|string, mixed>, 1: array<string, UploadedFile>}
+     * @return array{0: array<int|string, mixed>, 1: array<string, mixed>}
      */
     private function parseMultipartBody(string $body, string $boundary): array
     {
@@ -503,7 +550,7 @@ final class LaravelHttpServer implements HttpServer
                 $path = (string) tempnam(sys_get_temp_dir(), 'pest-upload-');
                 file_put_contents($path, $content);
                 $mimeType = preg_match('/Content-Type:\s*([^\r\n]+)/i', $rawHeaders, $type) === 1 ? mb_trim($type[1]) : null;
-                $files[$name[1]] = new UploadedFile($path, $fileName[1], $mimeType, null, true);
+                $this->addFile($files, $name[1], new UploadedFile($path, $fileName[1], $mimeType, null, true));
 
                 continue;
             }
