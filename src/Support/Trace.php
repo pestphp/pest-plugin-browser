@@ -128,6 +128,10 @@ final class Trace
      */
     public static function cleanup(): void
     {
+        if (is_dir(self::dir()) === false) {
+            return;
+        }
+
         $files = glob(self::dir().'/*.zip');
 
         if (is_array($files)) {

@@ -59,10 +59,14 @@ final class ServerManager
             return AlreadyStartedPlaywrightServer::fromPersisted();
         }
 
+        if ($this->playwright instanceof PlaywrightServer) {
+            return $this->playwright;
+        }
+
         $port = Port::find();
         $host = Playwright::host() ?? self::DEFAULT_HOST;
 
-        $this->playwright ??= PlaywrightNpmServer::create(
+        $this->playwright = PlaywrightNpmServer::create(
             PackageJsonDirectory::find(),
             '.'.DIRECTORY_SEPARATOR.'node_modules'.DIRECTORY_SEPARATOR.'.bin'.DIRECTORY_SEPARATOR.'playwright run-server --host %s --port %d --mode launchServer',
             $host,
@@ -76,6 +80,14 @@ final class ServerManager
         );
 
         return $this->playwright;
+    }
+
+    /**
+     * Determines whether the Playwright server instance has already been created.
+     */
+    public function hasPlaywright(): bool
+    {
+        return $this->playwright instanceof PlaywrightServer;
     }
 
     /**
