@@ -463,29 +463,31 @@ final class LaravelHttpServer implements HttpServer
     /**
      * Remove the temporary files of the uploads.
      *
-     * @param  array<string, UploadedFile>  $files
+     * @param  array<int|string, mixed>  $files
      */
     private function removeUploads(array $files): void
     {
-        foreach ($files as $file) {
-            @unlink($file->getPathname());
-        }
+        array_walk_recursive($files, function (mixed $file): void {
+            if ($file instanceof UploadedFile) {
+                @unlink($file->getPathname());
+            }
+        });
     }
 
     /**
      * Reads a multipart body the way PHP does for a real upload: the fields
      * into the parameters, each file into a temporary file wrapped in an
      * upload in test mode (there is no real upload for `is_uploaded_file()`
-     * to recognise here). Two parts with the same name keep the last file,
-     * and a nested name such as `files[avatar]` stays flat where PHP would
-     * nest it.
+     * to recognise here). File names nest the way PHP nests them, so that
+     * `files[]` collects a list and `files[avatar]` a keyed entry.
      *
-     * @return array{0: array<int|string, mixed>, 1: array<string, UploadedFile>}
+     * @return array{0: array<int|string, mixed>, 1: array<int|string, mixed>}
      */
     private function parseMultipartBody(string $body, string $boundary): array
     {
         $fields = '';
-        $files = [];
+        $fileNames = '';
+        $uploads = [];
 
         foreach (explode("--{$boundary}", $body) as $part) {
             $part = mb_ltrim($part, "\r\n");
@@ -503,7 +505,8 @@ final class LaravelHttpServer implements HttpServer
                 $path = (string) tempnam(sys_get_temp_dir(), 'pest-upload-');
                 file_put_contents($path, $content);
                 $mimeType = preg_match('/Content-Type:\s*([^\r\n]+)/i', $rawHeaders, $type) === 1 ? mb_trim($type[1]) : null;
-                $files[$name[1]] = new UploadedFile($path, $fileName[1], $mimeType, null, true);
+                $fileNames .= ($fileNames === '' ? '' : '&').rawurlencode($name[1]).'='.count($uploads);
+                $uploads[] = new UploadedFile($path, $fileName[1], $mimeType, null, true);
 
                 continue;
             }
@@ -514,6 +517,15 @@ final class LaravelHttpServer implements HttpServer
 
         $parameters = [];
         parse_str($fields, $parameters);
+
+        // Each file name is parsed like a field whose value is the index of its upload, then the index is swapped for the upload.
+        $files = [];
+        parse_str($fileNames, $files);
+        array_walk_recursive($files, function (mixed &$index) use ($uploads): void {
+            if (is_string($index)) {
+                $index = $uploads[(int) $index];
+            }
+        });
 
         return [$parameters, $files];
     }
