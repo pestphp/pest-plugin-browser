@@ -104,3 +104,23 @@ it('asserts that there are accessibility issues after navigating to another page
         ->assertPathIs('/second')
         ->assertNoAccessibilityIssues();
 })->throws(ExpectationFailedException::class, 'image-alt');
+
+it('does not load axe into the page until accessibility is asserted', function (): void {
+    Route::get('/', fn (): string => '
+        <!DOCTYPE html>
+        <html lang="en">
+        <head><title>Lazy</title></head>
+        <body>
+            <main>
+                <h1>Lazy page</h1>
+            </main>
+        </body>
+        </html>
+    ');
+
+    $page = visit('/');
+
+    $page->assertScript('typeof window.axe', 'undefined')
+        ->assertNoAccessibilityIssues()
+        ->assertScript('typeof window.axe', 'object');
+});

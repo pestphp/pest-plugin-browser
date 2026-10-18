@@ -105,6 +105,8 @@ trait MakesConsoleAssertions
             );
         }
 
+        $this->page->injectAxe();
+
         /** @var Violations|null $violations */
         $violations = Playwright::usingTimeout(5_000, fn () => $this->page->evaluate('async () => ((await window.axe.run()).violations)'));
 
