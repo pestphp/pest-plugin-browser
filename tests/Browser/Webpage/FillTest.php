@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use PHPUnit\Framework\ExpectationFailedException;
+
 it('may fill text in an input field', function (): void {
     Route::get('/', fn (): string => '<input id="name" name="name" type="text">');
 
@@ -50,3 +52,11 @@ it('can fill an input with exact match css selectors', function (string $selecto
     '[name$="username"]',
     'input[name="username"]',
 ]);
+
+it('fails within the timeout when the field never appears', function (): void {
+    Route::get('/', fn (): string => '<input id="name" name="name" type="text">');
+
+    $page = visit('/');
+
+    $page->fill('#missing', 'John Doe');
+})->throws(ExpectationFailedException::class);
