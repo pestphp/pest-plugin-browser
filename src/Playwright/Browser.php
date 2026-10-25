@@ -96,6 +96,14 @@ final class Browser
     }
 
     /**
+     * Checks if the browser has any open contexts.
+     */
+    public function hasContexts(): bool
+    {
+        return $this->contexts !== [];
+    }
+
+    /**
      * Resets the browser state.
      */
     public function reset(): void
