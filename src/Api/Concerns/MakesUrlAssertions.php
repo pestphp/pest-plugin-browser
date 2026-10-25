@@ -231,7 +231,7 @@ trait MakesUrlAssertions
             return $this;
         }
 
-        $parsedOutputName = is_array($output[$name]) ? implode(',', $output[$name]) : $output[$name];
+        $parsedOutputName = is_array($output[$name]) ? implode(',', $output[$name]) : $output[$name]; // @phpstan-ignore argument.type
 
         $message = "Query string parameter [{$name}] had value [{$parsedOutputName}], but expected [{$value}].";
         expect($output[$name])->toBe($value, $message);

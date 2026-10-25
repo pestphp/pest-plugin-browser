@@ -55,6 +55,11 @@ final class Playwright
     private static ?string $userAgent = null;
 
     /**
+     * The default host.
+     */
+    private static ?string $host = null;
+
+    /**
      * Get a browser factory for the given browser type.
      */
     public static function browser(BrowserType $browserType): BrowserFactory
@@ -132,6 +137,22 @@ final class Playwright
     public static function setUserAgent(string $userAgent): void
     {
         self::$userAgent = $userAgent;
+    }
+
+    /**
+     * Set the default host.
+     */
+    public static function setHost(?string $host): void
+    {
+        self::$host = $host;
+    }
+
+    /**
+     * Get the default host.
+     */
+    public static function host(): ?string
+    {
+        return self::$host;
     }
 
     /**

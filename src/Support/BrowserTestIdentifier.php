@@ -81,8 +81,8 @@ final readonly class BrowserTestIdentifier
 
         for ($i = 0; $i < $tokensCount - 1; $i++) {
             if (is_array($tokens[$i]) &&
-            $tokens[$i][0] === T_STRING &&
-            mb_strtolower($tokens[$i][1]) === $functionName &&
+            in_array($tokens[$i][0], [T_STRING, T_NAME_FULLY_QUALIFIED], true) &&
+            mb_strtolower(mb_ltrim($tokens[$i][1], '\\')) === $functionName &&
             $tokens[$i + 1] === '(') {
                 if ($functionName === 'debug') {
                     return true;
