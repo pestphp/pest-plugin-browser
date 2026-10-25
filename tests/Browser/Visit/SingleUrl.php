@@ -126,6 +126,8 @@ it('may visit a page with a custom userAgent', function (): void {
 
 it('may visit external URLs', function (): void {
     ExternalSite::run(function (string $url): void {
-        visit($url)->assertSee('External fixture page');
+        visit($url)
+            ->assertUrlIs($url)
+            ->assertSee('External fixture page');
     });
 });

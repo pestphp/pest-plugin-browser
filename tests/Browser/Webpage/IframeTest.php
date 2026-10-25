@@ -114,11 +114,15 @@ it('can interact with iframe from external URL content', function (): void {
 
         Route::get('/', fn (): string => str_replace('__EXTERNAL_URL__', $url, $mainContent));
 
-        visit('/')
-            ->assertSee('Cross-Origin Iframe Behavior Test')
-            ->withinFrame('.iframe-container', function (AwaitableWebpage $frame): void {
-                $frame->assertSee('External fixture page');
-            });
+        $page = visit('/')->assertSee('Cross-Origin Iframe Behavior Test');
+
+        expect($page->script('window.location.origin'))->not->toBe($url);
+
+        $page->withinFrame('.iframe-container', function (AwaitableWebpage $frame) use ($url): void {
+            $frame->assertSee('External fixture page');
+
+            expect($frame->script('window.location.origin'))->toBe($url);
+        });
     });
 });
 
@@ -146,15 +150,20 @@ it('can interact with two iframes from external URL content', function (): void 
 
         Route::get('/', fn (): string => str_replace('__EXTERNAL_URL__', $url, $mainContent));
 
-        $page = visit('/')
-            ->assertSee('Cross-Origin Iframe Behavior Test');
+        $page = visit('/')->assertSee('Cross-Origin Iframe Behavior Test');
 
-        $page->withinFrame('.iframe-container', function (AwaitableWebpage $frame): void {
+        expect($page->script('window.location.origin'))->not->toBe($url);
+
+        $page->withinFrame('.iframe-container', function (AwaitableWebpage $frame) use ($url): void {
             $frame->assertSee('External fixture page');
+
+            expect($frame->script('window.location.origin'))->toBe($url);
         });
 
-        $page->withinFrame('.another-iframe-container', function (AwaitableWebpage $frame): void {
+        $page->withinFrame('.another-iframe-container', function (AwaitableWebpage $frame) use ($url): void {
             $frame->assertSee('External fixture page');
+
+            expect($frame->script('window.location.origin'))->toBe($url);
         });
     });
 });
