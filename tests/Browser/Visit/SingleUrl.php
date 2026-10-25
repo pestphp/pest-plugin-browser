@@ -126,5 +126,5 @@ it('may visit a page with a custom userAgent', function (): void {
 it('may visit external URLs', function (): void {
     $page = visit('https://example.com');
 
-    $page->assertSee('Example Domain');
+    $page->assertSee('This domain is for use in documentation examples');
 });
