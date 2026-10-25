@@ -123,10 +123,9 @@ final class Execution
 
         $originalCount = Assert::getCount();
 
-        $start = microtime(true);
-        $end = $start + ($timeout / 1_000);
+        $end = hrtime(true) + ($timeout * 1_000_000);
 
-        while (microtime(true) < $end) {
+        while (hrtime(true) < $end) {
             try {
                 return Playwright::usingTimeout(1_000, $callback);
             } catch (ExpectationFailedException) {
@@ -153,7 +152,6 @@ final class Execution
         $reflector = new ReflectionClass(Assert::class);
         $property = $reflector->getProperty('count');
 
-        // @phpstan-ignore-next-line
-        $property->setValue(Assert::class, $originalCount);
+        $property->setValue(null, $originalCount);
     }
 }
