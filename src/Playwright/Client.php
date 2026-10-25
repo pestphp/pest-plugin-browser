@@ -32,6 +32,13 @@ final class Client
     private int $timeout = 5_000;
 
     /**
+     * The PHP call stacks of the requests made while tracing, keyed by request id.
+     *
+     * @var array<string, array<int, array{file: string, line: int, function: string}>>
+     */
+    private array $stacks = [];
+
+    /**
      * Returns the current client instance.
      */
     public static function instance(): self
@@ -72,9 +79,13 @@ final class Client
      */
     public function execute(string $guid, string $method, array $params = [], array $meta = []): Generator
     {
-        assert($this->websocketConnection instanceof WebsocketConnection, 'WebSocket client is not connected.');
-
         $requestId = uniqid();
+
+        if (Tracing::isRecording()) {
+            $this->recordStack($requestId);
+        }
+
+        assert($this->websocketConnection instanceof WebsocketConnection, 'WebSocket client is not connected.');
 
         $timeout = is_numeric($params['timeout'] ?? null) ? (int) $params['timeout'] : $this->timeout;
 
@@ -131,6 +142,54 @@ final class Client
     public function timeout(): int
     {
         return $this->timeout;
+    }
+
+    /**
+     * Returns the PHP call stacks of the requests made while tracing.
+     *
+     * @return array<string, array<int, array{file: string, line: int, function: string}>>
+     */
+    public function stacks(): array
+    {
+        return $this->stacks;
+    }
+
+    /**
+     * Forgets the PHP call stacks of the requests made while tracing.
+     */
+    public function flushStacks(): void
+    {
+        $this->stacks = [];
+    }
+
+    /**
+     * Records the PHP call stack of the given request, so the trace viewer can show the test's source.
+     */
+    private function recordStack(string $requestId): void
+    {
+        $src = dirname(__DIR__);
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+        $frames = [];
+
+        foreach ($backtrace as $index => $trace) {
+            if (! isset($trace['file'], $trace['line'])) {
+                continue;
+            }
+
+            if (str_starts_with($trace['file'], $src) || str_contains($trace['file'], DIRECTORY_SEPARATOR.'vendor'.DIRECTORY_SEPARATOR)) {
+                continue;
+            }
+
+            $frames[] = [
+                'file' => $trace['file'],
+                'line' => $trace['line'],
+                'function' => $backtrace[$index + 1]['function'] ?? '',
+            ];
+        }
+
+        if ($frames !== []) {
+            $this->stacks[$requestId] = $frames;
+        }
     }
 
     /**

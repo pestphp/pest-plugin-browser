@@ -5,6 +5,10 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Route;
 use Pest\Browser\Playwright\Playwright;
 
+afterEach(function (): void {
+    pest()->browser()->withHost(null);
+});
+
 it('can visit non-subdomain routes with subdomain host browser testing', function (): void {
     Route::get('/app-test', fn (): string => '
         <html>
@@ -70,18 +74,18 @@ it('Chaining withHost will not override global host', function (): void {
         'host' => request()->getHost(),
     ]);
 
-    // Set global host: test.domain
-    pest()->browser()->withHost('test.domain');
+    // Set global host: test.localhost
+    pest()->browser()->withHost('test.localhost');
 
     // 1. Visit withHost: api.localhost
     visit('/api/health')
         ->withHost('api.localhost')
         ->assertSee('"host":"api.localhost"')
-        ->assertDontSee('test.domain');
+        ->assertDontSee('test.localhost');
 
-    // 2. Visit without withHost: should use global host "test.domain"
+    // 2. Visit without withHost: should use global host "test.localhost"
     visit('/')
-        ->assertSee('"host":"test.domain"')
+        ->assertSee('"host":"test.localhost"')
         ->assertDontSee('api.localhost');
 });
 
