@@ -14,6 +14,7 @@ use Amp\Http\Server\Request as AmpRequest;
 use Amp\Http\Server\RequestHandler\ClosureRequestHandler;
 use Amp\Http\Server\Response;
 use Amp\Http\Server\SocketHttpServer;
+use Closure;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Illuminate\Cookie\CookieJar;
@@ -21,6 +22,7 @@ use Illuminate\Foundation\Testing\Concerns\WithoutExceptionHandlingHandler;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Routing\UrlGenerator;
+use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\Uri;
 use Pest\Browser\Contracts\HttpServer;
 use Pest\Browser\Exceptions\ServerNotFoundException;
@@ -338,6 +340,8 @@ final class LaravelHttpServer implements HttpServer
         // The container is reused, so flush stale queued cookies (FPM/Octane start fresh).
         app()->make(CookieJar::class)->flushQueuedCookies();
 
+        $scopedInstances = $this->scopedInstances();
+
         try {
             config(['app.debug' => false]);
 
@@ -345,6 +349,7 @@ final class LaravelHttpServer implements HttpServer
         } catch (Throwable $e) {
             $this->lastThrowable = $e;
             $this->removeUploads($files);
+            $this->forgetScopedInstancesSince($scopedInstances);
 
             throw $e;
         } finally {
@@ -374,6 +379,9 @@ final class LaravelHttpServer implements HttpServer
 
             $content = $buffer === false ? '' : $buffer;
         }
+
+        // After the content, so a streamed response doesn't leave its scoped instances to the next request.
+        $this->forgetScopedInstancesSince($scopedInstances);
 
         return new Response(
             $response->getStatusCode(),
@@ -470,6 +478,49 @@ final class LaravelHttpServer implements HttpServer
     {
         foreach ($files as $file) {
             @unlink($file->getPathname());
+        }
+    }
+
+    /**
+     * Get the scoped instances the container holds, keyed by abstract.
+     *
+     * @return array<object>
+     */
+    private function scopedInstances(): array
+    {
+        return (function (): array {
+            $abstracts = [];
+
+            foreach ($this->scopedInstances as $scoped) {
+                array_push($abstracts, ...($scoped instanceof Closure ? $this->closureReturnTypes($scoped) : [$scoped]));
+            }
+
+            return array_intersect_key($this->instances, array_flip(array_filter($abstracts, is_string(...))));
+        })->call(app());
+    }
+
+    /**
+     * Forget the scoped instances resolved while serving a request, as FPM and Octane
+     * start each request without them. The ones the test bound before the request,
+     * such as a mock, stay bound, like they do with `$this->get()`.
+     *
+     * @param  array<object>  $before
+     */
+    private function forgetScopedInstancesSince(array $before): void
+    {
+        $forgotten = false;
+
+        foreach ($this->scopedInstances() as $abstract => $instance) {
+            if (! array_key_exists($abstract, $before) || $before[$abstract] !== $instance) {
+                app()->forgetInstance($abstract);
+
+                $forgotten = true;
+            }
+        }
+
+        // Facades cache what they resolve, so drop those references as well (the queue worker does the same).
+        if ($forgotten) {
+            Facade::clearResolvedInstances();
         }
     }
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Foundation\Http\Events\RequestHandled;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
@@ -99,4 +100,66 @@ it('does not re-send a cookie queued in an earlier request', function (): void {
     visit('/no-cookie')->assertSee('plain');
 
     expect($queued)->toBe(['queue-cookie']);
+});
+
+it('resolves scoped bindings fresh on every request', function (): void {
+    // Without flush the second request would get the first request's instance, like a singleton.
+    $resolved = 0;
+    app()->scoped('scoped-probe', function () use (&$resolved): ArrayObject {
+        $resolved++;
+
+        return new ArrayObject();
+    });
+    Route::get('/scoped-probe', function (): string {
+        $probe = app('scoped-probe');
+        $probe[] = 'hit';
+
+        return 'hits: '.count($probe);
+    });
+
+    visit('/scoped-probe')->assertSee('hits: 1');
+    visit('/scoped-probe')->assertSee('hits: 1');
+
+    expect($resolved)->toBe(2);
+});
+
+it('keeps a scoped binding the test registered', function (): void {
+    // A mock or instance bound by the test must reach every request, as it does with `$this->get()`.
+    app()->scoped('scoped-probe', fn (): ArrayObject => new ArrayObject(['source' => 'container']));
+    app()->instance('scoped-probe', new ArrayObject(['source' => 'test']));
+    Route::get('/scoped-probe', fn (): string => 'source: '.app('scoped-probe')['source']);
+
+    visit('/scoped-probe')->assertSee('source: test');
+    visit('/scoped-probe')->assertSee('source: test');
+});
+
+it('resolves scoped bindings fresh behind facades', function (): void {
+    // Facades cache what they resolve, so without flush the context of one request would reach the next.
+    Route::get('/context/add', function (): string {
+        Context::add('probe', 'first request');
+
+        return 'added';
+    });
+    Route::get('/context/read', fn (): string => 'probe: '.Context::get('probe', 'none'));
+
+    visit('/context/add')->assertSee('added');
+    visit('/context/read')->assertSee('probe: none');
+});
+
+it('forgets scoped instances when the request throws', function (): void {
+    // Without exception handling the kernel throws, and the failed request's instances must go too.
+    $this->withoutExceptionHandling();
+    app()->scoped('scoped-probe', fn (): ArrayObject => new ArrayObject());
+    Route::get('/scoped-probe', function (): never {
+        $probe = app('scoped-probe');
+        $probe[] = 'hit';
+
+        throw new RuntimeException('The request failed.');
+    });
+
+    expect(function (): void {
+        visit('/scoped-probe')->assertPathIs('/scoped-probe');
+    })->toThrow(RuntimeException::class, 'The request failed.');
+
+    expect(app('scoped-probe'))->toHaveCount(0);
 });
