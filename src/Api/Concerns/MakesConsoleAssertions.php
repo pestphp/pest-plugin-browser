@@ -108,7 +108,7 @@ trait MakesConsoleAssertions
         $this->page->injectAxe();
 
         /** @var Violations|null $violations */
-        $violations = Playwright::usingTimeout(5_000, fn () => $this->page->evaluate('async () => ((await window.axe.run()).violations)'));
+        $violations = Playwright::usingTimeout(max(5_000, Playwright::timeout()), fn () => $this->page->evaluate('async () => ((await window.axe.run()).violations)'));
 
         if (! is_array($violations)) {
             $violations = [];
