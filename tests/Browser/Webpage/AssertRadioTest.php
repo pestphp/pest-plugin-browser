@@ -36,6 +36,22 @@ it('may fail when asserting radio is not selected but it is', function (): void 
     $page->assertRadioNotSelected('color', 'red');
 })->throws(ExpectationFailedException::class);
 
+it('may assert radio is selected by data-testid and value', function (): void {
+    Route::get('/', fn (): string => '<input type="radio" data-testid="color" name="color" value="red"><input type="radio" data-testid="color" name="color" value="blue" checked>');
+
+    $page = visit('/');
+
+    $page->assertRadioSelected('@color', 'blue');
+});
+
+it('may assert radio is not selected by data-testid and value', function (): void {
+    Route::get('/', fn (): string => '<input type="radio" data-testid="color" name="color" value="red" checked><input type="radio" data-testid="color" name="color" value="blue">');
+
+    $page = visit('/');
+
+    $page->assertRadioNotSelected('@color', 'blue');
+});
+
 it('may assert all radios in a group are not selected', function (): void {
     Route::get('/', fn (): string => '<input type="radio" name="size" value="small"><input type="radio" name="size" value="medium"><input type="radio" name="size" value="large">');
 
