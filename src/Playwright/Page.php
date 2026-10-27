@@ -24,6 +24,11 @@ final class Page
     use Concerns\InteractsWithPlaywright;
 
     /**
+     * The axe-core source, read on first use.
+     */
+    private static ?string $axe = null;
+
+    /**
      * Whether the page has been closed.
      */
     private bool $closed = false;
@@ -481,6 +486,26 @@ final class Page
         /** @var array<int, string> $brokenImages */
         return $brokenImages;
 
+    }
+
+    /**
+     * Loads axe-core into the page and its iframes, unless it is already there.
+     */
+    public function injectAxe(): void
+    {
+        if ($this->evaluate('typeof window.axe === "undefined"') === true) {
+            $this->evaluate(self::$axe ??= (string) file_get_contents(
+                dirname(__DIR__, 2).'/resources/js/axe.min.js'
+            ));
+        }
+
+        foreach ($this->locator('iframe')->all() as $iframe) {
+            $frame = $iframe->contentFrame();
+
+            if ($frame !== null && property_exists($frame, 'guid') && is_string($frame->guid)) {
+                new self($this->context, $frame->guid, $frame->guid)->injectAxe();
+            }
+        }
     }
 
     /**
