@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use Pest\Browser\Api\On;
 use Pest\Browser\Api\Webpage;
 use Pest\Browser\Enums\ColorScheme;
+use Tests\Support\ExternalSite;
 
 // grab all methods from PendingAwaitablePage
 $reflection = new ReflectionClass(On::class);
@@ -124,7 +125,9 @@ it('may visit a page with a custom userAgent', function (): void {
 });
 
 it('may visit external URLs', function (): void {
-    $page = visit('https://example.com');
-
-    $page->assertSee('Example Domain');
+    ExternalSite::run(function (string $url): void {
+        visit($url)
+            ->assertUrlIs($url)
+            ->assertSee('External fixture page');
+    });
 });

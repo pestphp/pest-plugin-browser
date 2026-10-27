@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
 use Pest\Browser\Api\AwaitableWebpage;
+use Tests\Support\ExternalSite;
 
 it('can interact with iframe content using withinFrame', function (): void {
     $iframeContent = <<<'HTML'
@@ -94,63 +95,75 @@ it('can interact with iframe that uses JavaScript', function (): void {
 });
 
 it('can interact with iframe from external URL content', function (): void {
-    $mainContent = <<<'HTML'
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Cross-Origin Iframe Test</title>
-        </head>
-        <body>
-            <h1>Cross-Origin Iframe Behavior Test</h1>
+    ExternalSite::run(function (string $url): void {
+        $mainContent = <<<'HTML'
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Cross-Origin Iframe Test</title>
+            </head>
+            <body>
+                <h1>Cross-Origin Iframe Behavior Test</h1>
 
-            <div class="iframe-container">
-                <iframe id="external-iframe" src="https://example.com"></iframe>
-            </div>
-        </body>
-        </html>
-        HTML;
+                <div class="iframe-container">
+                    <iframe id="external-iframe" src="__EXTERNAL_URL__"></iframe>
+                </div>
+            </body>
+            </html>
+            HTML;
 
-    Route::get('/', fn (): string => $mainContent);
+        Route::get('/', fn (): string => str_replace('__EXTERNAL_URL__', $url, $mainContent));
 
-    visit('/')
-        ->assertSee('Cross-Origin Iframe Behavior Test')
-        ->wait(1)
-        ->withinFrame('.iframe-container', function (AwaitableWebpage $frame): void {
-            $frame->assertSee('Example Domain');
+        $page = visit('/')->assertSee('Cross-Origin Iframe Behavior Test');
+
+        expect($page->script('window.location.origin'))->not->toBe($url);
+
+        $page->withinFrame('.iframe-container', function (AwaitableWebpage $frame) use ($url): void {
+            $frame->assertSee('External fixture page');
+
+            expect($frame->script('window.location.origin'))->toBe($url);
         });
+    });
 });
 
 it('can interact with two iframes from external URL content', function (): void {
-    $mainContent = <<<'HTML'
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Cross-Origin Iframe Test</title>
-        </head>
-        <body>
-            <h1>Cross-Origin Iframe Behavior Test</h1>
+    ExternalSite::run(function (string $url): void {
+        $mainContent = <<<'HTML'
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Cross-Origin Iframe Test</title>
+            </head>
+            <body>
+                <h1>Cross-Origin Iframe Behavior Test</h1>
 
-            <div class="iframe-container">
-                <iframe id="external-iframe" src="https://example.com"></iframe>
-            </div>
+                <div class="iframe-container">
+                    <iframe id="external-iframe" src="__EXTERNAL_URL__"></iframe>
+                </div>
 
-            <div class="another-iframe-container">
-                <iframe id="external-iframe" src="https://example.com"></iframe>
-            </div>
-        </body>
-        </html>
-        HTML;
+                <div class="another-iframe-container">
+                    <iframe id="external-iframe" src="__EXTERNAL_URL__"></iframe>
+                </div>
+            </body>
+            </html>
+            HTML;
 
-    Route::get('/', fn (): string => $mainContent);
+        Route::get('/', fn (): string => str_replace('__EXTERNAL_URL__', $url, $mainContent));
 
-    $page = visit('/')
-        ->assertSee('Cross-Origin Iframe Behavior Test');
+        $page = visit('/')->assertSee('Cross-Origin Iframe Behavior Test');
 
-    $page->withinFrame('.iframe-container', function (AwaitableWebpage $frame): void {
-        $frame->assertSee('Example Domain');
-    });
+        expect($page->script('window.location.origin'))->not->toBe($url);
 
-    $page->withinFrame('.another-iframe-container', function (AwaitableWebpage $frame): void {
-        $frame->assertSee('Example Domain');
+        $page->withinFrame('.iframe-container', function (AwaitableWebpage $frame) use ($url): void {
+            $frame->assertSee('External fixture page');
+
+            expect($frame->script('window.location.origin'))->toBe($url);
+        });
+
+        $page->withinFrame('.another-iframe-container', function (AwaitableWebpage $frame) use ($url): void {
+            $frame->assertSee('External fixture page');
+
+            expect($frame->script('window.location.origin'))->toBe($url);
+        });
     });
 });
