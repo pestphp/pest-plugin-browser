@@ -112,10 +112,18 @@ final readonly class AlreadyStartedPlaywrightServer implements PlaywrightServer
     }
 
     /**
-     * Returns the state file of the Playwright server.
+     * Returns the state file of the Playwright server. Defaults to a file shared by
+     * the whole package; set "PEST_BROWSER_STATE_FILE" to give a test run its own,
+     * so that concurrent runs in one checkout don't overwrite or delete each other's state.
      */
     private static function path(): string
     {
+        $path = getenv('PEST_BROWSER_STATE_FILE');
+
+        if (is_string($path) && $path !== '') {
+            return $path;
+        }
+
         return dirname(__DIR__, 3).'/.temp/playwright-server.json';
     }
 }
