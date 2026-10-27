@@ -8,10 +8,16 @@ use Pest\Browser\Enums\BrowserType;
 use Pest\Browser\Enums\Device;
 
 /**
- * @mixin PendingAwaitablePage
+ * @mixin Webpage|AwaitableWebpage|PendingAwaitablePage
  */
 final readonly class On
 {
+    /**
+     * The cached pending awaitable page, lazily created on first call.
+     */
+    // @phpstan-ignore property.uninitializedReadonly
+    private PendingAwaitablePage $pendingAwaitablePage;
+
     /**
      * Creates a new pending awaitable page instance.
      *
@@ -33,13 +39,11 @@ final readonly class On
      */
     public function __call(string $name, array $arguments): mixed
     {
+        // @phpstan-ignore property.readOnlyAssignNotInConstructor
+        $this->pendingAwaitablePage ??= $this->createPendingAwaitablePage();
+
         // @phpstan-ignore-next-line
-        return new PendingAwaitablePage(
-            $this->browserType,
-            $this->device,
-            $this->url,
-            $this->options,
-        )->{$name}(...$arguments);
+        return $this->pendingAwaitablePage->{$name}(...$arguments);
     }
 
     /**
@@ -349,6 +353,16 @@ final readonly class On
         return new self(
             $this->browserType,
             Device::HUAWEI_P50,
+            $this->url,
+            $this->options,
+        );
+    }
+
+    private function createPendingAwaitablePage(): PendingAwaitablePage
+    {
+        return new PendingAwaitablePage(
+            $this->browserType,
+            $this->device,
             $this->url,
             $this->options,
         );
