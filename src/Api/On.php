@@ -10,36 +10,43 @@ use Pest\Browser\Enums\Device;
 /**
  * @mixin PendingAwaitablePage
  */
-final readonly class On
+final class On
 {
+    /**
+     * The pending page instance that receives every forwarded call.
+     */
+    private ?PendingAwaitablePage $pendingAwaitablePage = null;
+
     /**
      * Creates a new pending awaitable page instance.
      *
      * @param  array<string, mixed>  $options
      */
     public function __construct(
-        private BrowserType $browserType,
-        private Device $device,
-        private string $url,
-        private array $options,
+        private readonly BrowserType $browserType,
+        private readonly Device $device,
+        private readonly string $url,
+        private readonly array $options,
     ) {
         //
     }
 
     /**
-     * Creates the actual visit page instance, and calls the given method on it.
+     * Creates the actual visit page instance once, and calls the given method on it.
      *
      * @param  array<int, mixed>  $arguments
      */
     public function __call(string $name, array $arguments): mixed
     {
-        // @phpstan-ignore-next-line
-        return new PendingAwaitablePage(
+        $this->pendingAwaitablePage ??= new PendingAwaitablePage(
             $this->browserType,
             $this->device,
             $this->url,
             $this->options,
-        )->{$name}(...$arguments);
+        );
+
+        // @phpstan-ignore-next-line
+        return $this->pendingAwaitablePage->{$name}(...$arguments);
     }
 
     /**
