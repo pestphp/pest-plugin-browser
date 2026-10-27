@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Pest\Browser;
 
+use Closure;
+use LogicException;
 use Pest\Browser\Contracts\HttpServer;
 use Pest\Browser\Contracts\PlaywrightServer;
 use Pest\Browser\Drivers\LaravelHttpServer;
@@ -41,6 +43,9 @@ final class ServerManager
      * The HTTP server process.
      */
     private ?HttpServer $http = null;
+
+    /** @var Closure(): HttpServer|null */
+    private ?Closure $httpServerFactory = null;
 
     /**
      * Gets the singleton instance of the server manager.
@@ -87,11 +92,33 @@ final class ServerManager
     }
 
     /**
+     * Sets the factory used to create the HTTP server.
+     *
+     * @param  Closure(): HttpServer  $factory
+     */
+    public function setHttpServerFactory(Closure $factory): void
+    {
+        if ($this->http instanceof HttpServer) {
+            throw new LogicException('The HTTP server factory must be configured before the browser server is created.');
+        }
+
+        $this->httpServerFactory = $factory;
+    }
+
+    /**
      * Returns the HTTP server process instance.
      */
     public function http(): HttpServer
     {
-        return $this->http ??= match (function_exists('app_path')) {
+        if ($this->http instanceof HttpServer) {
+            return $this->http;
+        }
+
+        if ($this->httpServerFactory instanceof Closure) {
+            return $this->http = ($this->httpServerFactory)();
+        }
+
+        return $this->http = match (function_exists('app_path')) {
             true => new LaravelHttpServer(
                 self::DEFAULT_HOST, // Always bind to 127.0.0.1 for server
                 Port::find(),
