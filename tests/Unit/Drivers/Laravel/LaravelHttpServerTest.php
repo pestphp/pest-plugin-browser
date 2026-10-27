@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 use function Pest\Laravel\withServerVariables;
 use function Pest\Laravel\withUnencryptedCookie;
@@ -160,6 +161,37 @@ it('forgets scoped instances when the request throws', function (): void {
     expect(function (): void {
         visit('/scoped-probe')->assertPathIs('/scoped-probe');
     })->toThrow(RuntimeException::class, 'The request failed.');
+
+    expect(app('scoped-probe'))->toHaveCount(0);
+});
+
+it('forgets scoped instances when a streamed response throws', function (): void {
+    // The stream callback runs after the kernel has handled the request, so its instances must go even when it fails.
+    app()->scoped('scoped-probe', fn (): ArrayObject => new ArrayObject());
+    Route::get('/scoped-stream', fn (): StreamedResponse => response()->stream(function (): void {
+        $probe = app('scoped-probe');
+        $probe[] = 'hit';
+
+        throw new RuntimeException('The stream failed.');
+    }));
+
+    visit('/scoped-stream')->assertSee('500');
+
+    expect(app('scoped-probe'))->toHaveCount(0);
+});
+
+it('forgets scoped instances when terminating the request throws', function (): void {
+    // Terminate runs after the kernel has handled the request, so its instances must go even when it fails.
+    app()->scoped('scoped-probe', fn (): ArrayObject => new ArrayObject());
+    app()->terminating(function (): void {
+        $probe = app('scoped-probe');
+        $probe[] = 'hit';
+
+        throw new RuntimeException('Terminating failed.');
+    });
+    Route::get('/scoped-probe', fn (): string => 'handled');
+
+    visit('/scoped-probe')->assertSee('500');
 
     expect(app('scoped-probe'))->toHaveCount(0);
 });

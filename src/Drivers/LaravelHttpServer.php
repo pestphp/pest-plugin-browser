@@ -342,46 +342,47 @@ final class LaravelHttpServer implements HttpServer
 
         $scopedInstances = $this->scopedInstances();
 
+        // However the request ends, so an exception in terminate or in a streamed response cannot keep them.
         try {
-            config(['app.debug' => false]);
-
-            $response = $kernel->handle($laravelRequest = Request::createFromBase($symfonyRequest));
-        } catch (Throwable $e) {
-            $this->lastThrowable = $e;
-            $this->removeUploads($files);
-            $this->forgetScopedInstancesSince($scopedInstances);
-
-            throw $e;
-        } finally {
-            config(['app.debug' => $debug]);
-        }
-
-        $kernel->terminate($laravelRequest, $response);
-
-        // PHP removes the temporary files at shutdown, after terminate: a listener reading an upload there still finds it.
-        $this->removeUploads($files);
-
-        if (property_exists($response, 'exception') && $response->exception !== null) {
-            assert($response->exception instanceof Throwable);
-
-            $this->lastThrowable = $response->exception;
-        }
-
-        $content = $response->getContent();
-
-        if ($content === false) {
             try {
-                ob_start();
-                $response->sendContent();
+                config(['app.debug' => false]);
+
+                $response = $kernel->handle($laravelRequest = Request::createFromBase($symfonyRequest));
+            } catch (Throwable $e) {
+                $this->lastThrowable = $e;
+                $this->removeUploads($files);
+
+                throw $e;
             } finally {
-                $buffer = ob_get_clean();
+                config(['app.debug' => $debug]);
             }
 
-            $content = $buffer === false ? '' : $buffer;
-        }
+            $kernel->terminate($laravelRequest, $response);
 
-        // After the content, so a streamed response doesn't leave its scoped instances to the next request.
-        $this->forgetScopedInstancesSince($scopedInstances);
+            // PHP removes the temporary files at shutdown, after terminate: a listener reading an upload there still finds it.
+            $this->removeUploads($files);
+
+            if (property_exists($response, 'exception') && $response->exception !== null) {
+                assert($response->exception instanceof Throwable);
+
+                $this->lastThrowable = $response->exception;
+            }
+
+            $content = $response->getContent();
+
+            if ($content === false) {
+                try {
+                    ob_start();
+                    $response->sendContent();
+                } finally {
+                    $buffer = ob_get_clean();
+                }
+
+                $content = $buffer === false ? '' : $buffer;
+            }
+        } finally {
+            $this->forgetScopedInstancesSince($scopedInstances);
+        }
 
         return new Response(
             $response->getStatusCode(),
