@@ -488,7 +488,8 @@ final class LaravelHttpServer implements HttpServer
         $files = [];
 
         foreach (explode("--{$boundary}", $body) as $part) {
-            $part = mb_ltrim($part, "\r\n");
+            // Without '8bit', mbstring re-encodes the part and rewrites non-UTF-8 bytes as "?".
+            $part = mb_ltrim($part, "\r\n", '8bit');
             if ($part === '' || str_starts_with($part, '--')) {
                 continue;
             }
