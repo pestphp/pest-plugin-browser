@@ -19,17 +19,25 @@ beforeEach(function (): void {
 });
 
 it('rewrites the URLs on JS files', function (): void {
+    // Use a unique filename so parallel workers sharing `public/` don't race on `app.js`.
+    $filename = 'app-'.uniqid('', true).'.js';
+    $filepath = public_path($filename);
+
     @file_put_contents(
-        public_path('app.js'),
+        $filepath,
         <<<'JS'
         console.log('Hello http://localhost');
         JS,
     );
 
-    $page = visit('/app.js');
+    try {
+        $page = visit('/'.$filename);
 
-    $page->assertSee('http://127.0.0.1')
-        ->assertDontSee('http://localhost');
+        $page->assertSee('http://127.0.0.1')
+            ->assertDontSee('http://localhost');
+    } finally {
+        @unlink($filepath);
+    }
 });
 
 it('serves JS files bigger than the stream chunk size', function (): void {
