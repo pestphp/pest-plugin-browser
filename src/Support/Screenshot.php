@@ -70,6 +70,10 @@ final class Screenshot
             self::dir().'/ImageDiffView',
             self::dir(),
         ] as $dir) {
+            if (! is_dir($dir)) {
+                continue;
+            }
+
             $files = glob($dir.'/*');
 
             if (is_array($files)) {
