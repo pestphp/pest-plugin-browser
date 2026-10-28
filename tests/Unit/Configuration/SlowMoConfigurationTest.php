@@ -6,8 +6,15 @@ use Pest\Browser\Configuration;
 use Pest\Browser\Playwright\Playwright;
 
 beforeEach(function (): void {
-    // Reset Playwright state before each test
+    $this->originalSlowMo = Playwright::slowMo();
+    $this->originalTimeout = Playwright::timeout();
+
     Playwright::setSlowMo(0);
+});
+
+afterEach(function (): void {
+    Playwright::setSlowMo($this->originalSlowMo);
+    Playwright::setTimeout($this->originalTimeout);
 });
 
 it('defaults slow motion to zero', function (): void {

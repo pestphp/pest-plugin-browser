@@ -6,7 +6,13 @@ use Pest\Browser\Playwright\Playwright;
 use Pest\Browser\Plugin;
 
 beforeEach(function (): void {
+    $this->originalSlowMo = Playwright::slowMo();
+
     Playwright::setSlowMo(0);
+});
+
+afterEach(function (): void {
+    Playwright::setSlowMo($this->originalSlowMo);
 });
 
 it('leaves slow motion off when the argument is absent', function (): void {
