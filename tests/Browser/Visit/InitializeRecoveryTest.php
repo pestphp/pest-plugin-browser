@@ -17,9 +17,9 @@ it('can open a page after initialization fails', function (): void {
 
     expect(Client::instance()->timeout())->toBe($timeout);
 
-    (new ReflectionProperty(Playwright::class, 'browserTypes'))->setValue([]);
+    new ReflectionProperty(Playwright::class, 'browserTypes')->setValue([]);
 
-    expect(fn () => Playwright::browser(BrowserType::CHROME))
+    expect(fn (): \Pest\Browser\Playwright\BrowserFactory => Playwright::browser(BrowserType::CHROME))
         ->toThrow(ExpectationFailedException::class, 'Assertion error');
 
     expect(Client::instance()->timeout())->toBe($timeout);
