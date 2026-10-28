@@ -402,19 +402,26 @@ final class LaravelHttpServer implements HttpServer
             // The content is sent as a string instead of a stream because a
             // "php://temp" stream is set to non-blocking mode, which makes
             // the event loop deliver the first 8192 bytes chunk only.
+            $content = $this->rewriteAssetUrl($content);
+
+            // Amp's Response sets the body before the headers, and setting the headers drops the Content-Length the
+            // body gave it, so it is passed explicitly: without it every asset is sent chunked.
             return new Response(200, [
                 'Content-Type' => $contentType,
-            ], $this->rewriteAssetUrl($content));
+                'Content-Length' => (string) strlen($content),
+            ], $content);
         }
 
         $file = fopen($filepath, 'r');
+        $size = filesize($filepath);
 
-        if ($file === false) {
+        if ($file === false || $size === false) {
             return new Response(404);
         }
 
         return new Response(200, [
             'Content-Type' => $contentType,
+            'Content-Length' => (string) $size,
         ], new ReadableResourceStream($file));
     }
 

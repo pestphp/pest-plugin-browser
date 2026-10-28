@@ -100,3 +100,19 @@ it('does not re-send a cookie queued in an earlier request', function (): void {
 
     expect($queued)->toBe(['queue-cookie']);
 });
+
+it('serves every asset with its Content-Length instead of chunked', function (string $extension): void {
+    // Over the compression middleware's 860-byte threshold, in a type it does not compress, so the length reaches the browser as is.
+    $filename = 'asset-'.uniqid('', true).'.'.$extension;
+    @file_put_contents($filepath = public_path($filename), str_repeat('x', 70_000));
+
+    try {
+        $page = visit('/');
+
+        $framing = $page->script("async () => { const response = await fetch('/{$filename}', { cache: 'no-store' }); return [response.headers.get('content-length'), response.headers.get('transfer-encoding'), (await response.arrayBuffer()).byteLength]; }");
+
+        expect($framing)->toBe([(string) filesize($filepath), null, filesize($filepath)]);
+    } finally {
+        @unlink($filepath);
+    }
+})->with(['wasm', 'bin']);
