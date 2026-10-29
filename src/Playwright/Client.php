@@ -10,6 +10,7 @@ use Generator;
 use Pest\Browser\Exceptions\PlaywrightOutdatedException;
 use PHPUnit\Framework\ExpectationFailedException;
 use RuntimeException;
+use Throwable;
 
 use function Amp\Websocket\Client\connect;
 
@@ -131,6 +132,32 @@ final class Client
             if (isset($response['id']) && $response['id'] === $requestId) {
                 break;
             }
+        }
+    }
+
+    /**
+     * Drops the current connection so the next test can initialize again.
+     *
+     * Playwright accepts initialize only once per socket, and marks the
+     * socket initialized before the browser launch finishes.
+     */
+    public function disconnect(): void
+    {
+        if (! $this->websocketConnection instanceof WebsocketConnection) {
+            return;
+        }
+
+        $connection = $this->websocketConnection;
+        $this->websocketConnection = null;
+
+        if ($connection->isClosed()) {
+            return;
+        }
+
+        try {
+            $connection->close();
+        } catch (Throwable) {
+            // The socket can already be gone when initialize fails.
         }
     }
 
