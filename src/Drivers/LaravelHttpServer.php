@@ -14,6 +14,7 @@ use Amp\Http\Server\Request as AmpRequest;
 use Amp\Http\Server\RequestHandler\ClosureRequestHandler;
 use Amp\Http\Server\Response;
 use Amp\Http\Server\SocketHttpServer;
+use Closure;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Illuminate\Cookie\CookieJar;
@@ -21,6 +22,7 @@ use Illuminate\Foundation\Testing\Concerns\WithoutExceptionHandlingHandler;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Routing\UrlGenerator;
+use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\Uri;
 use Pest\Browser\Contracts\HttpServer;
 use Pest\Browser\Exceptions\ServerNotFoundException;
@@ -338,40 +340,48 @@ final class LaravelHttpServer implements HttpServer
         // The container is reused, so flush stale queued cookies (FPM/Octane start fresh).
         app()->make(CookieJar::class)->flushQueuedCookies();
 
-        try {
-            config(['app.debug' => false]);
+        $scopedInstances = $this->scopedInstances();
 
-            $response = $kernel->handle($laravelRequest = Request::createFromBase($symfonyRequest));
-        } catch (Throwable $e) {
-            $this->lastThrowable = $e;
+        // However the request ends, so an exception in terminate or in a streamed response cannot keep them.
+        try {
+            try {
+                config(['app.debug' => false]);
+
+                $response = $kernel->handle($laravelRequest = Request::createFromBase($symfonyRequest));
+            } catch (Throwable $e) {
+                $this->lastThrowable = $e;
+                $this->removeUploads($files);
+
+                throw $e;
+            } finally {
+                config(['app.debug' => $debug]);
+            }
+
+            $kernel->terminate($laravelRequest, $response);
+
+            // PHP removes the temporary files at shutdown, after terminate: a listener reading an upload there still finds it.
             $this->removeUploads($files);
 
-            throw $e;
-        } finally {
-            config(['app.debug' => $debug]);
-        }
+            if (property_exists($response, 'exception') && $response->exception !== null) {
+                assert($response->exception instanceof Throwable);
 
-        $kernel->terminate($laravelRequest, $response);
-
-        // PHP removes the temporary files at shutdown, after terminate: a listener reading an upload there still finds it.
-        $this->removeUploads($files);
-
-        if (property_exists($response, 'exception') && $response->exception !== null) {
-            assert($response->exception instanceof Throwable);
-
-            $this->lastThrowable = $response->exception;
-        }
-
-        $content = $response->getContent();
-
-        if ($content === false) {
-            try {
-                ob_start();
-                $response->sendContent();
-            } finally {
-                // @phpstan-ignore-next-line
-                $content = mb_trim(ob_get_clean());
+                $this->lastThrowable = $response->exception;
             }
+
+            $content = $response->getContent();
+
+            if ($content === false) {
+                try {
+                    ob_start();
+                    $response->sendContent();
+                } finally {
+                    $buffer = ob_get_clean();
+                }
+
+                $content = $buffer === false ? '' : $buffer;
+            }
+        } finally {
+            $this->forgetScopedInstancesSince($scopedInstances);
         }
 
         return new Response(
@@ -469,6 +479,49 @@ final class LaravelHttpServer implements HttpServer
     {
         foreach ($files as $file) {
             @unlink($file->getPathname());
+        }
+    }
+
+    /**
+     * Get the scoped instances the container holds, keyed by abstract.
+     *
+     * @return array<object>
+     */
+    private function scopedInstances(): array
+    {
+        return (function (): array {
+            $abstracts = [];
+
+            foreach ($this->scopedInstances as $scoped) {
+                array_push($abstracts, ...($scoped instanceof Closure ? $this->closureReturnTypes($scoped) : [$scoped]));
+            }
+
+            return array_intersect_key($this->instances, array_flip(array_filter($abstracts, is_string(...))));
+        })->call(app());
+    }
+
+    /**
+     * Forget the scoped instances resolved while serving a request, as FPM and Octane
+     * start each request without them. The ones the test bound before the request,
+     * such as a mock, stay bound, like they do with `$this->get()`.
+     *
+     * @param  array<object>  $before
+     */
+    private function forgetScopedInstancesSince(array $before): void
+    {
+        $forgotten = false;
+
+        foreach ($this->scopedInstances() as $abstract => $instance) {
+            if (! array_key_exists($abstract, $before) || $before[$abstract] !== $instance) {
+                app()->forgetInstance($abstract);
+
+                $forgotten = true;
+            }
+        }
+
+        // Facades cache what they resolve, so drop those references as well (the queue worker does the same).
+        if ($forgotten) {
+            Facade::clearResolvedInstances();
         }
     }
 
