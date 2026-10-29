@@ -21,7 +21,10 @@ afterEach(function (): void {
     $snapshot = TestSuite::getInstance()->snapshots->current();
 
     if ($snapshot->exists()) {
-        unlink(TestSuite::getInstance()->rootPath.'/'.$snapshot->path());
+        $path = $snapshot->path();
+
+        // On Windows the path is already absolute, elsewhere it is relative to the root.
+        unlink(is_file($path) ? $path : TestSuite::getInstance()->rootPath.'/'.$path);
     }
 });
 
