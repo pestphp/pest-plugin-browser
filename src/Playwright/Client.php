@@ -4,15 +4,16 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Playwright;
 
+use Amp\ByteStream\ResourceStream;
+use Amp\Websocket\Client\Rfc6455Connector;
 use Amp\Websocket\Client\WebsocketConnection;
+use Amp\Websocket\Client\WebsocketHandshake;
 use Amp\Websocket\WebsocketMessage;
 use Generator;
 use Pest\Browser\Exceptions\PlaywrightOutdatedException;
 use PHPUnit\Framework\ExpectationFailedException;
 use RuntimeException;
 use Throwable;
-
-use function Amp\Websocket\Client\connect;
 
 /**
  * @internal
@@ -28,6 +29,21 @@ final class Client
      * WebSocket client instance.
      */
     private ?WebsocketConnection $websocketConnection = null;
+
+    /**
+     * The socket under the WebSocket connection.
+     */
+    private ?ResourceStream $socket = null;
+
+    /**
+     * The id of the process that opened the WebSocket connection.
+     */
+    private int|false $socketOwner = false;
+
+    /**
+     * Whether the shutdown function that releases inherited sockets is registered.
+     */
+    private bool $releasesInheritedSockets = false;
 
     /**
      * Default timeout for requests in milliseconds.
@@ -68,9 +84,21 @@ final class Client
                 'bypassCSP' => true,
             ]);
 
-            $this->websocketConnection = connect(
+            $connector = new Rfc6455Connector(new ConnectionFactory(function (ResourceStream $socket): void {
+                $this->socket = $socket;
+            }));
+
+            $this->websocketConnection = $connector->connect(new WebsocketHandshake(
                 "ws://$url?browser=$browser&launch-options=$launchOptions",
-            );
+            ));
+
+            $this->socketOwner = getmypid();
+
+            if (! $this->releasesInheritedSockets) {
+                register_shutdown_function($this->releaseInheritedSocket(...));
+
+                $this->releasesInheritedSockets = true;
+            }
         }
     }
 
@@ -149,6 +177,7 @@ final class Client
 
         $connection = $this->websocketConnection;
         $this->websocketConnection = null;
+        $this->socket = null;
 
         if ($connection->isClosed()) {
             return;
@@ -222,6 +251,26 @@ final class Client
 
         if ($frames !== []) {
             $this->stacks[$requestId] = $frames;
+        }
+    }
+
+    /**
+     * Closes a forked process's copy of the socket, before PHP destroys the connection.
+     *
+     * A process forked from the test process (pcntl_fork) shares the socket with it. Destroying
+     * the connection shuts the socket down, which ends the connection for both processes, while
+     * fclose() only releases the forked process's copy of it.
+     */
+    private function releaseInheritedSocket(): void
+    {
+        if ($this->socketOwner === getmypid()) {
+            return;
+        }
+
+        $resource = $this->socket?->getResource();
+
+        if (is_resource($resource)) {
+            fclose($resource);
         }
     }
 
