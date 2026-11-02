@@ -86,6 +86,9 @@ final readonly class AwaitableWebpage
                 $result = $call();
             }
         } catch (ExpectationFailedException $e) {
+            // Count the failed check, as PHPUnit does, so the test is not also reported as risky.
+            expect(true)->toBeTrue();
+
             ServerManager::instance()->http()->throwLastThrowableIfNeeded();
 
             try {
