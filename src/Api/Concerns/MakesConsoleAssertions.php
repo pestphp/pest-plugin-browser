@@ -18,6 +18,13 @@ use Pest\Browser\Support\AccessibilityFormatter;
 trait MakesConsoleAssertions
 {
     /**
+     * Console methods `assertNoConsoleLogs()` can check.
+     *
+     * @var list<string>
+     */
+    private const array CONSOLE_LEVELS = ['log', 'info', 'warn', 'error', 'debug'];
+
+    /**
      * Asserts there are no console logs or JavaScript errors on the page.
      */
     public function assertNoSmoke(): Webpage
@@ -57,16 +64,33 @@ trait MakesConsoleAssertions
 
     /**
      * Asserts there are no console logs on the page.
+     *
+     * Only `console.log` is checked by default. Pass one or more of `log`, `info`,
+     * `warn`, `error`, or `debug` to include those methods. `warning` is an alias of `warn`.
+     *
+     * @param  array<int, string>|string  $levels
      */
-    public function assertNoConsoleLogs(): Webpage
+    public function assertNoConsoleLogs(array|string $levels = ['log']): Webpage
     {
-        $consoleLogs = $this->page->consoleLogs();
+        $levels = $this->normalizeConsoleLevels($levels);
+
+        $consoleLogs = array_values(array_filter(
+            $this->page->consoleLogs(),
+            fn (array $log): bool => in_array($log['level'] ?? 'log', $levels, true),
+        ));
 
         expect($consoleLogs)->toBeEmpty(sprintf(
             'Expected no console logs on the page initially with the url [%s], but found %s: %s',
             $this->initialUrl,
             count($consoleLogs),
-            implode(', ', array_map(fn (array $log) => $log['message'], $consoleLogs)),
+            implode(', ', array_map(
+                function (array $log): string {
+                    $level = $log['level'] ?? 'log';
+
+                    return $level === 'log' ? $log['message'] : sprintf('[%s] %s', $level, $log['message']);
+                },
+                $consoleLogs,
+            )),
         ));
 
         return $this;
@@ -127,5 +151,39 @@ trait MakesConsoleAssertions
         expect($violations)->toBeEmpty($report);
 
         return $this;
+    }
+
+    /**
+     * @param  array<int, string>|string  $levels
+     * @return list<string>
+     */
+    private function normalizeConsoleLevels(array|string $levels): array
+    {
+        if (is_string($levels)) {
+            $levels = [$levels];
+        }
+
+        $levels = array_map(
+            fn (string $level): string => $level === 'warning' ? 'warn' : $level,
+            $levels,
+        );
+
+        $levels = array_values(array_unique($levels));
+
+        if ($levels === []) {
+            throw new InvalidArgumentException('At least one console level is required.');
+        }
+
+        $unknown = array_values(array_diff($levels, self::CONSOLE_LEVELS));
+
+        if ($unknown !== []) {
+            throw new InvalidArgumentException(sprintf(
+                'Unknown console level [%s]. Expected one of [%s].',
+                implode(', ', $unknown),
+                implode(', ', self::CONSOLE_LEVELS),
+            ));
+        }
+
+        return $levels;
     }
 }

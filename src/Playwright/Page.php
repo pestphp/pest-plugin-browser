@@ -457,13 +457,13 @@ final class Page
     /**
      * Get the console logs from the page, if any.
      *
-     * @return array<int, array{message: string}>
+     * @return array<int, array{message: string, level?: string}>
      */
     public function consoleLogs(): array
     {
         $consoleLogs = $this->evaluate('window.__pestBrowser.consoleLogs || []');
 
-        /** @var array<int, array{message: string}> $consoleLogs */
+        /** @var array<int, array{message: string, level?: string}> $consoleLogs */
 
         return $consoleLogs;
     }

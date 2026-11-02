@@ -20,14 +20,23 @@ final class InitScript
                 consoleLogs: []
             };
 
-            const originalConsoleLog = console.log;
-            console.log = function(...args) {
-                window.__pestBrowser.consoleLogs.push({
-                    timestamp: new Date().getTime(),
-                    message: args.map(arg => String(arg)).join(' ')
-                });
-                originalConsoleLog.apply(console, args);
-            };
+            const consoleLevels = ['log', 'info', 'warn', 'error', 'debug'];
+            const originalConsole = {};
+
+            for (const level of consoleLevels) {
+                originalConsole[level] = console[level];
+            }
+
+            for (const level of consoleLevels) {
+                console[level] = function (...args) {
+                    window.__pestBrowser.consoleLogs.push({
+                        timestamp: new Date().getTime(),
+                        level: level,
+                        message: args.map(arg => String(arg)).join(' ')
+                    });
+                    originalConsole[level].apply(console, args);
+                };
+            }
 
             window.addEventListener('error', (e) => {
                 window.__pestBrowser.jsErrors.push({
@@ -44,6 +53,17 @@ final class InitScript
                     filename: '',
                     lineno: 0,
                     colno: 0
+                });
+            });
+
+            window.addEventListener('securitypolicyviolation', (e) => {
+                const directive = e.effectiveDirective || e.violatedDirective;
+
+                window.__pestBrowser.jsErrors.push({
+                    message: `CSP ${e.disposition}: ${directive} blocked ${e.blockedURI}`,
+                    filename: e.sourceFile || '',
+                    lineno: e.lineNumber || 0,
+                    colno: e.columnNumber || 0
                 });
             });
             JS;

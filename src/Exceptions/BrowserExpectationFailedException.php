@@ -43,7 +43,7 @@ final class BrowserExpectationFailedException
 
         if (count($consoleLogs) > 0) {
             $message .= "\n\nThe following console logs were found:\n".implode("\n", array_map(
-                fn (array $error): string => '- '.$error['message'],
+                fn (array $error): string => '- ['.($error['level'] ?? 'log').'] '.$error['message'],
                 $consoleLogs,
             ));
         }
