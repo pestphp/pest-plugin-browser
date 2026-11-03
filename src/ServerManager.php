@@ -67,9 +67,13 @@ final class ServerManager
         $port = Port::find();
         $host = Playwright::host() ?? self::DEFAULT_HOST;
 
+        // Without "exec", /bin/sh stays between PHP and node on Unix, so stopping the
+        // process would end the shell and leave the Playwright server running.
+        $exec = PHP_OS_FAMILY === 'Windows' ? '' : 'exec ';
+
         $this->playwright ??= PlaywrightNpmServer::create(
             PackageJsonDirectory::find(),
-            '.'.DIRECTORY_SEPARATOR.'node_modules'.DIRECTORY_SEPARATOR.'.bin'.DIRECTORY_SEPARATOR.'playwright run-server --host %s --port %d --mode launchServer',
+            $exec.'.'.DIRECTORY_SEPARATOR.'node_modules'.DIRECTORY_SEPARATOR.'.bin'.DIRECTORY_SEPARATOR.'playwright run-server --host %s --port %d --mode launchServer',
             $host,
             $port,
             'Listening on',
