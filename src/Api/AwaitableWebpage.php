@@ -42,6 +42,9 @@ final readonly class AwaitableWebpage
             'keys',
             'drag',
             'append',
+            // Its callback runs while the key is held and performs its own actions, so
+            // a retry would hold the key and replay those actions a second time.
+            'withKeyDown',
             // Retrying can start another load or traverse another history entry. Let
             // Playwright wait within a single navigation attempt.
             'navigate',
