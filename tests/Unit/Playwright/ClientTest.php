@@ -2,10 +2,13 @@
 
 declare(strict_types=1);
 
+use Amp\Cancellation;
 use Amp\Websocket\Client\WebsocketConnection;
 use Amp\Websocket\WebsocketMessage;
 use Pest\Browser\Playwright\Client;
 use PHPUnit\Framework\ExpectationFailedException;
+
+use function Amp\delay;
 
 it('reports a closed connection instead of waiting on it', function (): void {
     $connection = $this->createStub(WebsocketConnection::class);
@@ -68,4 +71,27 @@ it('reports the screenshot comparison result instead of the bare expect error', 
 
     expect(fn (): array => iterator_to_array($client->execute('page@1', 'expectScreenshot')))
         ->toThrow(ExpectationFailedException::class, '1954 pixels (ratio 0.01 of all image pixels) are different.');
+});
+
+it('fails a request the server never answers once the action timeout and the grace have passed, instead of waiting forever', function (): void {
+    $connection = $this->createStub(WebsocketConnection::class);
+    $connection->method('receive')->willReturnCallback(
+        function (?Cancellation $cancellation = null): ?WebsocketMessage {
+            delay(5, cancellation: $cancellation);
+
+            return null;
+        },
+    );
+
+    $client = new Client();
+    $client->setTimeout(100);
+    $client->setReplyGrace(0);
+
+    new ReflectionProperty(Client::class, 'websocketConnection')->setValue($client, $connection);
+
+    $started = microtime(true);
+
+    expect(fn (): array => iterator_to_array($client->execute('page@1', 'goto')))
+        ->toThrow(RuntimeException::class, 'The Playwright server sent no reply within 0.1 seconds.')
+        ->and(microtime(true) - $started)->toBeLessThan(3.0);
 });
