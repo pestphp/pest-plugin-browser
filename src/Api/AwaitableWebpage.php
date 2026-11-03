@@ -42,6 +42,12 @@ final readonly class AwaitableWebpage
             'keys',
             'drag',
             'append',
+            // Filling selects the field's text, then inserts the value. An attempt that
+            // times out after the insertion was sent would be repeated, and the repeat
+            // can select the field before the first insertion lands: the value is then
+            // typed twice. The field itself is looked up again until it is on the page.
+            'fill',
+            'type',
             // Retrying can start another load or traverse another history entry. Let
             // Playwright wait within a single navigation attempt.
             'navigate',
