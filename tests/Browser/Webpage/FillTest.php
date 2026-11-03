@@ -50,3 +50,53 @@ it('can fill an input with exact match css selectors', function (string $selecto
     '[name$="username"]',
     'input[name="username"]',
 ]);
+
+it('fills only once when the page takes longer than an attempt to handle the input', function (string $method): void {
+    Route::get('/', fn (): string => '
+        <input id="name" type="text">
+        <span id="inputs">0</span>
+
+        <script>
+            let inputs = 0;
+
+            document.getElementById("name").addEventListener("input", function () {
+                inputs += 1;
+                document.getElementById("inputs").textContent = String(inputs);
+
+                if (inputs === 1) {
+                    const until = performance.now() + 1500;
+
+                    while (performance.now() < until) {}
+                }
+            });
+        </script>
+    ');
+
+    $page = visit('/');
+
+    $page->{$method}('#name', 'John Doe');
+
+    expect($page->text('#inputs'))->toBe('1');
+})->with(['fill', 'type']);
+
+it('may fill a field that the previous action reveals', function (): void {
+    Route::get('/', fn (): string => '
+        <button type="button">Reveal</button>
+        <div id="form"></div>
+
+        <script>
+            document.querySelector("button").addEventListener("click", function () {
+                setTimeout(function () {
+                    document.getElementById("form").innerHTML = \'<input name="email" type="text">\';
+                }, 500);
+            });
+        </script>
+    ');
+
+    $page = visit('/');
+
+    $page->click('Reveal');
+    $page->fill('email', 'john@example.com');
+
+    expect($page->value('[name="email"]'))->toBe('john@example.com');
+});

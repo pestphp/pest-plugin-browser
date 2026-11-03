@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Pest\Browser\Api\Concerns;
 
 use Pest\Browser\Api\Webpage;
+use Pest\Browser\Execution;
+use Pest\Browser\Playwright\Locator;
 use Pest\Browser\Playwright\Playwright;
+use PHPUnit\Framework\ExpectationFailedException;
 
 /**
  * @mixin Webpage
@@ -63,7 +66,24 @@ trait InteractsWithElements
      */
     public function type(string $field, string $value): self
     {
-        $this->guessLocator($field)->fill($value);
+        // Only the lookup is retried, not the fill: a field revealed by the previous
+        // action may not be on the page yet, and guessing too early would settle on
+        // the wrong locator for the whole timeout.
+        $locator = Execution::instance()->waitForExpectation(function () use ($field): Locator {
+            $locator = $this->guessLocator($field);
+
+            if ($locator->count() === 0) {
+                throw new ExpectationFailedException(
+                    sprintf('Selector [%s] does not match any element.', $field)
+                );
+            }
+
+            return $locator;
+        });
+
+        assert($locator instanceof Locator);
+
+        $locator->fill($value);
 
         return $this;
     }
