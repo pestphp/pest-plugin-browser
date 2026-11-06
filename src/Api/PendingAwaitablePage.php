@@ -12,7 +12,7 @@ use Pest\Browser\Playwright\Playwright;
 use Pest\Browser\Support\ComputeUrl;
 
 /**
- * @mixin Webpage|AwaitableWebpage
+ * @mixin AwaitableWebpage
  */
 final class PendingAwaitablePage
 {
