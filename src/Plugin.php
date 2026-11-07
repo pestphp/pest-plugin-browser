@@ -75,7 +75,7 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
                 );
             }
 
-            (new Configuration)->useRemoteConnection($endpoint);
+            (new Configuration)->useWebsocket($endpoint);
         }
 
         if ($this->hasArgument('--headed', $arguments)) {
