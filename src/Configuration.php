@@ -18,9 +18,9 @@ use Pest\Browser\Playwright\Playwright;
  */
 final readonly class Configuration
 {
-    public function useRemoteConnection(string $endpoint): self
+    public function useWebsocket(string $endpoint): self
     {
-        ServerManager::instance()->useEndpoint($endpoint);
+        ServerManager::instance()->useWebsocket($endpoint);
 
         return $this;
     }

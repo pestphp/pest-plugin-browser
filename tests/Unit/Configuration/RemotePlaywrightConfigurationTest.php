@@ -27,7 +27,7 @@ afterEach(function (): void {
 });
 
 it('uses a remote endpoint without creating a local process', function (string $endpoint): void {
-    $configuration = (new Configuration)->useRemoteConnection($endpoint);
+    $configuration = (new Configuration)->useWebsocket($endpoint);
     $server = ServerManager::instance()->playwright();
 
     expect($configuration)->toBeInstanceOf(Configuration::class)
@@ -98,14 +98,14 @@ it('continues to use a local server by default', function (): void {
 });
 
 it('rejects invalid remote endpoints', function (string $endpoint): void {
-    expect(fn (): Configuration => (new Configuration)->useRemoteConnection($endpoint))
+    expect(fn (): Configuration => (new Configuration)->useWebsocket($endpoint))
         ->toThrow(InvalidArgumentException::class);
 })->with(['', 'localhost:3000', 'https://example.test', 'ws:///missing-host', 'ws://example.test/#fragment']);
 
 it('does not allow changing the endpoint after the server was created', function (): void {
-    (new Configuration)->useRemoteConnection('ws://example.test:3000');
+    (new Configuration)->useWebsocket('ws://example.test:3000');
 
-    expect(fn (): Configuration => (new Configuration)->useRemoteConnection('ws://other.example.test:3000'))
+    expect(fn (): Configuration => (new Configuration)->useWebsocket('ws://other.example.test:3000'))
         ->toThrow(LogicException::class);
 });
 
@@ -125,7 +125,7 @@ it('runs browser commands remotely without stopping the external server', functi
             throw new RuntimeException('Could not start the remote Playwright fixture: '.$process->getErrorOutput());
         }
 
-        (new Configuration)->useRemoteConnection('ws://'.$address.'/session?token=example');
+        (new Configuration)->useWebsocket('ws://'.$address.'/session?token=example');
         $server = ServerManager::instance()->playwright();
         $server->start();
 

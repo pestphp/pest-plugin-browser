@@ -16,7 +16,7 @@ This repository contains the Pest Plugin for Browser.
 By default, the plugin starts a local Playwright server using your project's npm installation. To use an existing remote server instead, configure its WebSocket endpoint in `tests/Pest.php`, before running browser tests:
 
 ```php
-pest()->browser()->useRemoteConnection('ws://playwright.example.com:3000');
+pest()->browser()->useWebsocket('ws://playwright.example.com:3000');
 ```
 
 For a single test run, pass the endpoint to Pest with `--ws`:

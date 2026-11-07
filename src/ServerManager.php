@@ -88,7 +88,7 @@ final class ServerManager
         return $this->playwright;
     }
 
-    public function useEndpoint(string $endpoint): void
+    public function useWebsocket(string $endpoint): void
     {
         if ($this->playwright instanceof PlaywrightServer) {
             throw new LogicException('The Playwright endpoint must be configured before the browser server is created.');
