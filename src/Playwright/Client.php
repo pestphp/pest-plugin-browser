@@ -68,9 +68,14 @@ final class Client
                 'bypassCSP' => true,
             ]);
 
-            $this->websocketConnection = connect(
-                "ws://$url?browser=$browser&launch-options=$launchOptions",
-            );
+            $endpoint = preg_match('/^wss?:\/\//', $url) === 1 ? $url : "ws://$url";
+            $separator = str_contains($endpoint, '?') ? '&' : '?';
+            $query = http_build_query([
+                'browser' => $browser,
+                'launch-options' => $launchOptions,
+            ], '', '&', PHP_QUERY_RFC3986);
+
+            $this->websocketConnection = connect($endpoint.$separator.$query);
         }
     }
 

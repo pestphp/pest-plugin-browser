@@ -18,6 +18,13 @@ use Pest\Browser\Playwright\Playwright;
  */
 final readonly class Configuration
 {
+    public function useRemoteConnection(string $endpoint): self
+    {
+        ServerManager::instance()->useEndpoint($endpoint);
+
+        return $this;
+    }
+
     /**
      * Uses a custom HTTP server implementation.
      *

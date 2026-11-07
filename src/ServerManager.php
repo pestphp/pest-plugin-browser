@@ -13,6 +13,7 @@ use Pest\Browser\Drivers\NullableHttpServer;
 use Pest\Browser\Playwright\Playwright;
 use Pest\Browser\Playwright\Servers\AlreadyStartedPlaywrightServer;
 use Pest\Browser\Playwright\Servers\PlaywrightNpmServer;
+use Pest\Browser\Playwright\Servers\RemotePlaywrightServer;
 use Pest\Browser\Support\PackageJsonDirectory;
 use Pest\Browser\Support\Port;
 use Pest\Plugins\Parallel;
@@ -60,6 +61,10 @@ final class ServerManager
      */
     public function playwright(): PlaywrightServer
     {
+        if ($this->playwright instanceof PlaywrightServer) {
+            return $this->playwright;
+        }
+
         if (Parallel::isWorker()) {
             return AlreadyStartedPlaywrightServer::fromPersisted();
         }
@@ -81,6 +86,15 @@ final class ServerManager
         );
 
         return $this->playwright;
+    }
+
+    public function useEndpoint(string $endpoint): void
+    {
+        if ($this->playwright instanceof PlaywrightServer) {
+            throw new LogicException('The Playwright endpoint must be configured before the browser server is created.');
+        }
+
+        $this->playwright = new RemotePlaywrightServer($endpoint);
     }
 
     /**
