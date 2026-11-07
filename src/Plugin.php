@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Pest\Browser;
 
 use Error;
+use InvalidArgumentException;
 use Pest\Browser\Enums\BrowserType;
 use Pest\Browser\Enums\ColorScheme;
 use Pest\Browser\Exceptions\BrowserNotSupportedException;
@@ -65,6 +66,42 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
      */
     public function handleArguments(array $arguments): array
     {
+        if ($this->hasArgument('--ws', $arguments)) {
+            $endpoint = $this->popArgumentValue('--ws', $arguments);
+
+            if ($endpoint === null || $endpoint === '') {
+                throw new InvalidArgumentException(
+                    'The "--ws" argument requires a value. Usage: --ws <websocket-endpoint>.'
+                );
+            }
+
+            (new Configuration)->useWebsocket($endpoint);
+        }
+
+        if ($this->hasArgument('--host', $arguments)) {
+            $host = $this->popArgumentValue('--host', $arguments);
+
+            if ($host === null || $host === '' || str_starts_with($host, '-')) {
+                throw new InvalidArgumentException(
+                    'The "--host" argument requires a value. Usage: --host <hostname>.'
+                );
+            }
+
+            (new Configuration)->withHost($host);
+        }
+
+        if ($this->hasArgument('--server-host', $arguments)) {
+            $host = $this->popArgumentValue('--server-host', $arguments);
+
+            if ($host === null || $host === '' || str_starts_with($host, '-')) {
+                throw new InvalidArgumentException(
+                    'The "--server-host" argument requires a value. Usage: --server-host <hostname>.'
+                );
+            }
+
+            (new Configuration)->withServerHost($host);
+        }
+
         if ($this->hasArgument('--headed', $arguments)) {
             Playwright::headed();
 

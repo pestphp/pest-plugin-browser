@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Pest\Browser\Configuration;
 use Pest\Browser\Playwright\Playwright;
+use Pest\Browser\Plugin;
 use Pest\Browser\ServerManager;
 
 beforeEach(function (): void {
@@ -14,6 +15,32 @@ beforeEach(function (): void {
 afterEach(function (): void {
     Playwright::setHost(null);
 });
+
+it('can set host via the CLI', function (array $options): void {
+    Playwright::setHost('previous.localhost');
+
+    $arguments = (new Plugin)->handleArguments([
+        'tests/Browser/ExampleTest.php',
+        ...$options,
+        '--ci',
+    ]);
+
+    expect(Playwright::host())->toBe('host.docker.internal')
+        ->and($arguments)->toBe(['tests/Browser/ExampleTest.php', '--ci']);
+})->with([
+    'separate value' => [['--host', 'host.docker.internal']],
+    'equals value' => [['--host=host.docker.internal']],
+]);
+
+it('requires a value for the host CLI option', function (array $arguments): void {
+    expect(fn (): array => (new Plugin)->handleArguments($arguments))
+        ->toThrow(InvalidArgumentException::class, 'The "--host" argument requires a value.')
+        ->and(Playwright::host())->toBeNull();
+})->with([
+    'missing value' => [['--host']],
+    'empty value' => [['--host=']],
+    'another option' => [['--host', '--ci']],
+]);
 
 it('can set host via configuration', function (): void {
     $config = new Configuration();

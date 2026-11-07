@@ -18,6 +18,13 @@ use Pest\Browser\Playwright\Playwright;
  */
 final readonly class Configuration
 {
+    public function useWebsocket(string $endpoint): self
+    {
+        ServerManager::instance()->useWebsocket($endpoint);
+
+        return $this;
+    }
+
     /**
      * Uses a custom HTTP server implementation.
      *
@@ -26,6 +33,13 @@ final readonly class Configuration
     public function httpServer(Closure $factory): self
     {
         ServerManager::instance()->setHttpServerFactory($factory);
+
+        return $this;
+    }
+
+    public function withServerHost(string $host): self
+    {
+        ServerManager::instance()->setHttpServerHost($host);
 
         return $this;
     }

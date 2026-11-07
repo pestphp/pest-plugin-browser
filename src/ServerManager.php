@@ -13,6 +13,7 @@ use Pest\Browser\Drivers\NullableHttpServer;
 use Pest\Browser\Playwright\Playwright;
 use Pest\Browser\Playwright\Servers\AlreadyStartedPlaywrightServer;
 use Pest\Browser\Playwright\Servers\PlaywrightNpmServer;
+use Pest\Browser\Playwright\Servers\RemotePlaywrightServer;
 use Pest\Browser\Support\PackageJsonDirectory;
 use Pest\Browser\Support\Port;
 use Pest\Plugins\Parallel;
@@ -47,6 +48,8 @@ final class ServerManager
     /** @var Closure(): HttpServer|null */
     private ?Closure $httpServerFactory = null;
 
+    private string $httpServerHost = self::DEFAULT_HOST;
+
     /**
      * Gets the singleton instance of the server manager.
      */
@@ -60,6 +63,10 @@ final class ServerManager
      */
     public function playwright(): PlaywrightServer
     {
+        if ($this->playwright instanceof PlaywrightServer) {
+            return $this->playwright;
+        }
+
         if (Parallel::isWorker()) {
             return AlreadyStartedPlaywrightServer::fromPersisted();
         }
@@ -81,6 +88,15 @@ final class ServerManager
         );
 
         return $this->playwright;
+    }
+
+    public function useWebsocket(string $endpoint): void
+    {
+        if ($this->playwright instanceof PlaywrightServer) {
+            throw new LogicException('The Playwright endpoint must be configured before the browser server is created.');
+        }
+
+        $this->playwright = new RemotePlaywrightServer($endpoint);
     }
 
     /**
@@ -105,6 +121,15 @@ final class ServerManager
         $this->httpServerFactory = $factory;
     }
 
+    public function setHttpServerHost(string $host): void
+    {
+        if ($this->http instanceof HttpServer) {
+            throw new LogicException('The HTTP server host must be configured before the browser server is created.');
+        }
+
+        $this->httpServerHost = $host;
+    }
+
     /**
      * Returns the HTTP server process instance.
      */
@@ -120,7 +145,7 @@ final class ServerManager
 
         return $this->http = match (function_exists('app_path')) {
             true => new LaravelHttpServer(
-                self::DEFAULT_HOST, // Always bind to 127.0.0.1 for server
+                $this->httpServerHost,
                 Port::find(),
             ),
             default => new NullableHttpServer(),
