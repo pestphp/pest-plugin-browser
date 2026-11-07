@@ -28,7 +28,7 @@ final readonly class RemotePlaywrightServer implements PlaywrightServer
 
     public function stop(): void
     {
-        AlreadyStartedPlaywrightServer::markAsStopped();
+        // 
     }
 
     public function url(): string

@@ -48,6 +48,8 @@ final class ServerManager
     /** @var Closure(): HttpServer|null */
     private ?Closure $httpServerFactory = null;
 
+    private string $httpServerHost = self::DEFAULT_HOST;
+
     /**
      * Gets the singleton instance of the server manager.
      */
@@ -119,6 +121,15 @@ final class ServerManager
         $this->httpServerFactory = $factory;
     }
 
+    public function setHttpServerHost(string $host): void
+    {
+        if ($this->http instanceof HttpServer) {
+            throw new LogicException('The HTTP server host must be configured before the browser server is created.');
+        }
+
+        $this->httpServerHost = $host;
+    }
+
     /**
      * Returns the HTTP server process instance.
      */
@@ -134,7 +145,7 @@ final class ServerManager
 
         return $this->http = match (function_exists('app_path')) {
             true => new LaravelHttpServer(
-                self::DEFAULT_HOST, // Always bind to 127.0.0.1 for server
+                $this->httpServerHost,
                 Port::find(),
             ),
             default => new NullableHttpServer(),

@@ -37,6 +37,13 @@ final readonly class Configuration
         return $this;
     }
 
+    public function withServerHost(string $host): self
+    {
+        ServerManager::instance()->setHttpServerHost($host);
+
+        return $this;
+    }
+
     /**
      * Defaults the browser to Chrome.
      */

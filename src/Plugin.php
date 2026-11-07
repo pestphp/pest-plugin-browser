@@ -78,6 +78,30 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
             (new Configuration)->useWebsocket($endpoint);
         }
 
+        if ($this->hasArgument('--host', $arguments)) {
+            $host = $this->popArgumentValue('--host', $arguments);
+
+            if ($host === null || $host === '' || str_starts_with($host, '-')) {
+                throw new InvalidArgumentException(
+                    'The "--host" argument requires a value. Usage: --host <hostname>.'
+                );
+            }
+
+            (new Configuration)->withHost($host);
+        }
+
+        if ($this->hasArgument('--server-host', $arguments)) {
+            $host = $this->popArgumentValue('--server-host', $arguments);
+
+            if ($host === null || $host === '' || str_starts_with($host, '-')) {
+                throw new InvalidArgumentException(
+                    'The "--server-host" argument requires a value. Usage: --server-host <hostname>.'
+                );
+            }
+
+            (new Configuration)->withServerHost($host);
+        }
+
         if ($this->hasArgument('--headed', $arguments)) {
             Playwright::headed();
 
