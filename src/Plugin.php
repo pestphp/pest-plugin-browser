@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Pest\Browser;
 
 use Error;
+use InvalidArgumentException;
 use Pest\Browser\Enums\BrowserType;
 use Pest\Browser\Enums\ColorScheme;
 use Pest\Browser\Exceptions\BrowserNotSupportedException;
@@ -65,6 +66,18 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
      */
     public function handleArguments(array $arguments): array
     {
+        if ($this->hasArgument('--ws', $arguments)) {
+            $endpoint = $this->popArgumentValue('--ws', $arguments);
+
+            if ($endpoint === null || $endpoint === '') {
+                throw new InvalidArgumentException(
+                    'The "--ws" argument requires a value. Usage: --ws <websocket-endpoint>.'
+                );
+            }
+
+            (new Configuration)->useRemoteConnection($endpoint);
+        }
+
         if ($this->hasArgument('--headed', $arguments)) {
             Playwright::headed();
 

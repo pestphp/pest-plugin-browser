@@ -19,6 +19,14 @@ By default, the plugin starts a local Playwright server using your project's npm
 pest()->browser()->useRemoteConnection('ws://playwright.example.com:3000');
 ```
 
+For a single test run, pass the endpoint to Pest with `--ws`:
+
+```sh
+vendor/bin/pest --ws='ws://playwright.example.com:3000'
+```
+
+The endpoint can also be supplied as a separate argument with `--ws ws://playwright.example.com:3000`.
+
 Secure `wss://` endpoints, paths, and query parameters are supported. The plugin does not require a local Playwright installation when using a remote server, and does not start or stop the remote process. This configuration also works with parallel tests.
 
 Run a compatible Playwright server (currently version 1.63.0 or newer), for example:

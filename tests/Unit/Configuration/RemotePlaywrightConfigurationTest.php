@@ -9,6 +9,7 @@ use Pest\Browser\Playwright\Playwright;
 use Pest\Browser\Playwright\Servers\AlreadyStartedPlaywrightServer;
 use Pest\Browser\Playwright\Servers\PlaywrightNpmServer;
 use Pest\Browser\Playwright\Servers\RemotePlaywrightServer;
+use Pest\Browser\Plugin;
 use Pest\Browser\ServerManager;
 use Pest\Browser\Support\Port;
 use Pest\Plugins\Parallel;
@@ -47,13 +48,45 @@ it('uses a remote endpoint without creating a local process', function (string $
     'wss://playwright.example.test/session/path?token=abc%2B123',
 ]);
 
+it('configures a remote endpoint from the --ws option', function (): void {
+    $arguments = (new Plugin)->handleArguments([
+        'tests/Browser/ExampleTest.php',
+        '--ws',
+        'wss://playwright.example.test/session?token=abc',
+    ]);
+    $server = ServerManager::instance()->playwright();
+
+    expect($arguments)->toBe(['tests/Browser/ExampleTest.php'])
+        ->and($server)->toBeInstanceOf(RemotePlaywrightServer::class)
+        ->and($server->url())->toBe('wss://playwright.example.test/session?token=abc');
+});
+
+it('configures a remote endpoint from the equals-style --ws option', function (): void {
+    $arguments = (new Plugin)->handleArguments([
+        'tests/Browser/ExampleTest.php',
+        '--ws=wss://playwright.example.test/session?token=abc',
+    ]);
+    $server = ServerManager::instance()->playwright();
+
+    expect($arguments)->toBe(['tests/Browser/ExampleTest.php'])
+        ->and($server)->toBeInstanceOf(RemotePlaywrightServer::class)
+        ->and($server->url())->toBe('wss://playwright.example.test/session?token=abc');
+});
+
+it('requires a value for the --ws option', function (): void {
+    expect(fn (): array => (new Plugin)->handleArguments(['--ws']))
+        ->toThrow(InvalidArgumentException::class, 'The "--ws" argument requires a value.')
+        ->and(fn (): array => (new Plugin)->handleArguments(['--ws=']))
+        ->toThrow(InvalidArgumentException::class, 'The "--ws" argument requires a value.');
+});
+
 it('continues to use a local server by default', function (): void {
     if (Parallel::isWorker()) {
         AlreadyStartedPlaywrightServer::persist('127.0.0.1', 4001);
+        $server = ServerManager::instance()->playwright();
 
-        expect(ServerManager::instance()->playwright())
-            ->toBeInstanceOf(AlreadyStartedPlaywrightServer::class)
-            ->url()->toBe('127.0.0.1:4001');
+        expect($server)->toBeInstanceOf(AlreadyStartedPlaywrightServer::class);
+        expect($server->url())->toBe('127.0.0.1:4001');
 
         return;
     }
