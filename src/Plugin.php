@@ -29,6 +29,11 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
     use HandleArguments;
 
     /**
+     * The global holding the arguments forwarded from a parallel run to its workers.
+     */
+    private const string PARALLEL_ARGUMENTS_GLOBAL = 'BROWSER_ARGUMENTS';
+
+    /**
      * Indicates whether the plugin has been booted.
      */
     public static bool $booted = false;
@@ -65,6 +70,12 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
      */
     public function handleArguments(array $arguments): array
     {
+        if (Parallel::isWorker()) {
+            $arguments = [...$arguments, ...$this->parallelRunArguments()];
+        } elseif ($this->hasArgument('--parallel', $arguments) || $this->hasArgument('-p', $arguments)) {
+            Parallel::setGlobal(self::PARALLEL_ARGUMENTS_GLOBAL, json_encode($this->forwardedArguments($arguments), JSON_THROW_ON_ERROR));
+        }
+
         if ($this->hasArgument('--headed', $arguments)) {
             Playwright::headed();
 
@@ -174,6 +185,50 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
 
             throw $e;
         }
+    }
+
+    /**
+     * Returns the arguments the workers need, as the workers only receive PHPUnit's.
+     *
+     * @param  array<int, string>  $arguments
+     * @return array<int, string>
+     */
+    private function forwardedArguments(array $arguments): array
+    {
+        $forwarded = [];
+
+        $index = array_search('--browser', $arguments, true);
+
+        if ($index !== false && isset($arguments[$index + 1])) {
+            $forwarded = ['--browser', $arguments[$index + 1]];
+        }
+
+        foreach (['--trace', '--dark', '--light'] as $flag) {
+            if ($this->hasArgument($flag, $arguments)) {
+                $forwarded[] = $flag;
+            }
+        }
+
+        return $forwarded;
+    }
+
+    /**
+     * Returns the arguments forwarded by the parallel run this worker belongs to.
+     *
+     * @return array<int, string>
+     */
+    private function parallelRunArguments(): array
+    {
+        $arguments = Parallel::getGlobal(self::PARALLEL_ARGUMENTS_GLOBAL);
+
+        if (! is_string($arguments)) {
+            return [];
+        }
+
+        /** @var array<int, string> $decoded */
+        $decoded = json_decode($arguments, true, 512, JSON_THROW_ON_ERROR);
+
+        return $decoded;
     }
 
     /**
