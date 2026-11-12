@@ -111,6 +111,10 @@ final class Client
             /** @var array{id: string|null, params: array{add: string|null}, error: array{error: array{message: string|null}}, errorDetails: array{customErrorMessage: string|null}} $response */
             $response = json_decode($responseJson, true);
 
+            if (isset($response['error'], $response['id']) && $response['id'] !== $requestId) {
+                continue;
+            }
+
             if (isset($response['error']['error']['message'])) {
                 $message = $response['error']['error']['message'];
 
