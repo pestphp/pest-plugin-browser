@@ -39,3 +39,22 @@ it('asserts that there are unhandled promise rejection errors', function (): voi
 
     $page->assertNoJavaScriptErrors();
 })->throws(ExpectationFailedException::class, 'but found 1: Unhandled promise rejection');
+
+it('asserts that there are javascript errors across navigation', function (): void {
+    Route::get('/first', fn (): string => '
+        <script>
+            wqd,s;
+        </script>
+        <div>first</div>
+    ');
+
+    Route::get('/second', fn (): string => '
+        <div>second</div>
+    ');
+
+    $page = visit('/first');
+    $page->navigate('/second');
+
+    $page->assertNoJavaScriptErrors();
+})->throws(ExpectationFailedException::class, 'but found 1: Uncaught ReferenceError: wqd is not define');
+

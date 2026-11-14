@@ -26,3 +26,22 @@ it('asserts that there are console logs', function (): void {
 
     $page->assertNoConsoleLogs();
 })->throws(ExpectationFailedException::class, 'but found 1: Hello, World!');
+
+it('asserts that there are console logs across navigation', function (): void {
+    Route::get('/first', fn (): string => '
+        <script>
+            console.log("Hello from first page");
+        </script>
+        <div>first</div>
+    ');
+
+    Route::get('/second', fn (): string => '
+        <div>second</div>
+    ');
+
+    $page = visit('/first');
+    $page->navigate('/second');
+
+    $page->assertNoConsoleLogs();
+})->throws(ExpectationFailedException::class, 'but found 1: Hello from first page');
+
