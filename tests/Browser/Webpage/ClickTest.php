@@ -101,3 +101,19 @@ it('clicks only once when the page takes longer than an attempt to handle the cl
 
     expect($page->text('#clicks'))->toBe('1');
 });
+
+it('forwards options to the underlying click', function (): void {
+    Route::get('/', fn (): string => '
+        <button oncontextmenu="event.preventDefault(); document.getElementById(\'result\').textContent = \'Right Clicked\'">Menu</button>
+        <div id="result"></div>
+    ');
+
+    $page = visit('/');
+
+    // A left click would never fire the contextmenu handler, so this proves the
+    // `button` option reaches the underlying Playwright locator. The motivating
+    // use case is passing `noWaitAfter` for clicks that trigger a navigation.
+    $page->click('Menu', ['button' => 'right']);
+
+    expect($page->text('#result'))->toBe('Right Clicked');
+});
