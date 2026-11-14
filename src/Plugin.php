@@ -11,6 +11,8 @@ use Pest\Browser\Exceptions\BrowserNotSupportedException;
 use Pest\Browser\Exceptions\OptionNotSupportedInParallelException;
 use Pest\Browser\Filters\UsesBrowserTestCaseMethodFilter;
 use Pest\Browser\Playwright\Playwright;
+use Pest\Browser\Playwright\Tracing;
+use Pest\Browser\Support\TraceReporter;
 use Pest\Contracts\Plugins\Bootable;
 use Pest\Contracts\Plugins\HandlesArguments;
 use Pest\Contracts\Plugins\Terminable;
@@ -41,14 +43,14 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
             ->addTestCaseMethodFilter(new UsesBrowserTestCaseMethodFilter());
 
         pest()->afterEach(function (): void {
-            if (Playwright::shouldDebugAssertions()) {
-                /** @var TestStatus $status */
-                $status = $this->status(); // @phpstan-ignore-line
+            /** @var TestStatus $status */
+            $status = $this->status(); // @phpstan-ignore-line
 
-                if ($status->isFailure() || $status->isError()) {
-                    Execution::instance()->debug($status);
-                }
+            if (Playwright::shouldDebugAssertions() && ($status->isFailure() || $status->isError()) && Playwright::hasContexts()) {
+                Execution::instance()->debug($status);
             }
+
+            Tracing::stopAll(save: $status->isFailure() || $status->isError());
 
             ServerManager::instance()->http()->flush();
 
@@ -79,6 +81,12 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
             Playwright::setShouldDebugAssertions();
 
             $arguments = $this->popArgument('--debug', $arguments);
+        }
+
+        if ($this->hasArgument('--trace', $arguments)) {
+            Playwright::setShouldTrace();
+
+            $arguments = $this->popArgument('--trace', $arguments);
         }
 
         if ($this->hasArgument('--dark', $arguments)) {
@@ -118,6 +126,22 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
             $arguments = array_values($arguments);
         }
 
+        if ($this->hasArgument('--slow-mo', $arguments)) {
+            $index = array_search('--slow-mo', $arguments, true);
+
+            $value = $index === false
+                ? $this->popArgumentValue('--slow-mo', $arguments)
+                : $arguments[$index + 1] ?? null;
+
+            if ($index !== false && is_numeric($value)) {
+                unset($arguments[$index + 1]);
+            }
+
+            Playwright::setSlowMo(is_numeric($value) ? (int) $value : Playwright::DEFAULT_SLOW_MO);
+
+            $arguments = $this->popArgument('--slow-mo', $arguments);
+        }
+
         $this->validateNonSupportedParallelFeatures();
 
         return $arguments;
@@ -137,6 +161,11 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
 
             if (Parallel::isWorker() === false) {
                 ServerManager::instance()->playwright()->stop();
+
+                // Only browser tests clean up the traces of previous runs, so they are reported only when they ran.
+                if (self::$booted && Playwright::shouldTrace()) {
+                    TraceReporter::report(Playwright::shouldOpenTraces());
+                }
             }
         } catch (Error $e) {
             if ($e->getMessage() === 'Must call resume() or throw() before calling suspend() again') {
@@ -181,6 +210,12 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
         if (Playwright::shouldDebugAssertions()) {
             throw new OptionNotSupportedInParallelException(
                 'Debugging assertions is not supported when running tests in parallel.',
+            );
+        }
+
+        if (Playwright::slowMo() > 0) {
+            throw new OptionNotSupportedInParallelException(
+                'Running tests in slow motion is not supported when running tests in parallel.',
             );
         }
     }

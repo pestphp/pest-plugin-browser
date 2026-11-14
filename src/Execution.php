@@ -59,22 +59,7 @@ final class Execution
             "\n  <info>Test [{$testName}] failed with the message:</info> {$message}\n"
         );
 
-        // @phpstan-ignore-next-line
-        Container::getInstance()->get(OutputInterface::class)->writeln(
-            '  <info>Press any key to continue...</info>'
-        );
-
-        $stdin = new ReadableResourceStream(STDIN);
-
-        async(function () use ($stdin): void {
-            while ($stdin->read() !== null) {
-                $stdin->close();
-
-                delay(0.1);
-
-                break;
-            }
-        })->await();
+        $this->waitForKey();
     }
 
     /**
@@ -119,16 +104,13 @@ final class Execution
             '  <info>Press any key to continue...</info>'
         );
 
+        // The stream is not closed, as doing so would close the process' STDIN for the rest of the test suite...
         $stdin = new ReadableResourceStream(STDIN);
 
         async(function () use ($stdin): void {
-            while ($stdin->read() !== null) {
-                $stdin->close();
+            $stdin->read();
 
-                delay(0.1);
-
-                break;
-            }
+            delay(0.1);
         })->await();
     }
 
@@ -141,10 +123,9 @@ final class Execution
 
         $originalCount = Assert::getCount();
 
-        $start = microtime(true);
-        $end = $start + ($timeout / 1_000);
+        $end = hrtime(true) + ($timeout * 1_000_000);
 
-        while (microtime(true) < $end) {
+        while (hrtime(true) < $end) {
             try {
                 return Playwright::usingTimeout(1_000, $callback);
             } catch (ExpectationFailedException) {
@@ -171,7 +152,6 @@ final class Execution
         $reflector = new ReflectionClass(Assert::class);
         $property = $reflector->getProperty('count');
 
-        // @phpstan-ignore-next-line
-        $property->setValue(Assert::class, $originalCount);
+        $property->setValue(null, $originalCount);
     }
 }

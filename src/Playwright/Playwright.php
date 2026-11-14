@@ -6,12 +6,27 @@ namespace Pest\Browser\Playwright;
 
 use Pest\Browser\Enums\BrowserType;
 use Pest\Browser\Enums\ColorScheme;
+use Throwable;
 
 /**
  * @internal
  */
 final class Playwright
 {
+    /**
+     * The default slow-motion delay, in milliseconds, used when `--slow-mo` is
+     * passed without a value.
+     */
+    public const int DEFAULT_SLOW_MO = 500;
+
+    /**
+     * Timeout for the one-time browser launch, in milliseconds.
+     *
+     * Kept apart from the action timeout so a slow Chromium start does not
+     * fail the limit used for page actions.
+     */
+    private const int LAUNCH_TIMEOUT = 30_000;
+
     /**
      * Browser types
      *
@@ -35,6 +50,16 @@ final class Playwright
     private static bool $shouldDiffOnScreenshotAssertions = false;
 
     /**
+     * Whether to record a trace of each test, kept when the test fails.
+     */
+    private static bool $shouldTrace = false;
+
+    /**
+     * Whether to open the trace of a failed test once the test suite has finished, when not running on CI.
+     */
+    private static bool $shouldOpenTraces = true;
+
+    /**
      * The default browser type.
      */
     private static BrowserType $defaultBrowserType = BrowserType::CHROME;
@@ -48,6 +73,11 @@ final class Playwright
      * The timeout in milliseconds.
      */
     private static int $timeout = 5_000;
+
+    /**
+     * The delay, in milliseconds, applied before each browser action.
+     */
+    private static int $slowMo = 0;
 
     /**
      * The default userAgent.
@@ -132,6 +162,22 @@ final class Playwright
     }
 
     /**
+     * Set the delay, in milliseconds, applied before each browser action.
+     */
+    public static function setSlowMo(int $milliseconds): void
+    {
+        self::$slowMo = $milliseconds;
+    }
+
+    /**
+     * Get the delay, in milliseconds, applied before each browser action.
+     */
+    public static function slowMo(): int
+    {
+        return self::$slowMo;
+    }
+
+    /**
      * Set the default userAgent.
      */
     public static function setUserAgent(string $userAgent): void
@@ -188,6 +234,42 @@ final class Playwright
     }
 
     /**
+     * Set whether to record a trace of each test, kept when the test fails.
+     */
+    public static function setShouldTrace(?bool $open = null): void
+    {
+        self::$shouldTrace = true;
+
+        if ($open !== null) {
+            self::$shouldOpenTraces = $open;
+        }
+    }
+
+    /**
+     * Whether to open the trace of a failed test once the test suite has finished, when not running on CI.
+     */
+    public static function shouldOpenTraces(): bool
+    {
+        return self::$shouldOpenTraces;
+    }
+
+    /**
+     * Whether to record a trace of each test, kept when the test fails.
+     */
+    public static function shouldTrace(): bool
+    {
+        return self::$shouldTrace;
+    }
+
+    /**
+     * Checks if any browser type has open contexts, meaning the current test has visited a page.
+     */
+    public static function hasContexts(): bool
+    {
+        return array_any(self::$browserTypes, fn (BrowserFactory $browserType): bool => $browserType->hasContexts());
+    }
+
+    /**
      * Reset playwright state, reset browser types, without closing them.
      */
     public static function reset(): void
@@ -234,49 +316,66 @@ final class Playwright
     }
 
     /**
-     * Initialize Playwright
+     * Initializes Playwright on the current connection.
+     *
+     * Launch uses its own timeout, separate from the action timeout. A failed
+     * initialize drops the connection: Playwright accepts that call only once.
      */
     private static function initialize(string $browser): BrowserFactory
     {
-        $response = Client::instance()->execute(
-            '',
-            'initialize',
-            [
-                'sdkLanguage' => 'javascript',
-            ]
-        );
+        $client = Client::instance();
 
-        /** @var array{method: string|null, params: array{type: string|null, guid: string, initializer: array{name: string|null, preLaunchedBrowser?: array{guid: string}}}} $message */
-        foreach ($response as $message) {
-            if (
-                isset($message['method'])
-                && $message['method'] === '__create__'
-                && isset($message['params']['type'])
-                && $message['params']['type'] === 'Playwright'
-                && isset($message['params']['initializer']['preLaunchedBrowser'])
-            ) {
-                self::$browserTypes[$browser]->prelaunch(
-                    $message['params']['initializer']['preLaunchedBrowser']['guid'],
-                );
-            }
+        try {
+            return self::usingTimeout(
+                max($client->timeout(), self::LAUNCH_TIMEOUT),
+                function () use ($browser, $client): BrowserFactory {
+                    $response = $client->execute(
+                        '',
+                        'initialize',
+                        [
+                            'sdkLanguage' => 'javascript',
+                        ]
+                    );
 
-            if (
-                isset($message['method'])
-                && $message['method'] === '__create__'
-                && isset($message['params']['type'])
-                && $message['params']['type'] === 'BrowserType'
-            ) {
-                $name = $message['params']['initializer']['name'] ?? '';
+                    /** @var array{method: string|null, params: array{type: string|null, guid: string, initializer: array{name: string|null, preLaunchedBrowser?: array{guid: string}}}} $message */
+                    foreach ($response as $message) {
+                        if (
+                            isset($message['method'])
+                            && $message['method'] === '__create__'
+                            && isset($message['params']['type'])
+                            && $message['params']['type'] === 'Playwright'
+                            && isset($message['params']['initializer']['preLaunchedBrowser'])
+                        ) {
+                            self::$browserTypes[$browser]->prelaunch(
+                                $message['params']['initializer']['preLaunchedBrowser']['guid'],
+                            );
+                        }
 
-                self::$browserTypes[$name] = new BrowserFactory(
-                    $message['params']['guid'],
-                    $name,
-                    self::$headless,
-                    self::$userAgent
-                );
-            }
+                        if (
+                            isset($message['method'])
+                            && $message['method'] === '__create__'
+                            && isset($message['params']['type'])
+                            && $message['params']['type'] === 'BrowserType'
+                        ) {
+                            $name = $message['params']['initializer']['name'] ?? '';
+
+                            self::$browserTypes[$name] = new BrowserFactory(
+                                $message['params']['guid'],
+                                $name,
+                                self::$headless,
+                                self::$userAgent
+                            );
+                        }
+                    }
+
+                    return self::$browserTypes[$browser];
+                }
+            );
+        } catch (Throwable $throwable) {
+            self::$browserTypes = [];
+            $client->disconnect();
+
+            throw $throwable;
         }
-
-        return self::$browserTypes[$browser];
     }
 }

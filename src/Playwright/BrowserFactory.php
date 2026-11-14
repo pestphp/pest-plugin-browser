@@ -87,6 +87,14 @@ final class BrowserFactory
     }
 
     /**
+     * Checks if the browser type has any open contexts.
+     */
+    public function hasContexts(): bool
+    {
+        return $this->browser instanceof Browser && $this->browser->hasContexts();
+    }
+
+    /**
      * Resets the browser type state, without closing the browser.
      */
     public function reset(): void
