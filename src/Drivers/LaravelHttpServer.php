@@ -14,6 +14,7 @@ use Amp\Http\Server\Request as AmpRequest;
 use Amp\Http\Server\RequestHandler\ClosureRequestHandler;
 use Amp\Http\Server\Response;
 use Amp\Http\Server\SocketHttpServer;
+use Amp\Socket\InternetAddress;
 use Closure;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Http\Kernel as HttpKernel;
@@ -58,10 +59,13 @@ final class LaravelHttpServer implements HttpServer
 
     /**
      * Creates a new laravel http server instance.
+     *
+     * Pass port 0 to let the operating system assign a free port when the
+     * server binds; once started, `$port` holds the port actually bound.
      */
     public function __construct(
         public readonly string $host,
-        public readonly int $port,
+        public private(set) int $port,
     ) {
         //
     }
@@ -121,6 +125,16 @@ final class LaravelHttpServer implements HttpServer
             new ClosureRequestHandler($this->handleRequest(...)),
             new DefaultErrorHandler(),
         );
+
+        foreach ($server->getServers() as $socketServer) {
+            $address = $socketServer->getAddress();
+
+            if ($address instanceof InternetAddress) {
+                $this->port = $address->getPort();
+
+                break;
+            }
+        }
     }
 
     /**

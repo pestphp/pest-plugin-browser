@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
+use Pest\Browser\Drivers\LaravelHttpServer;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 use function Pest\Laravel\withServerVariables;
@@ -194,4 +195,27 @@ it('forgets scoped instances when terminating the request throws', function (): 
     visit('/scoped-probe')->assertSee('500');
 
     expect(app('scoped-probe'))->toHaveCount(0);
+});
+
+it('binds to a port the operating system assigns when given port 0', function (): void {
+    $first = new LaravelHttpServer('127.0.0.1', 0);
+    $second = new LaravelHttpServer('127.0.0.1', 0);
+
+    try {
+        $first->start();
+        $second->start();
+
+        expect($first->port)->toBeGreaterThan(0)
+            ->and($second->port)->toBeGreaterThan(0)
+            ->and($first->port)->not->toBe($second->port);
+
+        $connection = stream_socket_client("tcp://127.0.0.1:{$first->port}", $errorCode, $errorMessage, 1);
+
+        expect($connection)->not->toBeFalse();
+
+        fclose($connection);
+    } finally {
+        $first->stop();
+        $second->stop();
+    }
 });
