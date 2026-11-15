@@ -112,6 +112,14 @@ final class Playwright
     }
 
     /**
+     * Forget all browsers without closing them, when their connection is already gone.
+     */
+    public static function forget(): void
+    {
+        self::$browserTypes = [];
+    }
+
+    /**
      * Set playwright in non-headless mode.
      */
     public static function headed(): void
