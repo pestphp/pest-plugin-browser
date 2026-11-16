@@ -42,6 +42,11 @@ final readonly class AwaitableWebpage
             'keys',
             'drag',
             'append',
+            // Retrying would run the whole callback again, and with it every action
+            // inside that already reached the page.
+            'withKeyDown',
+            // submit() is a click on the form's submit button.
+            'submit',
             // Retrying can start another load or traverse another history entry. Let
             // Playwright wait within a single navigation attempt.
             'navigate',
