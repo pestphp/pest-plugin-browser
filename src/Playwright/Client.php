@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Playwright;
 
+use Amp\CancelledException;
+use Amp\TimeoutCancellation;
 use Amp\Websocket\Client\WebsocketConnection;
 use Amp\Websocket\WebsocketMessage;
 use Generator;
@@ -33,6 +35,11 @@ final class Client
      * Default timeout for requests in milliseconds.
      */
     private int $timeout = 5_000;
+
+    /**
+     * Grace in milliseconds a reply may take beyond the action timeout before the request fails.
+     */
+    private int $replyGrace = 60_000;
 
     /**
      * The PHP call stacks of the requests made while tracing, keyed by request id.
@@ -107,7 +114,7 @@ final class Client
         $this->websocketConnection->sendText($requestJson);
 
         while (true) {
-            $responseJson = $this->fetch($this->websocketConnection);
+            $responseJson = $this->fetch($this->websocketConnection, $timeout);
             /** @var array{id: string|null, params: array{add: string|null}, error: array{error: array{message: string|null}}, errorDetails: array{customErrorMessage: string|null}} $response */
             $response = json_decode($responseJson, true);
 
@@ -170,6 +177,14 @@ final class Client
     }
 
     /**
+     * Sets the grace in milliseconds a reply may take beyond the action timeout.
+     */
+    public function setReplyGrace(int $milliseconds): void
+    {
+        $this->replyGrace = $milliseconds;
+    }
+
+    /**
      * Returns the current timeout for requests.
      */
     public function timeout(): int
@@ -226,11 +241,20 @@ final class Client
     }
 
     /**
-     * Fetches the response from the Playwright server.
+     * Fetches the response from the Playwright server, giving up once the action timeout and the grace have passed.
      */
-    private function fetch(WebsocketConnection $client): string
+    private function fetch(WebsocketConnection $client, int $timeout): string
     {
-        $message = $client->receive();
+        $deadline = ($timeout + $this->replyGrace) / 1000;
+
+        // Playwright answers every request within its action timeout, with an error if
+        // need be. A reply that does not come by then plus the grace is not coming:
+        // the server is stuck or its browser is gone while the socket stays open.
+        try {
+            $message = $client->receive(new TimeoutCancellation($deadline));
+        } catch (CancelledException) {
+            throw new RuntimeException(sprintf('The Playwright server sent no reply within %.1f seconds.', $deadline));
+        }
 
         // Once the connection closes, receive() returns null. Cast to an empty string,
         // that response has neither an `error` nor an `id`, so execute() would keep
