@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Pest\Browser\Playwright;
 
 use Amp\Websocket\Client\WebsocketConnection;
+use Amp\Websocket\WebsocketMessage;
 use Generator;
 use Pest\Browser\Exceptions\PlaywrightOutdatedException;
 use PHPUnit\Framework\ExpectationFailedException;
+use RuntimeException;
+use Throwable;
 
 use function Amp\Websocket\Client\connect;
 
@@ -32,6 +35,13 @@ final class Client
     private int $timeout = 5_000;
 
     /**
+     * The PHP call stacks of the requests made while tracing, keyed by request id.
+     *
+     * @var array<string, array<int, array{file: string, line: int, function: string}>>
+     */
+    private array $stacks = [];
+
+    /**
      * Returns the current client instance.
      */
     public static function instance(): self
@@ -53,6 +63,7 @@ final class Client
 
             $launchOptions = json_encode([
                 'headless' => Playwright::isHeadless(),
+                'slowMo' => Playwright::slowMo(),
                 'ignoreHTTPSErrors' => true,
                 'bypassCSP' => true,
             ]);
@@ -72,9 +83,13 @@ final class Client
      */
     public function execute(string $guid, string $method, array $params = [], array $meta = []): Generator
     {
-        assert($this->websocketConnection instanceof WebsocketConnection, 'WebSocket client is not connected.');
-
         $requestId = uniqid();
+
+        if (Tracing::isRecording()) {
+            $this->recordStack($requestId);
+        }
+
+        assert($this->websocketConnection instanceof WebsocketConnection, 'WebSocket client is not connected.');
 
         $timeout = is_numeric($params['timeout'] ?? null) ? (int) $params['timeout'] : $this->timeout;
 
@@ -93,7 +108,7 @@ final class Client
 
         while (true) {
             $responseJson = $this->fetch($this->websocketConnection);
-            /** @var array{id: string|null, params: array{add: string|null}, error: array{error: array{message: string|null}}} $response */
+            /** @var array{id: string|null, params: array{add: string|null}, error: array{error: array{message: string|null}}, errorDetails: array{customErrorMessage: string|null}} $response */
             $response = json_decode($responseJson, true);
 
             if (isset($response['error']['error']['message'])) {
@@ -103,17 +118,46 @@ final class Client
                     throw new PlaywrightOutdatedException();
                 }
 
+                // Since 1.61 a failed screenshot expectation reports only "Expect failed"
+                // here, and sends what actually differs in the error details instead.
+                if (is_string($response['errorDetails']['customErrorMessage'] ?? null)) {
+                    $message = $response['errorDetails']['customErrorMessage'];
+                }
+
                 throw new ExpectationFailedException($message);
             }
 
             yield $response;
 
-            if (
-                (isset($response['id']) && $response['id'] === $requestId)
-                || (isset($params['waitUntil']) && isset($response['params']['add']) && $params['waitUntil'] === $response['params']['add'])
-            ) {
+            if (isset($response['id']) && $response['id'] === $requestId) {
                 break;
             }
+        }
+    }
+
+    /**
+     * Drops the current connection so the next test can initialize again.
+     *
+     * Playwright accepts initialize only once per socket, and marks the
+     * socket initialized before the browser launch finishes.
+     */
+    public function disconnect(): void
+    {
+        if (! $this->websocketConnection instanceof WebsocketConnection) {
+            return;
+        }
+
+        $connection = $this->websocketConnection;
+        $this->websocketConnection = null;
+
+        if ($connection->isClosed()) {
+            return;
+        }
+
+        try {
+            $connection->close();
+        } catch (Throwable) {
+            // The socket can already be gone when initialize fails.
         }
     }
 
@@ -134,10 +178,67 @@ final class Client
     }
 
     /**
+     * Returns the PHP call stacks of the requests made while tracing.
+     *
+     * @return array<string, array<int, array{file: string, line: int, function: string}>>
+     */
+    public function stacks(): array
+    {
+        return $this->stacks;
+    }
+
+    /**
+     * Forgets the PHP call stacks of the requests made while tracing.
+     */
+    public function flushStacks(): void
+    {
+        $this->stacks = [];
+    }
+
+    /**
+     * Records the PHP call stack of the given request, so the trace viewer can show the test's source.
+     */
+    private function recordStack(string $requestId): void
+    {
+        $src = dirname(__DIR__);
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+        $frames = [];
+
+        foreach ($backtrace as $index => $trace) {
+            if (! isset($trace['file'], $trace['line'])) {
+                continue;
+            }
+
+            if (str_starts_with($trace['file'], $src) || str_contains($trace['file'], DIRECTORY_SEPARATOR.'vendor'.DIRECTORY_SEPARATOR)) {
+                continue;
+            }
+
+            $frames[] = [
+                'file' => $trace['file'],
+                'line' => $trace['line'],
+                'function' => $backtrace[$index + 1]['function'] ?? '',
+            ];
+        }
+
+        if ($frames !== []) {
+            $this->stacks[$requestId] = $frames;
+        }
+    }
+
+    /**
      * Fetches the response from the Playwright server.
      */
     private function fetch(WebsocketConnection $client): string
     {
-        return (string) $client->receive()?->read();
+        $message = $client->receive();
+
+        // Once the connection closes, receive() returns null. Cast to an empty string,
+        // that response has neither an `error` nor an `id`, so execute() would keep
+        // waiting on a connection that can never answer, at full CPU.
+        if (! $message instanceof WebsocketMessage) {
+            throw new RuntimeException('The Playwright server closed the connection unexpectedly.');
+        }
+
+        return (string) $message->read();
     }
 }

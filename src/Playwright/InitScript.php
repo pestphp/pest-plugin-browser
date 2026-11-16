@@ -14,13 +14,7 @@ final class InitScript
      */
     public static function get(): string
     {
-        $axe = (string) file_get_contents(
-            dirname(__DIR__, 2).'/resources/js/axe.min.js'
-        );
-
-        return <<<JS
-            $axe
-
+        return <<<'JS'
             window.__pestBrowser = {
                 jsErrors: [],
                 consoleLogs: []
@@ -41,6 +35,15 @@ final class InitScript
                     filename: e.filename,
                     lineno: e.lineno,
                     colno: e.colno
+                });
+            });
+
+            window.addEventListener('unhandledrejection', (e) => {
+                window.__pestBrowser.jsErrors.push({
+                    message: e.reason instanceof Error ? e.reason.message : String(e.reason),
+                    filename: '',
+                    lineno: 0,
+                    colno: 0
                 });
             });
             JS;

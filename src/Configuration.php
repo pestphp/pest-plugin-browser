@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Pest\Browser;
 
+use Closure;
+use Pest\Browser\Contracts\HttpServer;
 use Pest\Browser\Drivers\LaravelHttpServer;
 use Pest\Browser\Enums\BrowserType;
 use Pest\Browser\Enums\ColorScheme;
@@ -16,6 +18,18 @@ use Pest\Browser\Playwright\Playwright;
  */
 final readonly class Configuration
 {
+    /**
+     * Uses a custom HTTP server implementation.
+     *
+     * @param  Closure(): HttpServer  $factory
+     */
+    public function httpServer(Closure $factory): self
+    {
+        ServerManager::instance()->setHttpServerFactory($factory);
+
+        return $this;
+    }
+
     /**
      * Defaults the browser to Chrome.
      */
@@ -87,6 +101,16 @@ final readonly class Configuration
     }
 
     /**
+     * Slows down each browser action by the given number of milliseconds.
+     */
+    public function slowMo(int $milliseconds = Playwright::DEFAULT_SLOW_MO): self
+    {
+        Playwright::setSlowMo($milliseconds);
+
+        return $this;
+    }
+
+    /**
      * Sets the browsers userAgent.
      */
     public function userAgent(string $userAgent): self
@@ -119,6 +143,17 @@ final readonly class Configuration
     public function debug(): self
     {
         Playwright::setShouldDebugAssertions();
+
+        return $this;
+    }
+
+    /**
+     * Records a trace of each test, and keeps it when the test fails. Unless running on CI,
+     * the trace of a failed test is opened once the test suite has finished.
+     */
+    public function trace(bool $open = true): self
+    {
+        Playwright::setShouldTrace($open);
 
         return $this;
     }

@@ -7,6 +7,7 @@ namespace Pest\Browser\Exceptions;
 use Pest\Browser\Playwright\Page;
 use Pest\Browser\Playwright\Playwright;
 use Pest\Browser\ServerManager;
+use Pest\Browser\Support\Trace;
 use PHPUnit\Framework\ExpectationFailedException;
 use Throwable;
 
@@ -28,6 +29,14 @@ final class BrowserExpectationFailedException
             if ($filename !== null) {
                 $message .= " A screenshot of the page has been saved to [Tests/Browser/Screenshots/$filename].";
             }
+        }
+
+        $trace = $page->context()->tracing()?->path();
+
+        if ($trace !== null) {
+            $trace = Trace::relative($trace);
+
+            $message .= " A trace of the test has been saved to [$trace], view it with: npx playwright show-trace $trace";
         }
 
         $consoleLogs = $page->consoleLogs();

@@ -39,3 +39,35 @@ it('hands the application the files and the fields of a multipart form', functio
 
     unlink($tempFile);
 });
+
+it('hands the application a binary file byte for byte', function (): void {
+    Route::get('/', fn (): string => '
+        <form method="post" action="/upload" enctype="multipart/form-data">
+            <input type="file" id="avatar" name="avatar">
+            <button type="submit">Upload</button>
+        </form>
+    ');
+    Route::post('/upload', function (Request $request): string {
+        $file = $request->file('avatar');
+
+        return sprintf(
+            'received %d bytes, sha256 %s',
+            (int) $file->getSize(),
+            hash('sha256', (string) file_get_contents($file->getPathname())),
+        );
+    });
+
+    // PNG magic, then bytes that are not valid UTF-8. A multibyte string
+    // function re-encodes the whole body and replaces these with "?".
+    $bytes = "\x89PNG\r\n\x1a\n\xff\xfe\xc0\x80\x81";
+
+    $tempFile = tempnam(sys_get_temp_dir(), 'test');
+    file_put_contents($tempFile, $bytes);
+
+    visit('/')
+        ->attach('#avatar', $tempFile)
+        ->click('Upload')
+        ->assertSee(sprintf('received %d bytes, sha256 %s', mb_strlen($bytes, '8bit'), hash('sha256', $bytes)));
+
+    unlink($tempFile);
+});
