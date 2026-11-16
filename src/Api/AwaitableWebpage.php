@@ -42,6 +42,8 @@ final readonly class AwaitableWebpage
             'keys',
             'drag',
             'append',
+            // submit() is a click on the form's submit button.
+            'submit',
             // Retrying can start another load or traverse another history entry. Let
             // Playwright wait within a single navigation attempt.
             'navigate',
