@@ -39,6 +39,9 @@ final readonly class AwaitableWebpage
             'rightClick',
             'press',
             'pressAndWaitFor',
+            // A retried submit sends the form a second time: the first attempt has
+            // already reached the page, and only the timed-out wait is repeated.
+            'submit',
             'keys',
             'drag',
             'append',
