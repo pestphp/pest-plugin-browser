@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace Pest\Browser;
 
 use Error;
+use InvalidArgumentException;
 use Pest\Browser\Enums\BrowserType;
 use Pest\Browser\Enums\ColorScheme;
+use Pest\Browser\Enums\TraceMode;
 use Pest\Browser\Exceptions\BrowserNotSupportedException;
 use Pest\Browser\Exceptions\OptionNotSupportedInParallelException;
 use Pest\Browser\Filters\UsesBrowserTestCaseMethodFilter;
 use Pest\Browser\Playwright\Playwright;
 use Pest\Browser\Playwright\Tracing;
+use Pest\Browser\Support\Trace;
 use Pest\Browser\Support\TraceReporter;
 use Pest\Contracts\Plugins\Bootable;
 use Pest\Contracts\Plugins\HandlesArguments;
@@ -46,11 +49,19 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
             /** @var TestStatus $status */
             $status = $this->status(); // @phpstan-ignore-line
 
-            if (Playwright::shouldDebugAssertions() && ($status->isFailure() || $status->isError()) && Playwright::hasContexts()) {
+            $failed = $status->isFailure() || $status->isError();
+
+            if (Playwright::shouldDebugAssertions() && $failed && Playwright::hasContexts()) {
                 Execution::instance()->debug($status);
             }
 
-            Tracing::stopAll(save: $status->isFailure() || $status->isError());
+            $paths = Tracing::stopAll(save: Playwright::shouldSaveTrace($failed));
+
+            if ($failed) {
+                foreach ($paths as $path) {
+                    Trace::rememberFailed($path);
+                }
+            }
 
             ServerManager::instance()->http()->flush();
 
@@ -84,7 +95,24 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
         }
 
         if ($this->hasArgument('--trace', $arguments)) {
-            Playwright::setShouldTrace();
+            $mode = TraceMode::RetainOnFailure;
+
+            foreach ($arguments as $key => $argument) {
+                if (str_starts_with($argument, '--trace=')) {
+                    $value = substr($argument, strlen('--trace='));
+                    $mode = TraceMode::tryFrom($value) ?? throw new InvalidArgumentException(
+                        'The specified trace mode is not supported. Supported modes are: '.
+                        implode(', ', array_map(fn (TraceMode $traceMode): string => $traceMode->value, TraceMode::cases())).'.'
+                    );
+
+                    unset($arguments[$key]);
+                    $arguments = array_values($arguments);
+
+                    break;
+                }
+            }
+
+            Playwright::setShouldTrace(mode: $mode);
 
             $arguments = $this->popArgument('--trace', $arguments);
         }

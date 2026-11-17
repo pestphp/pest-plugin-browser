@@ -14,6 +14,13 @@ use ZipArchive;
 final class Trace
 {
     /**
+     * The paths of traces saved for failed tests during the current run.
+     *
+     * @var array<int, string>
+     */
+    private static array $failed = [];
+
+    /**
      * Return the path to the traces' directory.
      */
     public static function dir(): string
@@ -57,10 +64,28 @@ final class Trace
             return [];
         }
 
-        // In the order the tests failed, so the trace that is opened is the one of the first failure.
+        // In the order the tests ran, so the first failure is opened first when only failures are kept.
         usort($files, fn (string $a, string $b): int => filemtime($a) <=> filemtime($b));
 
         return $files;
+    }
+
+    /**
+     * Remember that the given trace belongs to a failed test.
+     */
+    public static function rememberFailed(string $path): void
+    {
+        self::$failed[] = $path;
+    }
+
+    /**
+     * Return the paths of the traces saved for failed tests during the current run.
+     *
+     * @return array<int, string>
+     */
+    public static function failed(): array
+    {
+        return self::$failed;
     }
 
     /**
@@ -129,6 +154,8 @@ final class Trace
      */
     public static function cleanup(): void
     {
+        self::$failed = [];
+
         $files = glob(self::dir().'/*.zip');
 
         if (is_array($files)) {

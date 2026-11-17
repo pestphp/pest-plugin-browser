@@ -33,8 +33,10 @@ final class TraceReporter
             return;
         }
 
-        if ($open) {
-            self::open($traces);
+        $failed = Trace::failed();
+
+        if ($open && $failed !== []) {
+            self::open($failed);
         }
     }
 
@@ -51,8 +53,14 @@ final class TraceReporter
             return;
         }
 
+        $failed = Trace::failed();
+        $failedOnly = $failed !== [] && count($failed) === count($traces);
+
         $markdown = "### Browser test traces\n\n"
-            .'The following failed browser tests recorded a trace. Upload the `tests/Browser/Traces` directory as an artifact, '
+            .($failedOnly
+                ? 'The following failed browser tests recorded a trace. '
+                : 'The following browser tests recorded a trace. ')
+            .'Upload the `tests/Browser/Traces` directory as an artifact, '
             .'then drop a trace on [trace.playwright.dev](https://trace.playwright.dev), or run `npx playwright show-trace <trace>`.'
             ."\n\n"
             .implode("\n", array_map(fn (string $trace): string => '- `'.Trace::relative($trace).'`', $traces))

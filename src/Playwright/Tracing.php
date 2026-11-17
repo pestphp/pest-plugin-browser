@@ -21,7 +21,7 @@ final class Tracing
     private static array $recording = [];
 
     /**
-     * The path the trace will be saved to, if the test fails.
+     * The path the trace will be saved to, when it is kept.
      */
     private ?string $path = null;
 
