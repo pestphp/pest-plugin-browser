@@ -55,9 +55,18 @@ final class Client
 
     /**
      * Connects to the Playwright server.
+     *
+     * A connection the server has closed is replaced, together with the browsers
+     * launched on it, so one lost connection fails only the test that was using it.
      */
     public function connectTo(string $url): void
     {
+        if ($this->websocketConnection?->isClosed() === true) {
+            $this->websocketConnection = null;
+
+            Playwright::forget();
+        }
+
         if (! $this->websocketConnection instanceof WebsocketConnection) {
             $browser = Playwright::defaultBrowserType()->toPlaywrightName();
 
@@ -236,7 +245,13 @@ final class Client
         // that response has neither an `error` nor an `id`, so execute() would keep
         // waiting on a connection that can never answer, at full CPU.
         if (! $message instanceof WebsocketMessage) {
-            throw new RuntimeException('The Playwright server closed the connection unexpectedly.');
+            $closeInfo = $client->getCloseInfo();
+
+            throw new RuntimeException(sprintf(
+                'The Playwright server closed the connection unexpectedly (code %d: %s).',
+                $closeInfo->getCode(),
+                $closeInfo->getReason(),
+            ));
         }
 
         return (string) $message->read();

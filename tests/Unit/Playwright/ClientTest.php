@@ -3,20 +3,22 @@
 declare(strict_types=1);
 
 use Amp\Websocket\Client\WebsocketConnection;
+use Amp\Websocket\WebsocketCloseInfo;
 use Amp\Websocket\WebsocketMessage;
 use Pest\Browser\Playwright\Client;
 use PHPUnit\Framework\ExpectationFailedException;
 
-it('reports a closed connection instead of waiting on it', function (): void {
+it('reports a closed connection, with its close code and reason, instead of waiting on it', function (): void {
     $connection = $this->createStub(WebsocketConnection::class);
     $connection->method('receive')->willReturn(null);
+    $connection->method('getCloseInfo')->willReturn(new WebsocketCloseInfo(1001, 'Browser closed', microtime(true), true));
 
     $client = new Client();
 
     new ReflectionProperty(Client::class, 'websocketConnection')->setValue($client, $connection);
 
     expect(fn (): array => iterator_to_array($client->execute('page@1', 'goto')))
-        ->toThrow(RuntimeException::class, 'The Playwright server closed the connection unexpectedly.');
+        ->toThrow(RuntimeException::class, 'The Playwright server closed the connection unexpectedly (code 1001: Browser closed).');
 });
 
 it('still completes a request the server answers', function (): void {
