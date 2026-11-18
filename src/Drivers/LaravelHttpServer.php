@@ -199,7 +199,10 @@ final class LaravelHttpServer implements HttpServer
         $exceptionHandler = app(ExceptionHandler::class);
 
         if ($exceptionHandler instanceof WithoutExceptionHandlingHandler) {
-            throw $this->lastThrowable;
+            $throwable = $this->lastThrowable;
+            $this->lastThrowable = null;
+
+            throw $throwable;
         }
     }
 
@@ -366,6 +369,8 @@ final class LaravelHttpServer implements HttpServer
                 assert($response->exception instanceof Throwable);
 
                 $this->lastThrowable = $response->exception;
+            } else {
+                $this->lastThrowable = null;
             }
 
             $content = $response->getContent();
