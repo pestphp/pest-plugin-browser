@@ -111,6 +111,15 @@ final class Client
             /** @var array{id: string|null, params: array{add: string|null}, error: array{error: array{message: string|null}}, errorDetails: array{customErrorMessage: string|null}} $response */
             $response = json_decode($responseJson, true);
 
+            // A response addressed to another request was stranded by a generator
+            // abandoned before its final frame was read — a caller that returns on
+            // a __create__ event, such as querySelector() or evaluateHandle(), leaves
+            // its response unconsumed. Processing it here would desynchronize the
+            // stream, and an error in that stranded response would fail this command.
+            if (isset($response['id']) && $response['id'] !== $requestId) {
+                continue;
+            }
+
             if (isset($response['error']['error']['message'])) {
                 $message = $response['error']['error']['message'];
 
