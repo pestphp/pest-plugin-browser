@@ -8,6 +8,7 @@ use Pest\Browser\ServerManager;
 
 beforeEach(function (): void {
     $this->paratest = $_SERVER['PARATEST'] ?? null;
+    $this->stateFile = getenv('PEST_BROWSER_STATE_FILE');
 
     unset($_SERVER['PARATEST']);
 
@@ -17,7 +18,7 @@ beforeEach(function (): void {
 afterEach(function (): void {
     AlreadyStartedPlaywrightServer::markAsStopped();
 
-    putenv('PEST_BROWSER_STATE_FILE');
+    putenv($this->stateFile === false ? 'PEST_BROWSER_STATE_FILE' : 'PEST_BROWSER_STATE_FILE='.$this->stateFile);
 
     if ($this->paratest !== null) {
         $_SERVER['PARATEST'] = $this->paratest;
