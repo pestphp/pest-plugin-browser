@@ -154,3 +154,33 @@ it('can interact with two iframes from external URL content', function (): void 
         $frame->assertSee('Example Domain');
     });
 });
+
+it('waits for an iframe that is inserted after the page has loaded', function (string $origin): void {
+    Route::get('/iframe', fn (): string => '<html><body><input type="text" name="number" /></body></html>');
+
+    Route::get('/', fn (): string => <<<HTML
+        <!DOCTYPE html>
+        <html>
+        <head><title>Main Page</title></head>
+        <body>
+            <h1>Main Page</h1>
+            <script>
+                setTimeout(() => {
+                    const iframe = document.createElement('iframe');
+                    iframe.title = 'Embedded form';
+                    iframe.src = {$origin} + '/iframe';
+                    document.body.appendChild(iframe);
+                }, 500);
+            </script>
+        </body>
+        </html>
+        HTML);
+
+    visit('/')->withinFrame('iframe[title="Embedded form"]', function (AwaitableWebpage $frame): void {
+        $frame->fill('[name=number]', '4242')
+            ->assertValue('[name=number]', '4242');
+    });
+})->with([
+    'same origin' => 'location.origin',
+    'cross origin' => "'http://localhost:' + location.port",
+]);
