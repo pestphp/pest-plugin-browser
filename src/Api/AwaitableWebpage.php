@@ -78,20 +78,7 @@ final class AwaitableWebpage
 
             // Not retried as a whole: the page calls inside the extend already wait on their
             // own, and a retry would repeat every action that already reached the page.
-            $tracing = $this->page->context()->tracing();
-
-            if ($tracing instanceof Tracing && $tracing->path() !== null) {
-                $caller = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1)[0];
-
-                $result = $tracing->group(
-                    Step::title($name, $arguments),
-                    $caller['file'] ?? null,
-                    $caller['line'] ?? null,
-                    fn (): mixed => $extend(...$arguments),
-                );
-            } else {
-                $result = $extend(...$arguments);
-            }
+            $result = $this->step($name, $arguments, fn (): mixed => $extend(...$arguments));
 
             return $result === null && self::returnsNothing($extend) ? $this : $result;
         }
@@ -107,20 +94,7 @@ final class AwaitableWebpage
             );
 
         try {
-            $tracing = $this->page->context()->tracing();
-
-            if ($tracing instanceof Tracing && $tracing->path() !== null) {
-                $caller = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1)[0];
-
-                $result = $tracing->group(
-                    Step::title($name, $arguments),
-                    $caller['file'] ?? null,
-                    $caller['line'] ?? null,
-                    $call,
-                );
-            } else {
-                $result = $call();
-            }
+            $result = $this->step($name, $arguments, $call);
         } catch (ExpectationFailedException $e) {
             ServerManager::instance()->http()->throwLastThrowableIfNeeded();
 
@@ -146,5 +120,29 @@ final class AwaitableWebpage
     public function page(): Page
     {
         return $this->page;
+    }
+
+    /**
+     * Runs the given call, grouped under the method's name in the trace when tracing.
+     *
+     * @param  array<int, mixed>  $arguments
+     */
+    private function step(string $name, array $arguments, Closure $call): mixed
+    {
+        $tracing = $this->page->context()->tracing();
+
+        if (! $tracing instanceof Tracing || $tracing->path() === null) {
+            return $call();
+        }
+
+        // Frame 0 is the call from __call(), frame 1 is the call into __call().
+        $caller = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1];
+
+        return $tracing->group(
+            Step::title($name, $arguments),
+            $caller['file'] ?? null,
+            $caller['line'] ?? null,
+            $call,
+        );
     }
 }
