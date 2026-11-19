@@ -15,23 +15,31 @@ final class InitScript
     public static function get(): string
     {
         return <<<'JS_WRAP'
+            // window.name persists across same-tab navigations even when the origin
+            // changes (e.g. 127.0.0.1 -> localhost), unlike origin-scoped sessionStorage.
+            // Namespace the payload so unrelated window.name usage is left untouched.
+            const PEST_NAME_PREFIX = '__pestBrowser:';
             let storedErrors = [];
             let storedLogs = [];
             try {
-                const rawErrors = sessionStorage.getItem('__pestBrowser_jsErrors');
-                if (rawErrors) storedErrors = JSON.parse(rawErrors);
-                const rawLogs = sessionStorage.getItem('__pestBrowser_consoleLogs');
-                if (rawLogs) storedLogs = JSON.parse(rawLogs);
+                if (typeof window.name === 'string' && window.name.startsWith(PEST_NAME_PREFIX)) {
+                    const stored = JSON.parse(window.name.slice(PEST_NAME_PREFIX.length));
+                    if (Array.isArray(stored.jsErrors)) storedErrors = stored.jsErrors;
+                    if (Array.isArray(stored.consoleLogs)) storedLogs = stored.consoleLogs;
+                }
             } catch (_) {}
 
             window.__pestBrowser = {
-                jsErrors: Array.isArray(storedErrors) ? storedErrors : [],
-                consoleLogs: Array.isArray(storedLogs) ? storedLogs : []
+                jsErrors: storedErrors,
+                consoleLogs: storedLogs
             };
 
-            function syncStorage(key, value) {
+            function syncStorage() {
                 try {
-                    sessionStorage.setItem(key, JSON.stringify(value));
+                    window.name = PEST_NAME_PREFIX + JSON.stringify({
+                        jsErrors: window.__pestBrowser.jsErrors,
+                        consoleLogs: window.__pestBrowser.consoleLogs
+                    });
                 } catch (_) {}
             }
 
@@ -41,7 +49,7 @@ final class InitScript
                     timestamp: new Date().getTime(),
                     message: args.map(arg => String(arg)).join(' ')
                 });
-                syncStorage('__pestBrowser_consoleLogs', window.__pestBrowser.consoleLogs);
+                syncStorage();
                 originalConsoleLog.apply(console, args);
             };
 
@@ -52,7 +60,7 @@ final class InitScript
                     lineno: e.lineno,
                     colno: e.colno
                 });
-                syncStorage('__pestBrowser_jsErrors', window.__pestBrowser.jsErrors);
+                syncStorage();
             });
 
             window.addEventListener('unhandledrejection', (e) => {
@@ -62,7 +70,7 @@ final class InitScript
                     lineno: 0,
                     colno: 0
                 });
-                syncStorage('__pestBrowser_jsErrors', window.__pestBrowser.jsErrors);
+                syncStorage();
             });
             JS_WRAP;
     }
