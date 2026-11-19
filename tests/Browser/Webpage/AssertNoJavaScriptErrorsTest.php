@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use PHPUnit\Framework\ExpectationFailedException;
 use Pest\Browser\ServerManager;
+use PHPUnit\Framework\ExpectationFailedException;
 
 it('asserts that there are no javascript errors', function (): void {
     Route::get('/', fn (): string => '
