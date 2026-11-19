@@ -180,6 +180,7 @@ final class PendingAwaitablePage
             ...$options,
         ]);
 
+        $context->exposeBinding(InitScript::BINDING_NAME);
         $context->addInitScript(InitScript::get());
 
         if (Playwright::shouldTrace()) {

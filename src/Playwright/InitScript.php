@@ -10,19 +10,28 @@ namespace Pest\Browser\Playwright;
 final class InitScript
 {
     /**
+     * Binding used to hand collected entries to the PHP side.
+     */
+    public const string BINDING_NAME = '__pestBrowserReport';
+
+    /**
      * Get the JavaScript code for the initialization script.
      */
     public static function get(): string
     {
         return <<<'JS'
-            window.__pestBrowser = {
-                jsErrors: [],
-                consoleLogs: []
+            const report = (entry) => {
+                try {
+                    window.__pestBrowserReport(entry);
+                } catch (_) {
+                    // The binding may not be installed for a frame yet.
+                }
             };
 
             const originalConsoleLog = console.log;
             console.log = function(...args) {
-                window.__pestBrowser.consoleLogs.push({
+                report({
+                    kind: 'log',
                     timestamp: new Date().getTime(),
                     message: args.map(arg => String(arg)).join(' ')
                 });
@@ -30,7 +39,8 @@ final class InitScript
             };
 
             window.addEventListener('error', (e) => {
-                window.__pestBrowser.jsErrors.push({
+                report({
+                    kind: 'error',
                     message: e.message,
                     filename: e.filename,
                     lineno: e.lineno,
@@ -39,7 +49,8 @@ final class InitScript
             });
 
             window.addEventListener('unhandledrejection', (e) => {
-                window.__pestBrowser.jsErrors.push({
+                report({
+                    kind: 'error',
                     message: e.reason instanceof Error ? e.reason.message : String(e.reason),
                     filename: '',
                     lineno: 0,
