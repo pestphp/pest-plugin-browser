@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Api;
 
+use Closure;
 use Pest\Browser\Exceptions\BrowserExpectationFailedException;
 use Pest\Browser\Execution;
 use Pest\Browser\Playwright\Page;
@@ -17,17 +18,19 @@ use Throwable;
 /**
  * @mixin Webpage
  */
-final readonly class AwaitableWebpage
+final class AwaitableWebpage
 {
+    use Concerns\Extendable;
+
     /**
      * Creates a new awaitable webpage instance.
      *
      * @param  array<int, string>  $nonAwaitableMethods
      */
     public function __construct(
-        private Page $page,
-        private string $initialUrl,
-        private array $nonAwaitableMethods = [
+        private readonly Page $page,
+        private readonly string $initialUrl,
+        private readonly array $nonAwaitableMethods = [
             'assertScreenshotMatches',
             'assertNoAccessibilityIssues',
             // Retrying this action would append the value to what was already typed.
@@ -68,6 +71,18 @@ final readonly class AwaitableWebpage
      */
     public function __call(string $name, array $arguments): mixed
     {
+        if (self::hasExtend($name)) {
+            $extend = self::$extends[$name]->bindTo($this, self::class);
+
+            assert($extend instanceof Closure);
+
+            // Not retried as a whole: the page calls inside the extend already wait on their
+            // own, and a retry would repeat every action that already reached the page.
+            $result = $this->step($name, $arguments, fn (): mixed => $extend(...$arguments));
+
+            return $result === null && self::returnsNothing($extend) ? $this : $result;
+        }
+
         $webpage = new Webpage($this->page, $this->initialUrl);
 
         $call = in_array($name, $this->nonAwaitableMethods, true) || Playwright::timeout() <= 1000
@@ -79,20 +94,7 @@ final readonly class AwaitableWebpage
             );
 
         try {
-            $tracing = $this->page->context()->tracing();
-
-            if ($tracing instanceof Tracing && $tracing->path() !== null) {
-                $caller = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1)[0];
-
-                $result = $tracing->group(
-                    Step::title($name, $arguments),
-                    $caller['file'] ?? null,
-                    $caller['line'] ?? null,
-                    $call,
-                );
-            } else {
-                $result = $call();
-            }
+            $result = $this->step($name, $arguments, $call);
         } catch (ExpectationFailedException $e) {
             ServerManager::instance()->http()->throwLastThrowableIfNeeded();
 
@@ -118,5 +120,29 @@ final readonly class AwaitableWebpage
     public function page(): Page
     {
         return $this->page;
+    }
+
+    /**
+     * Runs the given call, grouped under the method's name in the trace when tracing.
+     *
+     * @param  array<int, mixed>  $arguments
+     */
+    private function step(string $name, array $arguments, Closure $call): mixed
+    {
+        $tracing = $this->page->context()->tracing();
+
+        if (! $tracing instanceof Tracing || $tracing->path() === null) {
+            return $call();
+        }
+
+        // Frame 0 is the call from __call(), frame 1 is the call into __call().
+        $caller = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1];
+
+        return $tracing->group(
+            Step::title($name, $arguments),
+            $caller['file'] ?? null,
+            $caller['line'] ?? null,
+            $call,
+        );
     }
 }

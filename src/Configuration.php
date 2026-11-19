@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Pest\Browser;
 
 use Closure;
+use Pest\Browser\Api\AwaitableWebpage;
 use Pest\Browser\Contracts\HttpServer;
 use Pest\Browser\Drivers\LaravelHttpServer;
 use Pest\Browser\Enums\BrowserType;
@@ -26,6 +27,21 @@ final readonly class Configuration
     public function httpServer(Closure $factory): self
     {
         ServerManager::instance()->setHttpServerFactory($factory);
+
+        return $this;
+    }
+
+    /**
+     * Registers a custom method on the pages returned by `visit()`, like `expect()->extend()`.
+     *
+     * The closure is bound to the page, so `$this->click(...)` inside it waits and retries as
+     * it would in a test. Returning nothing keeps the chain going.
+     *
+     * @param-closure-this AwaitableWebpage $extend
+     */
+    public function extend(string $name, Closure $extend): self
+    {
+        AwaitableWebpage::extend($name, $extend);
 
         return $this;
     }
