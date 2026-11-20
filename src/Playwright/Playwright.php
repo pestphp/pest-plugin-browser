@@ -6,6 +6,7 @@ namespace Pest\Browser\Playwright;
 
 use Pest\Browser\Enums\BrowserType;
 use Pest\Browser\Enums\ColorScheme;
+use Pest\Browser\Enums\TraceMode;
 use Throwable;
 
 /**
@@ -50,7 +51,7 @@ final class Playwright
     private static bool $shouldDiffOnScreenshotAssertions = false;
 
     /**
-     * Whether to record a trace of each test, kept when the test fails.
+     * Whether to record a trace of each test.
      */
     private static bool $shouldTrace = false;
 
@@ -58,6 +59,11 @@ final class Playwright
      * Whether to open the trace of a failed test once the test suite has finished, when not running on CI.
      */
     private static bool $shouldOpenTraces = true;
+
+    /**
+     * Which recorded traces to keep after each test.
+     */
+    private static TraceMode $traceMode = TraceMode::RetainOnFailure;
 
     /**
      * The default browser type.
@@ -236,11 +242,12 @@ final class Playwright
     }
 
     /**
-     * Set whether to record a trace of each test, kept when the test fails.
+     * Set whether to record a trace of each test, and which traces to keep.
      */
-    public static function setShouldTrace(?bool $open = null): void
+    public static function setShouldTrace(?bool $open = null, TraceMode $mode = TraceMode::RetainOnFailure): void
     {
         self::$shouldTrace = true;
+        self::$traceMode = $mode;
 
         if ($open !== null) {
             self::$shouldOpenTraces = $open;
@@ -256,11 +263,37 @@ final class Playwright
     }
 
     /**
-     * Whether to record a trace of each test, kept when the test fails.
+     * Whether to record a trace of each test.
      */
     public static function shouldTrace(): bool
     {
         return self::$shouldTrace;
+    }
+
+    /**
+     * Which recorded traces to keep after each test.
+     */
+    public static function traceMode(): TraceMode
+    {
+        return self::$traceMode;
+    }
+
+    /**
+     * Whether a recorded trace should be kept for the given test outcome.
+     */
+    public static function shouldSaveTrace(bool $failed): bool
+    {
+        return self::$traceMode->shouldSave($failed);
+    }
+
+    /**
+     * Resets the tracing configuration to its defaults.
+     */
+    public static function resetTracing(): void
+    {
+        self::$shouldTrace = false;
+        self::$shouldOpenTraces = true;
+        self::$traceMode = TraceMode::RetainOnFailure;
     }
 
     /**
