@@ -20,6 +20,7 @@ use Pest\Plugins\Concerns\HandleArguments;
 use Pest\Plugins\Parallel;
 use Pest\TestSuite;
 use PHPUnit\Framework\TestStatus\TestStatus;
+use PHPUnit\Util\ExcludeList;
 
 /**
  * @internal
@@ -38,6 +39,10 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
      */
     public function boot(): void
     {
+        // Keep the plugin's own frames out of failure traces so a failing
+        // browser check is attributed to the user's test file, not vendor code.
+        ExcludeList::addDirectory(__DIR__);
+
         TestSuite::getInstance()
             ->tests
             ->addTestCaseMethodFilter(new UsesBrowserTestCaseMethodFilter());
