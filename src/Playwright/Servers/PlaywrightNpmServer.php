@@ -60,7 +60,9 @@ final class PlaywrightNpmServer implements PlaywrightServer
             return;
         }
 
-        $this->systemProcess = SystemProcess::fromShellCommandline(sprintf(
+        // Without `exec`, the shell stays as the parent of node and `stop()`
+        // signals the shell only: it exits and the server keeps running.
+        $this->systemProcess = SystemProcess::fromShellCommandline((PHP_OS_FAMILY === 'Windows' ? '' : 'exec ').sprintf(
             $this->command,
             $this->host,
             $this->port,
