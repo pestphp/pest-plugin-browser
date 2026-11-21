@@ -14,10 +14,12 @@ trait InteractsWithElements
 {
     /**
      * Click the link with the given text.
+     *
+     * @param  array<string, mixed>|null  $options
      */
-    public function click(string $text): self
+    public function click(string $text, ?array $options = null): self
     {
-        $this->guessLocator($text)->click();
+        $this->guessLocator($text)->click($options);
 
         return $this;
     }
@@ -194,10 +196,12 @@ trait InteractsWithElements
 
     /**
      * Press the button with the given text or name.
+     *
+     * @param  array<string, mixed>|null  $options
      */
-    public function press(string $button): self
+    public function press(string $button, ?array $options = null): self
     {
-        return $this->click($button);
+        return $this->click($button, $options);
     }
 
     /**
