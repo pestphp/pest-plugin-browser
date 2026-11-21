@@ -18,17 +18,23 @@ it('stops the node process it started instead of leaving it behind', function ()
         'Listening on',
     );
 
-    $server->start();
+    $previousStateFile = getenv('PEST_BROWSER_STATE_FILE');
+    putenv('PEST_BROWSER_STATE_FILE='.sys_get_temp_dir().'/pest-browser-state-'.bin2hex(random_bytes(8)).'.json');
 
     try {
+        $server->start();
         $pid = (int) new ReflectionProperty($server, 'systemProcess')->getValue($server)->getPid();
         $commandLine = str_replace("\0", ' ', (string) file_get_contents("/proc/{$pid}/cmdline"));
 
         expect($commandLine)->toStartWith('node ')
             ->and($commandLine)->toContain("--port {$port}");
     } finally {
-        $server->stop();
-        AlreadyStartedPlaywrightServer::markAsStopped();
+        try {
+            $server->stop();
+        } finally {
+            AlreadyStartedPlaywrightServer::markAsStopped();
+            putenv($previousStateFile === false ? 'PEST_BROWSER_STATE_FILE' : 'PEST_BROWSER_STATE_FILE='.$previousStateFile);
+        }
     }
 
     $survivors = [];
