@@ -58,6 +58,24 @@ it('detects \visit() with a URL argument', function (): void {
     expect(callUsesFunction($closure, 'visit'))->toBeTrue();
 });
 
+// visit detection — wrapped in another function call
+
+it('detects visit() wrapped in another function call', function (): void {
+    $closure = function (): void {
+        acknowledgeEnvironment(visit('/'));
+    };
+
+    expect(callUsesFunction($closure, 'visit'))->toBeTrue();
+});
+
+it('detects \visit() wrapped in another function call', function (): void {
+    $closure = function (): void {
+        acknowledgeEnvironment(\visit('/'));
+    };
+
+    expect(callUsesFunction($closure, 'visit'))->toBeTrue();
+});
+
 // visit detection — Livewire
 
 it('detects Livewire::visit()', function (): void {
