@@ -16,7 +16,7 @@ beforeEach(function (): void {
     ]);
 });
 
-it('may visit a component', function (): void {
+it('may visit an anonymous component', function (bool $useClassName): void {
     $component = new class extends Component
     {
         public int $counter = 0;
@@ -38,7 +38,7 @@ it('may visit a component', function (): void {
         }
     };
 
-    $page = Livewire::test($component, [
+    $page = Livewire::test($useClassName ? $component::class : $component, [
         'counter' => 0,
     ]);
 
@@ -50,4 +50,7 @@ it('may visit a component', function (): void {
         ->click('Increment')
         ->assertSee(2)
         ->assertSet('counter', 2);
-});
+})->with([
+    'instance' => false,
+    'class name' => true,
+]);

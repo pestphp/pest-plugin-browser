@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Route;
 use Livewire\Component;
 use Livewire\Features\SupportTesting\Testable;
+use Livewire\Livewire as LivewireFacade;
 
 final readonly class Livewire
 {
@@ -20,6 +21,12 @@ final readonly class Livewire
     {
         if ($name instanceof Component) {
             $name = $name::class;
+        }
+
+        if (str_contains($name, "\0") && is_subclass_of($name, Component::class)) {
+            $alias = 'pest-browser-'.hash('sha256', $name);
+            LivewireFacade::component($alias, $name);
+            $name = $alias;
         }
 
         $testable = Testable::create(
