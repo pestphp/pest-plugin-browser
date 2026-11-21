@@ -283,6 +283,16 @@ final class LaravelHttpServer implements HttpServer
     {
         GlobalState::flush();
 
+        // A document navigation starts a fresh page lifecycle, so any throwable
+        // left by the previous page must go here. Do not clear it when a
+        // subrequest succeeds: a stylesheet/script/XHR belongs to the current
+        // page and must not erase the exception that made it fail (#324).
+        $secFetchDest = mb_strtolower($request->getHeader('sec-fetch-dest') ?? '');
+        if (in_array($secFetchDest, ['document', 'iframe'], true)
+            || ($secFetchDest === '' && str_contains($request->getHeader('accept') ?? '', 'text/html'))) {
+            $this->lastThrowable = null;
+        }
+
         if (Execution::instance()->isWaiting() === false) {
             Execution::instance()->tick();
         }
@@ -369,8 +379,6 @@ final class LaravelHttpServer implements HttpServer
                 assert($response->exception instanceof Throwable);
 
                 $this->lastThrowable = $response->exception;
-            } else {
-                $this->lastThrowable = null;
             }
 
             $content = $response->getContent();

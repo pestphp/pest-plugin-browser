@@ -174,10 +174,24 @@ it('does not leak server exceptions from an earlier request into subsequent requ
     Route::get('/successful-route', fn (): string => 'success');
 
     expect(function (): void {
-        visit('/failing-route');
+        visit('/failing-route')->assertPathIs('/failing-route');
     })->toThrow(RuntimeException::class, 'First request failed.');
 
     visit('/successful-route')->assertSee('success');
+});
+
+it('keeps the server exception when a 500 page loads a successful stylesheet', function (): void {
+    $this->withoutExceptionHandling();
+
+    Route::get('/failing-with-css', function () {
+        return response('<link rel="stylesheet" href="/site.css">failed', 500)
+            ->withException(new RuntimeException('Page failed.'));
+    });
+    Route::get('/site.css', fn () => response('body { color: red; }', 200, ['Content-Type' => 'text/css']));
+
+    expect(function (): void {
+        visit('/failing-with-css')->assertSee('failed');
+    })->toThrow(RuntimeException::class, 'Page failed.');
 });
 
 it('forgets scoped instances when a streamed response throws', function (): void {
