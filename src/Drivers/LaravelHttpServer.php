@@ -15,8 +15,10 @@ use Amp\Http\Server\RequestHandler\ClosureRequestHandler;
 use Amp\Http\Server\Response;
 use Amp\Http\Server\SocketHttpServer;
 use Closure;
+use Illuminate\Auth\AuthManager;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Http\Kernel as HttpKernel;
+use Illuminate\Contracts\Session\Session;
 use Illuminate\Cookie\CookieJar;
 use Illuminate\Foundation\Testing\Concerns\WithoutExceptionHandlingHandler;
 use Illuminate\Http\Request;
@@ -41,6 +43,11 @@ use Throwable;
  */
 final class LaravelHttpServer implements HttpServer
 {
+    /**
+     * The header the frontend bridge adds to the requests it forwards.
+     */
+    public const string BRIDGE_HEADER = 'x-pest-bridge';
+
     /**
      * The underlying socket server instance, if any.
      */
@@ -319,7 +326,11 @@ final class LaravelHttpServer implements HttpServer
             [$parameters, $files] = $this->parseMultipartBody($rawBody, $boundary[1]);
         }
         $cookies = array_map(fn (RequestCookie $cookie): string => urldecode($cookie->getValue()), $request->getCookies());
-        $cookies = array_merge($cookies, test()->prepareCookiesForRequest()); // @phpstan-ignore-line
+        $fromFrontend = $request->hasHeader(self::BRIDGE_HEADER);
+
+        if (! $fromFrontend) {
+            $cookies = array_merge($cookies, test()->prepareCookiesForRequest()); // @phpstan-ignore-line
+        }
         /** @var array<string, string> $serverVariables */
         $serverVariables = test()->serverVariables(); // @phpstan-ignore-line
 
@@ -341,6 +352,8 @@ final class LaravelHttpServer implements HttpServer
         app()->make(CookieJar::class)->flushQueuedCookies();
 
         $scopedInstances = $this->scopedInstances();
+
+        $testAuthentication = $fromFrontend ? $this->isolateAuthentication() : null;
 
         // However the request ends, so an exception in terminate or in a streamed response cannot keep them.
         try {
@@ -382,6 +395,10 @@ final class LaravelHttpServer implements HttpServer
             }
         } finally {
             $this->forgetScopedInstancesSince($scopedInstances);
+
+            if ($testAuthentication instanceof ClientAuthentication) {
+                $this->restoreAuthentication($testAuthentication);
+            }
         }
 
         return new Response(
@@ -389,6 +406,41 @@ final class LaravelHttpServer implements HttpServer
             $response->headers->all(), // @phpstan-ignore-line
             $content,
         );
+    }
+
+    /**
+     * Gives a request of the frontend server its own session and authenticated user, as a separate
+     * client has in production, and returns the ones of the test so that they can be restored.
+     */
+    private function isolateAuthentication(): ClientAuthentication
+    {
+        $auth = app()->resolved('auth') ? app('auth') : null;
+        $session = app()->resolved('session.store') ? app('session.store') : null;
+
+        $authentication = new ClientAuthentication(
+            $auth instanceof AuthManager ? $auth : null,
+            $session instanceof Session ? $session : null,
+        );
+
+        $authentication->isolate();
+
+        app()->forgetInstance('auth.driver');
+
+        Facade::clearResolvedInstances();
+
+        return $authentication;
+    }
+
+    /**
+     * Restores the session and authenticated user of the test after a request of the frontend server.
+     */
+    private function restoreAuthentication(ClientAuthentication $authentication): void
+    {
+        $authentication->restore();
+
+        app()->forgetInstance('auth.driver');
+
+        Facade::clearResolvedInstances();
     }
 
     /**

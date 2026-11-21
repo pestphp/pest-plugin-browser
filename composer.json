@@ -26,7 +26,8 @@
             "Pest\\Browser\\": "src/"
         },
         "files": [
-            "src/Autoload.php"
+            "src/Autoload.php",
+            "src/Functions.php"
         ]
     },
     "autoload-dev": {
