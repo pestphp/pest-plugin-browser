@@ -14,6 +14,7 @@ use Amp\Http\Server\Request as AmpRequest;
 use Amp\Http\Server\RequestHandler\ClosureRequestHandler;
 use Amp\Http\Server\Response;
 use Amp\Http\Server\SocketHttpServer;
+use Amp\Socket\BindContext;
 use Closure;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Http\Kernel as HttpKernel;
@@ -116,7 +117,10 @@ final class LaravelHttpServer implements HttpServer
             ),
         );
 
-        $server->expose("{$this->host}:{$this->port}");
+        // Amp writes a response's headers and its body as two writes. With
+        // Nagle's algorithm on, the body waits for the browser to acknowledge
+        // the headers, and the browser delays that acknowledgement.
+        $server->expose("{$this->host}:{$this->port}", (new BindContext)->withTcpNoDelay());
         $server->start(
             new ClosureRequestHandler($this->handleRequest(...)),
             new DefaultErrorHandler(),
