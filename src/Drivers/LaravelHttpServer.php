@@ -109,8 +109,12 @@ final class LaravelHttpServer implements HttpServer
         // Increase the body size limit beyond Amp's 128-KiB
         // default to prevent deadlocks when reading large
         // JSON payloads in POST, PUT, and PATCH requests.
+        //
+        // The browser is on the same machine, so compressing a response
+        // costs CPU time and saves nothing.
         $this->socket = $server = SocketHttpServer::createForDirectAccess(
             logger: $logger = new NullLogger(),
+            enableCompression: false,
             httpDriverFactory: new DefaultHttpDriverFactory(
                 logger: $logger,
                 bodySizeLimit: 64 * 1024 * 1024,

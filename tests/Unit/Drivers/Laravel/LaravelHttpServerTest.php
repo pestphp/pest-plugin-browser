@@ -70,6 +70,22 @@ it('accepts connections with Nagle\'s algorithm off', function (): void {
     expect($server->getServers()[0]->getBindContext()->hasTcpNoDelay())->toBeTrue();
 });
 
+it('serves responses without compressing them', function (): void {
+    // Text over the 860 bytes from which Amp's compression middleware would compress it.
+    $filename = 'plain-'.uniqid('', true).'.js';
+    @file_put_contents($filepath = public_path($filename), str_repeat('// '.str_repeat('x', 77)."\n", 110));
+
+    try {
+        $page = visit('/');
+
+        $encoding = $page->script("async () => { const response = await fetch('/{$filename}', { cache: 'no-store' }); await response.arrayBuffer(); return response.headers.get('content-encoding'); }");
+
+        expect($encoding)->toBeNull();
+    } finally {
+        @unlink($filepath);
+    }
+});
+
 it('serves empty JS files', function (): void {
     @file_put_contents(public_path('empty.js'), '');
 
