@@ -25,12 +25,21 @@ afterEach(function (): void {
     }
 });
 
-it('persists the port of the playwright server it keeps', function (): void {
+it('keeps the same playwright server for the whole process', function (): void {
     $manager = new ServerManager();
 
     $playwright = $manager->playwright();
 
     expect($playwright)->toBeInstanceOf(PlaywrightNpmServer::class)
-        ->and($manager->playwright())->toBe($playwright)
-        ->and(AlreadyStartedPlaywrightServer::fromPersisted()->port)->toBe($playwright->port);
+        ->and($manager->playwright())->toBe($playwright);
+});
+
+it('leaves the state file of a running parallel run to the process that started its server', function (): void {
+    AlreadyStartedPlaywrightServer::persist('127.0.0.1', 4001);
+
+    $secondProcess = new ServerManager();
+
+    $secondProcess->playwright()->stop();
+
+    expect(AlreadyStartedPlaywrightServer::fromPersisted()->port)->toBe(4001);
 });
