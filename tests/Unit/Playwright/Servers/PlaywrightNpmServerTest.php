@@ -49,3 +49,32 @@ it('stops the node process it started instead of leaving it behind', function ()
 
     expect($survivors)->toBe([]);
 })->skipOnWindows()->skipOnMac();
+
+it('persists the state file when it starts and removes it when it stops', function (): void {
+    $port = Port::find();
+
+    $server = PlaywrightNpmServer::create(
+        PackageJsonDirectory::find(),
+        '.'.DIRECTORY_SEPARATOR.'node_modules'.DIRECTORY_SEPARATOR.'.bin'.DIRECTORY_SEPARATOR.'playwright run-server --host %s --port %d --mode launchServer',
+        '127.0.0.1',
+        $port,
+        'Listening on',
+    );
+
+    $previousStateFile = getenv('PEST_BROWSER_STATE_FILE');
+    $stateFile = sys_get_temp_dir().'/pest-browser-state-'.bin2hex(random_bytes(8)).'.json';
+    putenv('PEST_BROWSER_STATE_FILE='.$stateFile);
+
+    try {
+        $server->start();
+
+        expect(AlreadyStartedPlaywrightServer::fromPersisted()->port)->toBe($port);
+
+        $server->stop();
+
+        expect(file_exists($stateFile))->toBeFalse();
+    } finally {
+        $server->stop();
+        putenv($previousStateFile === false ? 'PEST_BROWSER_STATE_FILE' : 'PEST_BROWSER_STATE_FILE='.$previousStateFile);
+    }
+})->skipOnWindows();
