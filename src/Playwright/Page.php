@@ -16,12 +16,29 @@ use Pest\TestSuite;
 use PHPUnit\Framework\ExpectationFailedException;
 use RuntimeException;
 
+use function Amp\delay;
+
 /**
  * @internal
  */
 final class Page
 {
     use Concerns\InteractsWithPlaywright;
+
+    /**
+     * The error Chromium reports when the operating system refuses a socket with no buffer space (WSAENOBUFS on Windows, ENOBUFS elsewhere).
+     */
+    private const string NO_BUFFER_SPACE = 'net::ERR_NO_BUFFER_SPACE';
+
+    /**
+     * How many times a navigation refused with the error above is sent again.
+     */
+    private const int NO_BUFFER_SPACE_RETRIES = 2;
+
+    /**
+     * The wait in seconds before the first retry; each later retry waits one step longer.
+     */
+    private const float NO_BUFFER_SPACE_DELAY = 0.5;
 
     /**
      * The axe-core source, read on first use.
@@ -97,14 +114,27 @@ final class Page
      */
     public function goto(string $url, array $options = []): self
     {
-        $response = $this->sendMessage('goto', [
-            ...['url' => $url, 'waitUntil' => 'load'],
-            ...$options,
-        ]);
+        for ($retry = 0; ; $retry++) {
+            try {
+                $response = $this->sendMessage('goto', [
+                    ...['url' => $url, 'waitUntil' => 'load'],
+                    ...$options,
+                ]);
 
-        $this->processVoidResponse($response);
+                $this->processVoidResponse($response);
 
-        return $this;
+                return $this;
+            } catch (ExpectationFailedException $exception) {
+                // The operating system refused a socket (no buffer space), which is treated as transient,
+                // so the navigation is sent again. Any other error is thrown on its first
+                // occurrence.
+                if ($retry >= self::NO_BUFFER_SPACE_RETRIES || ! str_contains($exception->getMessage(), self::NO_BUFFER_SPACE)) {
+                    throw $exception;
+                }
+
+                delay(self::NO_BUFFER_SPACE_DELAY * ($retry + 1));
+            }
+        }
     }
 
     /**
