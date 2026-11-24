@@ -31,6 +31,11 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
     use HandleArguments;
 
     /**
+     * The parallel global key used to propagate the CLI trace mode to worker processes.
+     */
+    private const string TRACE_MODE_GLOBAL = 'BROWSER_TRACE_MODE';
+
+    /**
      * Indicates whether the plugin has been booted.
      */
     public static bool $booted = false;
@@ -92,6 +97,12 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
 
         if ($this->hasArgument('--trace', $arguments)) {
             $arguments = $this->handleTraceArgument($arguments);
+        } elseif (Parallel::isWorker()) {
+            $persistedMode = Parallel::getGlobal(self::TRACE_MODE_GLOBAL);
+
+            if (is_string($persistedMode) && ($mode = TraceMode::tryFrom($persistedMode)) instanceof TraceMode) {
+                Playwright::setShouldTrace(mode: $mode);
+            }
         }
 
         if ($this->hasArgument('--dark', $arguments)) {
@@ -228,6 +239,10 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
 
         foreach ($modes as $mode) {
             Playwright::setShouldTrace(mode: $mode);
+        }
+
+        if ($this->hasArgument('--parallel', $remaining) || $this->hasArgument('-p', $remaining)) {
+            Parallel::setGlobal(self::TRACE_MODE_GLOBAL, Playwright::traceMode()->value);
         }
 
         return $remaining;

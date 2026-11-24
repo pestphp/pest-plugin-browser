@@ -7,16 +7,32 @@ use Pest\Browser\Enums\TraceMode;
 use Pest\Browser\Exceptions\TraceModeNotSupportedException;
 use Pest\Browser\Playwright\Playwright;
 use Pest\Browser\Plugin;
+use Pest\Plugins\Parallel;
 
 beforeEach(function (): void {
     $this->originalTraceMode = Playwright::traceMode();
     $this->originalShouldOpenTraces = Playwright::shouldOpenTraces();
+    $this->originalParatest = $_SERVER['PARATEST'] ?? null;
+    $this->originalTraceGlobal = $_ENV['PEST_PARALLEL_GLOBAL_BROWSER_TRACE_MODE'] ?? null;
 
     Playwright::setShouldTrace(open: true, mode: TraceMode::OFF);
+    unset($_SERVER['PARATEST'], $_ENV['PEST_PARALLEL_GLOBAL_BROWSER_TRACE_MODE']);
 });
 
 afterEach(function (): void {
     Playwright::setShouldTrace(open: $this->originalShouldOpenTraces, mode: $this->originalTraceMode);
+
+    if ($this->originalParatest === null) {
+        unset($_SERVER['PARATEST']);
+    } else {
+        $_SERVER['PARATEST'] = $this->originalParatest;
+    }
+
+    if ($this->originalTraceGlobal === null) {
+        unset($_ENV['PEST_PARALLEL_GLOBAL_BROWSER_TRACE_MODE']);
+    } else {
+        $_ENV['PEST_PARALLEL_GLOBAL_BROWSER_TRACE_MODE'] = $this->originalTraceGlobal;
+    }
 });
 
 it('leaves tracing off when the argument is absent', function (): void {
@@ -150,4 +166,35 @@ it('rejects an empty trace mode value', function (): void {
             TraceModeNotSupportedException::class,
             'The specified trace mode is not supported. Supported modes are: off, on, retain-on-failure.',
         );
+});
+
+it('propagates the resolved trace mode to parallel workers', function (): void {
+    $arguments = new Plugin()->handleArguments(['tests/Unit/ExampleTest.php', '--parallel', '--trace=on']);
+
+    expect($arguments)->toBe(['tests/Unit/ExampleTest.php', '--parallel'])
+        ->and(Parallel::getGlobal('BROWSER_TRACE_MODE'))->toBe(TraceMode::ON->value);
+
+    Playwright::setShouldTrace(open: true, mode: TraceMode::OFF);
+    $_SERVER['PARATEST'] = '1';
+
+    new Plugin()->handleArguments(['tests/Unit/ExampleTest.php']);
+
+    expect(Playwright::shouldTrace())->toBeTrue()
+        ->and(Playwright::traceMode())->toBe(TraceMode::ON);
+});
+
+it('propagates --trace=off to override configured tracing in parallel workers', function (): void {
+    new Configuration()->trace(all: true);
+
+    new Plugin()->handleArguments(['tests/Unit/ExampleTest.php', '-p', '--trace=off']);
+
+    expect(Parallel::getGlobal('BROWSER_TRACE_MODE'))->toBe(TraceMode::OFF->value);
+
+    new Configuration()->trace(all: true);
+    $_SERVER['PARATEST'] = '1';
+
+    new Plugin()->handleArguments(['tests/Unit/ExampleTest.php']);
+
+    expect(Playwright::shouldTrace())->toBeFalse()
+        ->and(Playwright::traceMode())->toBe(TraceMode::OFF);
 });
