@@ -288,7 +288,7 @@ final class LaravelHttpServer implements HttpServer
         // subrequest succeeds: a stylesheet/script/XHR belongs to the current
         // page and must not erase the exception that made it fail (#324).
         $secFetchDest = mb_strtolower($request->getHeader('sec-fetch-dest') ?? '');
-        if (in_array($secFetchDest, ['document', 'iframe'], true)
+        if ($secFetchDest === 'document'
             || ($secFetchDest === '' && str_contains($request->getHeader('accept') ?? '', 'text/html'))) {
             $this->lastThrowable = null;
         }

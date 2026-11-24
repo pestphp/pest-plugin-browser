@@ -194,6 +194,20 @@ it('keeps the server exception when a 500 page loads a successful stylesheet', f
     })->toThrow(RuntimeException::class, 'Page failed.');
 });
 
+it('keeps the server exception when a 500 page loads a successful iframe', function (): void {
+    $this->withoutExceptionHandling();
+
+    Route::get('/failing-with-iframe', function () {
+        return response('<iframe src="/frame.html"></iframe>failed', 500)
+            ->withException(new RuntimeException('Page failed.'));
+    });
+    Route::get('/frame.html', fn () => response('<p>frame</p>', 200, ['Content-Type' => 'text/html']));
+
+    expect(function (): void {
+        visit('/failing-with-iframe')->assertSee('failed');
+    })->toThrow(RuntimeException::class, 'Page failed.');
+});
+
 it('forgets scoped instances when a streamed response throws', function (): void {
     // The stream callback runs after the kernel has handled the request, so its instances must go even when it fails.
     app()->scoped('scoped-probe', fn (): ArrayObject => new ArrayObject());
