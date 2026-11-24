@@ -47,12 +47,12 @@ final class Tracing
      *
      * @return array<int, string>
      */
-    public static function stopAll(bool $save): array
+    public static function stopAll(bool $save, bool $failed = false): array
     {
         $paths = [];
 
         foreach (self::$recording as $tracing) {
-            $path = $tracing->stop($save);
+            $path = $tracing->stop($save, $failed);
 
             if ($path !== null) {
                 $paths[] = $path;
@@ -121,7 +121,7 @@ final class Tracing
     /**
      * Stops recording the trace, and saves it when requested.
      */
-    private function stop(bool $save): ?string
+    private function stop(bool $save, bool $failed): ?string
     {
         $path = $this->path;
 
@@ -151,7 +151,7 @@ final class Tracing
         // The archive lives on the Playwright server, which may not share our filesystem, so it is streamed back.
         $archive = new Artifact($artifactGuid)->contents();
 
-        Trace::save($path, $archive, Client::instance()->stacks());
+        Trace::save($path, $archive, Client::instance()->stacks(), $failed);
 
         return $path;
     }

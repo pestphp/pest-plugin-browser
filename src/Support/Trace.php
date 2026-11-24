@@ -14,11 +14,9 @@ use ZipArchive;
 final class Trace
 {
     /**
-     * The paths of traces saved for failed tests during the current run.
-     *
-     * @var array<int, string>
+     * The ZIP archive comment marking a trace that belongs to a failed test.
      */
-    private static array $failed = [];
+    private const string FAILED_ARCHIVE_COMMENT = 'pest-browser:failed';
 
     /**
      * Return the path to the traces' directory.
@@ -71,21 +69,35 @@ final class Trace
     }
 
     /**
-     * Remember that the given trace belongs to a failed test.
-     */
-    public static function rememberFailed(string $path): void
-    {
-        self::$failed[] = $path;
-    }
-
-    /**
-     * Return the paths of the traces saved for failed tests during the current run.
+     * Return the paths of the traces saved for failed tests during the test run.
      *
      * @return array<int, string>
      */
     public static function failed(): array
     {
-        return self::$failed;
+        return array_values(array_filter(self::saved(), self::isFailed(...)));
+    }
+
+    /**
+     * Determine whether the given trace archive belongs to a failed test.
+     */
+    public static function isFailed(string $path): bool
+    {
+        if (class_exists(ZipArchive::class) === false) {
+            return false;
+        }
+
+        $zip = new ZipArchive();
+
+        if ($zip->open($path) !== true) {
+            return false;
+        }
+
+        $comment = $zip->getArchiveComment();
+
+        $zip->close();
+
+        return $comment === self::FAILED_ARCHIVE_COMMENT;
     }
 
     /**
@@ -93,7 +105,7 @@ final class Trace
      *
      * @param  array<string, array<int, array{file: string, line: int, function: string}>>  $stacks
      */
-    public static function save(string $path, string $archive, array $stacks): void
+    public static function save(string $path, string $archive, array $stacks, bool $failed = false): void
     {
         if (is_dir(self::dir()) === false) {
             @mkdir(self::dir(), 0755, true);
@@ -101,13 +113,23 @@ final class Trace
 
         file_put_contents($path, $archive);
 
-        if ($stacks === [] || class_exists(ZipArchive::class) === false) {
+        if (($stacks === [] && ! $failed) || class_exists(ZipArchive::class) === false) {
             return;
         }
 
         $zip = new ZipArchive();
 
         if ($zip->open($path) !== true) {
+            return;
+        }
+
+        if ($failed) {
+            $zip->setArchiveComment(self::FAILED_ARCHIVE_COMMENT);
+        }
+
+        if ($stacks === []) {
+            $zip->close();
+
             return;
         }
 
@@ -154,8 +176,6 @@ final class Trace
      */
     public static function cleanup(): void
     {
-        self::$failed = [];
-
         $files = glob(self::dir().'/*.zip');
 
         if (is_array($files)) {

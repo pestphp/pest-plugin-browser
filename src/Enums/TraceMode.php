@@ -9,8 +9,17 @@ namespace Pest\Browser\Enums;
  */
 enum TraceMode: string
 {
-    case On = 'on';
-    case RetainOnFailure = 'retain-on-failure';
+    case OFF = 'off';
+    case ON = 'on';
+    case RETAIN_ON_FAILURE = 'retain-on-failure';
+
+    /**
+     * Whether tracing is enabled for this mode.
+     */
+    public function isEnabled(): bool
+    {
+        return $this !== self::OFF;
+    }
 
     /**
      * Whether a recorded trace should be kept for the given test outcome.
@@ -18,8 +27,9 @@ enum TraceMode: string
     public function shouldSave(bool $failed): bool
     {
         return match ($this) {
-            self::On => true,
-            self::RetainOnFailure => $failed,
+            self::OFF => false,
+            self::ON => true,
+            self::RETAIN_ON_FAILURE => $failed,
         };
     }
 }

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Pest\Browser\Playwright\Tracing;
+use Pest\Browser\Support\Trace;
 use PHPUnit\Framework\ExpectationFailedException;
 
 it('saves a trace with the steps and the test source', function (): void {
@@ -16,11 +17,12 @@ it('saves a trace with the steps and the test source', function (): void {
     expect(fn (): Pest\Browser\Api\Webpage => $page->assertSee('Hello Universe'))
         ->toThrow(ExpectationFailedException::class, 'A trace of the test has been saved to [tests/Browser/Traces/tracing-saved.zip]');
 
-    $paths = Tracing::stopAll(save: true);
+    $paths = Tracing::stopAll(save: true, failed: true);
 
     expect($paths)->toHaveCount(1)
         ->and($paths[0])->toEndWith('tests/Browser/Traces/tracing-saved.zip')
-        ->and($paths[0])->toBeFile();
+        ->and($paths[0])->toBeFile()
+        ->and(Trace::isFailed($paths[0]))->toBeTrue();
 
     $zip = new ZipArchive();
     $zip->open($paths[0]);
@@ -35,6 +37,25 @@ it('saves a trace with the steps and the test source', function (): void {
         ->and($zip->getFromName('resources/src@'.sha1(__FILE__).'.txt'))->toBe(file_get_contents(__FILE__));
 
     $zip->close();
+
+    unlink($paths[0]);
+});
+
+it('saves a trace for a passing test without marking it as failed', function (): void {
+    Route::get('/', fn (): string => 'Hello World');
+
+    $page = visit('/');
+
+    $page->page()->context()->tracing()?->start('tracing-passing');
+
+    $page->assertSee('Hello World');
+
+    $paths = Tracing::stopAll(save: true, failed: false);
+
+    expect($paths)->toHaveCount(1)
+        ->and($paths[0])->toEndWith('tests/Browser/Traces/tracing-passing.zip')
+        ->and($paths[0])->toBeFile()
+        ->and(Trace::isFailed($paths[0]))->toBeFalse();
 
     unlink($paths[0]);
 });

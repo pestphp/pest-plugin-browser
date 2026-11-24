@@ -149,15 +149,15 @@ final readonly class Configuration
     }
 
     /**
-     * Records a trace of each test. By default the trace is kept only when the test fails.
-     * Pass retainOnFailure: false to keep the trace of every test. Unless running on CI,
+     * Records a trace of each test. By default, traces are kept only when a test fails.
+     * Pass all: true to keep the trace of every test. Unless running on CI,
      * the trace of a failed test is opened once the test suite has finished.
      */
-    public function trace(bool $open = true, bool $retainOnFailure = true): self
+    public function trace(bool $open = true, bool $all = false): self
     {
         Playwright::setShouldTrace(
             $open,
-            $retainOnFailure ? TraceMode::RetainOnFailure : TraceMode::On,
+            $all ? TraceMode::ON : TraceMode::RETAIN_ON_FAILURE,
         );
 
         return $this;

@@ -51,19 +51,14 @@ final class Playwright
     private static bool $shouldDiffOnScreenshotAssertions = false;
 
     /**
-     * Whether to record a trace of each test.
+     * Which recorded traces to keep after each test.
      */
-    private static bool $shouldTrace = false;
+    private static TraceMode $traceMode = TraceMode::OFF;
 
     /**
      * Whether to open the trace of a failed test once the test suite has finished, when not running on CI.
      */
     private static bool $shouldOpenTraces = true;
-
-    /**
-     * Which recorded traces to keep after each test.
-     */
-    private static TraceMode $traceMode = TraceMode::RetainOnFailure;
 
     /**
      * The default browser type.
@@ -242,10 +237,13 @@ final class Playwright
     /**
      * Set whether to record a trace of each test, and which traces to keep.
      */
-    public static function setShouldTrace(?bool $open = null, TraceMode $mode = TraceMode::RetainOnFailure): void
+    public static function setShouldTrace(?bool $open = null, ?TraceMode $mode = null): void
     {
-        self::$shouldTrace = true;
-        self::$traceMode = $mode;
+        if ($mode instanceof TraceMode) {
+            self::$traceMode = $mode;
+        } elseif (self::$traceMode === TraceMode::OFF) {
+            self::$traceMode = TraceMode::RETAIN_ON_FAILURE;
+        }
 
         if ($open !== null) {
             self::$shouldOpenTraces = $open;
@@ -265,7 +263,7 @@ final class Playwright
      */
     public static function shouldTrace(): bool
     {
-        return self::$shouldTrace;
+        return self::$traceMode->isEnabled();
     }
 
     /**
@@ -282,16 +280,6 @@ final class Playwright
     public static function shouldSaveTrace(bool $failed): bool
     {
         return self::$traceMode->shouldSave($failed);
-    }
-
-    /**
-     * Resets the tracing configuration to its defaults.
-     */
-    public static function resetTracing(): void
-    {
-        self::$shouldTrace = false;
-        self::$shouldOpenTraces = true;
-        self::$traceMode = TraceMode::RetainOnFailure;
     }
 
     /**
