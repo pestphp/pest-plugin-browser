@@ -14,6 +14,7 @@ use Amp\Http\Server\Request as AmpRequest;
 use Amp\Http\Server\RequestHandler\ClosureRequestHandler;
 use Amp\Http\Server\Response;
 use Amp\Http\Server\SocketHttpServer;
+use Amp\Socket\BindContext;
 use Closure;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Http\Kernel as HttpKernel;
@@ -108,15 +109,22 @@ final class LaravelHttpServer implements HttpServer
         // Increase the body size limit beyond Amp's 128-KiB
         // default to prevent deadlocks when reading large
         // JSON payloads in POST, PUT, and PATCH requests.
+        //
+        // The browser is on the same machine, so compressing a response
+        // costs CPU time and saves nothing.
         $this->socket = $server = SocketHttpServer::createForDirectAccess(
             logger: $logger = new NullLogger(),
+            enableCompression: false,
             httpDriverFactory: new DefaultHttpDriverFactory(
                 logger: $logger,
                 bodySizeLimit: 64 * 1024 * 1024,
             ),
         );
 
-        $server->expose("{$this->host}:{$this->port}");
+        // Amp writes a response's headers and its body as two writes. With
+        // Nagle's algorithm on, the body waits for the browser to acknowledge
+        // the headers, and the browser delays that acknowledgement.
+        $server->expose("{$this->host}:{$this->port}", (new BindContext)->withTcpNoDelay());
         $server->start(
             new ClosureRequestHandler($this->handleRequest(...)),
             new DefaultErrorHandler(),
