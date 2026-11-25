@@ -128,7 +128,7 @@ final class Page
                 // The operating system refused a socket (no buffer space), which is treated as transient,
                 // so the navigation is sent again. Any other error is thrown on its first
                 // occurrence.
-                if ($retry >= self::NO_BUFFER_SPACE_RETRIES || ! str_contains($exception->getMessage(), self::NO_BUFFER_SPACE)) {
+                if ($retry >= self::NO_BUFFER_SPACE_RETRIES || ! str_starts_with($exception->getMessage(), self::NO_BUFFER_SPACE.' at ')) {
                     throw $exception;
                 }
 

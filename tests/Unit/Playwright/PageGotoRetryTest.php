@@ -76,9 +76,10 @@ it('throws net::ERR_NO_BUFFER_SPACE once the retries are used', function (): voi
 
 it('throws any other navigation error on its first occurrence', function (): void {
     $sent = [];
-    $page = pageAnsweringGoto(['net::ERR_CONNECTION_REFUSED at http://127.0.0.1:8000/', null], $sent);
+    $url = 'http://127.0.0.1:8000/net::ERR_NO_BUFFER_SPACE';
+    $page = pageAnsweringGoto(['net::ERR_CONNECTION_REFUSED at '.$url, null], $sent);
 
-    expect(fn (): Page => $page->goto('http://127.0.0.1:8000/'))
+    expect(fn (): Page => $page->goto($url))
         ->toThrow(ExpectationFailedException::class, 'net::ERR_CONNECTION_REFUSED')
         ->and($sent)->toBe(['goto']);
 });
