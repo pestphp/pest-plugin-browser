@@ -183,11 +183,9 @@ it('does not leak server exceptions from an earlier request into subsequent requ
 it('keeps the server exception when a 500 page loads a successful stylesheet', function (): void {
     $this->withoutExceptionHandling();
 
-    Route::get('/failing-with-css', function () {
-        return response('<link rel="stylesheet" href="/site.css">failed', 500)
-            ->withException(new RuntimeException('Page failed.'));
-    });
-    Route::get('/site.css', fn () => response('body { color: red; }', 200, ['Content-Type' => 'text/css']));
+    Route::get('/failing-with-css', fn () => response('<link rel="stylesheet" href="/site.css">failed', 500)
+        ->withException(new RuntimeException('Page failed.')));
+    Route::get('/site.css', fn (): Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response => response('body { color: red; }', 200, ['Content-Type' => 'text/css']));
 
     expect(function (): void {
         visit('/failing-with-css')->assertSee('failed');
@@ -197,11 +195,9 @@ it('keeps the server exception when a 500 page loads a successful stylesheet', f
 it('keeps the server exception when a 500 page loads a successful iframe', function (): void {
     $this->withoutExceptionHandling();
 
-    Route::get('/failing-with-iframe', function () {
-        return response('<iframe src="/frame.html"></iframe>failed', 500)
-            ->withException(new RuntimeException('Page failed.'));
-    });
-    Route::get('/frame.html', fn () => response('<p>frame</p>', 200, ['Content-Type' => 'text/html']));
+    Route::get('/failing-with-iframe', fn () => response('<iframe src="/frame.html"></iframe>failed', 500)
+        ->withException(new RuntimeException('Page failed.')));
+    Route::get('/frame.html', fn (): Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response => response('<p>frame</p>', 200, ['Content-Type' => 'text/html']));
 
     expect(function (): void {
         visit('/failing-with-iframe')->assertSee('failed');
