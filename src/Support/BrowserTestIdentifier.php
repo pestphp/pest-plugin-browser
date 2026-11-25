@@ -15,8 +15,20 @@ use ReflectionFunction;
  *
  * @codeCoverageIgnore
  */
-final readonly class BrowserTestIdentifier
+final class BrowserTestIdentifier
 {
+    /**
+     * The test file whose lines are cached. Tests are registered file by file, so one file is enough.
+     */
+    private static ?string $cachedFile = null;
+
+    /**
+     * The lines of the cached test file.
+     *
+     * @var array<int, string>|false
+     */
+    private static array|false $cachedLines = false;
+
     /**
      * Checks if the given closure uses the "page" function.
      */
@@ -67,7 +79,12 @@ final readonly class BrowserTestIdentifier
 
         $startLine = $ref->getStartLine();
         $endLine = $ref->getEndLine();
-        $lines = file($file);
+        if (self::$cachedFile !== $file) {
+            self::$cachedFile = $file;
+            self::$cachedLines = file($file);
+        }
+
+        $lines = self::$cachedLines;
 
         if (is_array($lines) === false || $startLine < 1 || $endLine > count($lines)) {
             return false;
@@ -75,6 +92,11 @@ final readonly class BrowserTestIdentifier
 
         // @phpstan-ignore-next-line
         $code = implode('', array_slice($lines, $startLine - 1, $endLine - $startLine + 1));
+
+        // The token check below needs the function name to appear in the code, so skip tokenizing when it can't.
+        if (mb_stripos($code, $functionName, encoding: 'UTF-8') === false) {
+            return false;
+        }
 
         $tokens = token_get_all('<?php '.$code);
         $tokensCount = count($tokens);

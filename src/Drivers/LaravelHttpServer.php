@@ -207,7 +207,10 @@ final class LaravelHttpServer implements HttpServer
         $exceptionHandler = app(ExceptionHandler::class);
 
         if ($exceptionHandler instanceof WithoutExceptionHandlingHandler) {
-            throw $this->lastThrowable;
+            $throwable = $this->lastThrowable;
+            $this->lastThrowable = null;
+
+            throw $throwable;
         }
     }
 
@@ -287,6 +290,16 @@ final class LaravelHttpServer implements HttpServer
     private function handleRequest(AmpRequest $request): Response
     {
         GlobalState::flush();
+
+        // A document navigation starts a fresh page lifecycle, so any throwable
+        // left by the previous page must go here. Do not clear it when a
+        // subrequest succeeds: a stylesheet/script/XHR belongs to the current
+        // page and must not erase the exception that made it fail (#324).
+        $secFetchDest = mb_strtolower($request->getHeader('sec-fetch-dest') ?? '');
+        if ($secFetchDest === 'document'
+            || ($secFetchDest === '' && str_contains($request->getHeader('accept') ?? '', 'text/html'))) {
+            $this->lastThrowable = null;
+        }
 
         if (Execution::instance()->isWaiting() === false) {
             Execution::instance()->tick();
