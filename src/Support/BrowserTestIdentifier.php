@@ -92,7 +92,7 @@ final readonly class BrowserTestIdentifier
                     return true;
                 }
 
-                return $tokens[$i - 1][0] === T_WHITESPACE || $tokens[$i - 1] === '(';
+                return $tokens[$i - 1][0] === T_WHITESPACE || in_array($tokens[$i - 1], ['(', ',', ':'], true);
             }
         }
 
