@@ -93,7 +93,9 @@ final class FrontendFixture
         }
 
         @rmdir($bridge->lanesDirectory());
-        @unlink($bridge->lanesDirectory().'.log');
+        foreach (['log', 'lock'] as $extension) {
+            @unlink(sys_get_temp_dir().DIRECTORY_SEPARATOR.'pest-browser-bridge-'.$bridge->port.'.'.$extension);
+        }
     }
 
     /**
@@ -103,10 +105,26 @@ final class FrontendFixture
     {
         exec(sprintf('lsof -ti tcp:%d -sTCP:LISTEN 2>/dev/null', $port), $pids);
 
+        $pids = array_unique($pids);
+
         foreach ($pids as $pid) {
             DetachedProcess::stop((int) $pid);
         }
 
-        Network::waitUntil(fn (): bool => ! Network::isListening($port, 0.2), 5);
+        Network::waitUntil(fn (): bool => ! Network::isListening($port, 0.2, ['127.0.0.1', '::1']), 5);
+
+        foreach (['json', 'log', 'lock'] as $extension) {
+            foreach (glob(sys_get_temp_dir().DIRECTORY_SEPARATOR.'pest-browser-frontend-*-'.$port.'.'.$extension) ?: [] as $file) {
+                @unlink($file);
+            }
+        }
+    }
+
+    /**
+     * Returns the host the browser of this process uses for the frontend.
+     */
+    public static function laneHost(): string
+    {
+        return 'pest-w'.getmypid().'.localhost';
     }
 }

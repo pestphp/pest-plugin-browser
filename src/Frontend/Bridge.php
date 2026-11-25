@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Pest\Browser\Frontend;
 
+use Closure;
 use Pest\Browser\Exceptions\FrontendUnavailableException;
 
 /**
@@ -30,8 +31,22 @@ final readonly class Bridge
         public int $port,
         public array $routeHeaders,
         public bool $forwardLaneHost,
+        public string $project,
     ) {
         //
+    }
+
+    /**
+     * Determines whether a running process, other than the given one, published its HTTP server in the lanes directory.
+     */
+    public static function hasLiveLanesIn(string $directory, ?int $except = null): bool
+    {
+        $entries = is_dir($directory) ? scandir($directory) : false;
+
+        return array_any(
+            $entries === false ? [] : $entries,
+            fn (string $entry): bool => preg_match('/^\d+$/', $entry) === 1 && (int) $entry !== $except && DetachedProcess::isRunning((int) $entry),
+        );
     }
 
     /**
@@ -47,7 +62,7 @@ final readonly class Bridge
      */
     public function lanesDirectory(): string
     {
-        $directory = sys_get_temp_dir().DIRECTORY_SEPARATOR.'pest-browser-bridge-'.$this->port;
+        $directory = sys_get_temp_dir().DIRECTORY_SEPARATOR.'pest-browser-bridge-'.$this->port.'-'.$this->project;
 
         if (! is_dir($directory)) {
             @mkdir($directory, 0755, true);
@@ -81,49 +96,39 @@ final readonly class Bridge
             implode(',', $this->routeHeaders),
             $this->forwardLaneHost ? '1' : '0',
             $this->lanesDirectory(),
+            (string) hash_file('xxh128', $this->script()),
         ]));
     }
 
     /**
-     * Starts the bridge, or reuses the one that already listens on its port.
+     * Starts the bridge, or reuses the one that already listens on its port, one test run at a time.
      *
      * @throws FrontendUnavailableException
      */
     public function ensureRunning(): void
     {
-        if (Network::isListening($this->port)) {
-            $identity = $this->identity();
+        $this->locked($this->startOrReuse(...));
+    }
 
-            if ($identity === null) {
-                throw new FrontendUnavailableException(sprintf(
-                    'The port %d of the browser bridge is used by another program. Choose a free port with [->bridgePort()].',
-                    $this->port,
-                ));
-            }
+    /**
+     * Starts or reuses the bridge and publishes the URL of the HTTP server of the given lane, so that no
+     * other test run replaces the bridge between both steps.
+     *
+     * @throws FrontendUnavailableException
+     */
+    public function join(int $lane, string $backendUrl): void
+    {
+        $this->locked(function () use ($lane, $backendUrl): void {
+            $this->startOrReuse();
 
-            if ($identity['signature'] === $this->signature()) {
-                return;
-            }
-
-            if ($this->hasLiveLanes()) {
-                throw new FrontendUnavailableException(sprintf(
-                    'The browser bridge on port %d routes with another configuration and serves a running test suite. Choose a free port with [->bridgePort()].',
-                    $this->port,
-                ));
-            }
-
-            DetachedProcess::stop($identity['pid']);
-
-            Network::waitUntil(fn (): bool => ! Network::isListening($this->port), self::START_TIMEOUT);
-        }
-
-        $this->start();
+            $this->register($lane, $backendUrl);
+        });
     }
 
     /**
      * Returns the identity of the bridge that listens on the port, if it is a bridge.
      *
-     * @return array{pid: int, signature: string}|null
+     * @return array{pid: int, signature: string, lanes: string}|null
      */
     public function identity(): ?array
     {
@@ -141,11 +146,71 @@ final readonly class Bridge
 
         $pid = $identity['pid'] ?? 0;
         $signature = $identity['signature'] ?? '';
+        $lanes = $identity['lanes'] ?? '';
 
         return [
             'pid' => is_int($pid) ? $pid : 0,
             'signature' => is_string($signature) ? $signature : '',
+            'lanes' => is_string($lanes) ? $lanes : '',
         ];
+    }
+
+    /**
+     * Runs the callback while this process holds the lock of the bridge port.
+     *
+     * @param  Closure(): void  $callback
+     *
+     * @throws FrontendUnavailableException
+     */
+    private function locked(Closure $callback): void
+    {
+        $lock = fopen(sys_get_temp_dir().DIRECTORY_SEPARATOR.'pest-browser-bridge-'.$this->port.'.lock', 'ce');
+
+        try {
+            if ($lock !== false) {
+                flock($lock, LOCK_EX);
+            }
+
+            $callback();
+        } finally {
+            if ($lock !== false) {
+                flock($lock, LOCK_UN);
+                fclose($lock);
+            }
+        }
+    }
+
+    /**
+     * Starts the bridge, or reuses the one that already listens on its port.
+     *
+     * @throws FrontendUnavailableException
+     */
+    private function startOrReuse(): void
+    {
+        if (Network::isListening($this->port)) {
+            $identity = $this->identity();
+
+            if ($identity === null) {
+                throw new FrontendUnavailableException(sprintf(
+                    'The port %d of the browser bridge is used by another program. Choose a free port with [->bridgePort()].',
+                    $this->port,
+                ));
+            }
+
+            if ($identity['signature'] === $this->signature()) {
+                return;
+            }
+
+            if (self::hasLiveLanesIn($identity['lanes'] === '' ? $this->lanesDirectory() : $identity['lanes'])) {
+                throw $this->busyWithAnotherConfiguration();
+            }
+
+            DetachedProcess::stop($identity['pid']);
+
+            Network::waitUntil(fn (): bool => ! Network::isListening($this->port), self::START_TIMEOUT);
+        }
+
+        $this->start();
     }
 
     /**
@@ -181,8 +246,16 @@ final readonly class Bridge
             self::START_TIMEOUT,
         );
 
-        if ($started && $this->identity() !== null) {
+        $identity = $started ? $this->identity() : null;
+
+        if ($identity !== null && $identity['signature'] === $this->signature()) {
             return;
+        }
+
+        $this->stopFailedStart($process);
+
+        if ($identity !== null) {
+            throw $this->busyWithAnotherConfiguration();
         }
 
         throw new FrontendUnavailableException(sprintf(
@@ -193,12 +266,21 @@ final readonly class Bridge
     }
 
     /**
-     * Determines whether a running process published its HTTP server in the lanes directory.
+     * Stops the bridge process a failed start launched, so that it does not open the port after the test gave up.
      */
-    private function hasLiveLanes(): bool
+    private function stopFailedStart(DetachedProcess $process): void
     {
-        $entries = scandir($this->lanesDirectory());
+        DetachedProcess::stop($process->pid);
+    }
 
-        return array_any($entries === false ? [] : $entries, fn (string $entry): bool => preg_match('/^\d+$/', $entry) === 1 && DetachedProcess::isRunning((int) $entry));
+    /**
+     * Returns the reason a bridge with another configuration cannot serve this test run.
+     */
+    private function busyWithAnotherConfiguration(): FrontendUnavailableException
+    {
+        return new FrontendUnavailableException(sprintf(
+            'The browser bridge on port %d routes with another configuration and serves a running test suite. Choose a free port with [->bridgePort()].',
+            $this->port,
+        ));
     }
 }

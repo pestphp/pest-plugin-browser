@@ -9,6 +9,9 @@ arch()
         Pest\Browser\Api\TestableLivewire::class,
         Pest\Browser\Cleanables\Livewire::class,
         Pest\Browser\Drivers\ClientAuthentication::class,
+        Pest\Browser\Drivers\ContainerInstances::class,
+        Pest\Browser\Drivers\ContainerReboundCallbacks::class,
+        Pest\Browser\Drivers\ContainerScopedInstances::class,
         Pest\Browser\Drivers\LaravelHttpServer::class,
         'Workbench',
     ]);

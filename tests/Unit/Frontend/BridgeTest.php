@@ -10,7 +10,7 @@ use Pest\Browser\Support\Port;
 use Tests\Support\FrontendFixture;
 
 beforeEach(function (): void {
-    $this->bridge = new Bridge(Port::find(), Frontend::DEFAULT_ROUTE_HEADERS, false);
+    $this->bridge = new Bridge(Port::find(), Frontend::DEFAULT_ROUTE_HEADERS, false, Frontend::project());
 });
 
 afterEach(function (): void {
@@ -57,7 +57,7 @@ it('restarts an idle bridge that routes with another configuration', function ()
     $this->bridge->ensureRunning();
     $pid = $this->bridge->identity()['pid'];
 
-    $this->bridge = new Bridge($this->bridge->port, ['x-tenant-domain'], true);
+    $this->bridge = new Bridge($this->bridge->port, ['x-tenant-domain'], true, Frontend::project());
     $this->bridge->ensureRunning();
 
     expect($this->bridge->identity())
@@ -69,14 +69,14 @@ it('refuses a busy bridge that routes with another configuration', function (): 
     $this->bridge->ensureRunning();
     $this->bridge->register(getmypid(), FrontendFixture::backend());
 
-    $other = new Bridge($this->bridge->port, ['x-tenant-domain'], true);
+    $other = new Bridge($this->bridge->port, ['x-tenant-domain'], true, Frontend::project());
 
     expect(fn () => $other->ensureRunning())->toThrow(FrontendUnavailableException::class, 'routes with another configuration');
 });
 
 it('refuses a port that another program uses', function (): void {
     $backend = FrontendFixture::backend();
-    $bridge = new Bridge((int) parse_url($backend, PHP_URL_PORT), Frontend::DEFAULT_ROUTE_HEADERS, false);
+    $bridge = new Bridge((int) parse_url($backend, PHP_URL_PORT), Frontend::DEFAULT_ROUTE_HEADERS, false, Frontend::project());
 
     expect(fn () => $bridge->ensureRunning())->toThrow(FrontendUnavailableException::class, 'is used by another program');
 });
@@ -95,6 +95,7 @@ it('routes to the lane named in the host of a route header', function (): void {
             'path' => '/users?page=2',
             'host' => mb_substr($other, 7),
             'bridge' => '1',
+            'laneHost' => 'pest-w'.FrontendFixture::pidOf($other).'.localhost:3101',
         ]);
 });
 
@@ -150,7 +151,7 @@ it('refuses a request without a lane when several processes run', function (): v
 });
 
 it('forwards the host of the lane when configured', function (): void {
-    $this->bridge = new Bridge($this->bridge->port, ['x-tenant-domain'], true);
+    $this->bridge = new Bridge($this->bridge->port, ['x-tenant-domain'], true, Frontend::project());
     $this->bridge->ensureRunning();
     $this->bridge->register(getmypid(), FrontendFixture::backend());
 

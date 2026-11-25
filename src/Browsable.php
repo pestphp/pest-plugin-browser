@@ -6,6 +6,8 @@ namespace Pest\Browser;
 
 use Pest\Browser\Api\ArrayablePendingAwaitablePage;
 use Pest\Browser\Api\PendingAwaitablePage;
+use Pest\Browser\Drivers\ClientAuthentication;
+use Pest\Browser\Drivers\ContainerScopedInstances;
 use Pest\Browser\Enums\Device;
 use Pest\Browser\Playwright\Client;
 use Pest\Browser\Playwright\Playwright;
@@ -29,6 +31,27 @@ trait Browsable
         $http = ServerManager::instance()->http();
 
         $http->bootstrap();
+    }
+
+    /**
+     * Remembers the default guard the application configured, so that a request of the frontend server starts with it.
+     *
+     * @internal
+     */
+    public function setUpBrowsable(): void
+    {
+        $prepare = static function (): void {
+            ClientAuthentication::rememberConfiguredGuard();
+            ContainerScopedInstances::track();
+        };
+
+        if (method_exists($this, 'afterApplicationCreated')) {
+            $this->afterApplicationCreated($prepare);
+
+            return;
+        }
+
+        $prepare();
     }
 
     /**

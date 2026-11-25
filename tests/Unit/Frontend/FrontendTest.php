@@ -12,7 +12,7 @@ use Pest\Browser\Support\Port;
 use Tests\Support\FrontendFixture;
 
 beforeEach(function (): void {
-    $this->bridge = new Bridge(Port::find(), Frontend::DEFAULT_ROUTE_HEADERS, false);
+    $this->bridge = new Bridge(Port::find(), Frontend::DEFAULT_ROUTE_HEADERS, false, Frontend::project());
     $this->port = Port::find();
 });
 
@@ -53,7 +53,7 @@ it('configures the frontend from the browser configuration', function (): void {
     $devServer = $frontend->devServer();
 
     expect($configuration)->toBeInstanceOf(FrontendConfiguration::class)
-        ->and($frontend->bridge())->toEqual(new Bridge(9898, ['x-tenant-domain', 'referer'], true))
+        ->and($frontend->bridge())->toEqual(new Bridge(9898, ['x-tenant-domain', 'referer'], true, Frontend::project()))
         ->and($frontend->laneHost())->toBe('acme-w'.getmypid().'.localhost:3101')
         ->and($frontend->laneHost('tenant'))->toBe('tenant-w'.getmypid().'.localhost:3101')
         ->and($devServer->resolvedCommand())->toBe('pnpm exec next dev -p 3101')
@@ -83,7 +83,7 @@ it('requires a configured frontend', function (): void {
 it('starts the dev server detached and waits until it answers', function (): void {
     $this->bridge->ensureRunning();
 
-    fixtureDevServer($this->port, $this->bridge)->ensureRunning($this->bridge);
+    fixtureDevServer($this->port, $this->bridge)->ensureRunning($this->bridge, FrontendFixture::laneHost());
 
     expect(Network::get('http://127.0.0.1:'.$this->port.'/environment', 2))
         ->body->json()->backend->toBe($this->bridge->url());
@@ -91,10 +91,10 @@ it('starts the dev server detached and waits until it answers', function (): voi
 
 it('reuses the dev server that already listens', function (): void {
     $this->bridge->ensureRunning();
-    fixtureDevServer($this->port, $this->bridge)->ensureRunning($this->bridge);
+    fixtureDevServer($this->port, $this->bridge)->ensureRunning($this->bridge, FrontendFixture::laneHost());
     $pid = FrontendFixture::pidOf('http://127.0.0.1:'.$this->port);
 
-    fixtureDevServer($this->port, $this->bridge)->ensureRunning($this->bridge);
+    fixtureDevServer($this->port, $this->bridge)->ensureRunning($this->bridge, FrontendFixture::laneHost());
 
     expect(FrontendFixture::pidOf('http://127.0.0.1:'.$this->port))->toBe($pid);
 });
@@ -102,26 +102,26 @@ it('reuses the dev server that already listens', function (): void {
 it('verifies that the dev server forwards to this bridge', function (): void {
     $this->bridge->ensureRunning();
 
-    fixtureDevServer($this->port, $this->bridge, bridgePrefix: '/api/')->ensureRunning($this->bridge);
+    fixtureDevServer($this->port, $this->bridge, bridgePrefix: '/api/')->ensureRunning($this->bridge, FrontendFixture::laneHost());
 })->throwsNoExceptions();
 
 it('refuses a dev server that forwards to another bridge', function (): void {
     $this->bridge->ensureRunning();
-    $other = new Bridge(Port::find(), Frontend::DEFAULT_ROUTE_HEADERS, false);
+    $other = new Bridge(Port::find(), Frontend::DEFAULT_ROUTE_HEADERS, false, Frontend::project());
 
-    expect(fn () => fixtureDevServer($this->port, $this->bridge, bridgePrefix: '/api')->ensureRunning($other))
+    expect(fn () => fixtureDevServer($this->port, $this->bridge, bridgePrefix: '/api')->ensureRunning($other, FrontendFixture::laneHost()))
         ->toThrow(FrontendUnavailableException::class, 'does not forward [http://localhost:'.$this->port.'/api/__pest-bridge] to the browser bridge on port '.$other->port);
 });
 
 it('reports the log of a dev server that exits', function (): void {
-    expect(fn () => fixtureDevServer($this->port, $this->bridge, 'echo "next: command not found" && exit 127')->ensureRunning($this->bridge))
+    expect(fn () => fixtureDevServer($this->port, $this->bridge, 'echo "next: command not found" && exit 127')->ensureRunning($this->bridge, FrontendFixture::laneHost()))
         ->toThrow(FrontendUnavailableException::class, 'next: command not found');
 });
 
 it('refuses a frontend directory that does not exist', function (): void {
     $devServer = new DevServer('/does/not/exist', 'true', 'localhost', $this->port, [], '/', 1, null);
 
-    expect(fn () => $devServer->ensureRunning($this->bridge))
+    expect(fn () => $devServer->ensureRunning($this->bridge, FrontendFixture::laneHost()))
         ->toThrow(FrontendUnavailableException::class, 'The frontend directory [/does/not/exist] does not exist.');
 });
 

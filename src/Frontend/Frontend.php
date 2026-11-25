@@ -16,11 +16,6 @@ use Pest\TestSuite;
 final class Frontend
 {
     /**
-     * The default port of the bridge between the frontend and the backend.
-     */
-    public const int DEFAULT_BRIDGE_PORT = 9899;
-
-    /**
      * The default subdomain that carries the lane in the URL of the frontend.
      */
     public const string DEFAULT_SUBDOMAIN = 'pest';
@@ -47,9 +42,9 @@ final class Frontend
     public array $environment = [];
 
     /**
-     * The port of the bridge.
+     * The port of the bridge, or null for the port of this project.
      */
-    public int $bridgePort = self::DEFAULT_BRIDGE_PORT;
+    public ?int $bridgePort = null;
 
     /**
      * The headers in which the bridge looks for the lane.
@@ -164,15 +159,21 @@ final class Frontend
     }
 
     /**
+     * Returns the key of the project under test, so that two projects or worktrees never share a bridge or a lane.
+     */
+    public static function project(): string
+    {
+        return mb_substr(hash('xxh128', TestSuite::getInstance()->rootPath), 0, 12);
+    }
+
+    /**
      * Returns the URL of the given path on the frontend, for the lane of this process.
      *
      * @throws FrontendUnavailableException
      */
     public function url(string $path = '/', ?string $subdomain = null): string
     {
-        $this->prepare();
-
-        $this->registerLane();
+        $this->prepare($subdomain);
 
         return sprintf('http://%s/%s', $this->laneHost($subdomain), mb_ltrim($path, '/'));
     }
@@ -183,7 +184,7 @@ final class Frontend
     public function laneHost(?string $subdomain = null): string
     {
         if ($this->host !== 'localhost') {
-            return sprintf('%s:%d', $this->host, $this->port);
+            return sprintf('%s:%d', Network::urlHost($this->host), $this->port);
         }
 
         return sprintf('%s-w%d.localhost:%d', $subdomain ?? $this->subdomain, self::lane(), $this->port);
@@ -195,9 +196,10 @@ final class Frontend
     public function bridge(): Bridge
     {
         return new Bridge(
-            $this->bridgePort,
+            $this->bridgePort ?? 10000 + crc32(self::project()) % 10000,
             array_values(array_unique(array_map(mb_strtolower(...), $this->routeHeaders))),
             $this->forwardLaneHost,
+            self::project(),
         );
     }
 
@@ -207,7 +209,7 @@ final class Frontend
     public function devServer(): DevServer
     {
         $bridgeUrl = $this->bridge()->url();
-        $frontendUrl = sprintf('http://%s:%d', $this->host, $this->port);
+        $frontendUrl = sprintf('http://%s:%d', Network::urlHost($this->host), $this->port);
 
         $placeholders = [
             '{bridge}' => $bridgeUrl,
@@ -268,7 +270,7 @@ final class Frontend
      *
      * @throws FrontendUnavailableException
      */
-    private function prepare(): void
+    private function prepare(?string $subdomain): void
     {
         if ($this->unavailable !== null) {
             throw new FrontendUnavailableException($this->unavailable);
@@ -278,18 +280,45 @@ final class Frontend
             return;
         }
 
-        $lock = fopen(sys_get_temp_dir().DIRECTORY_SEPARATOR.'pest-browser-frontend-'.$this->port.'.lock', 'c');
+        if (PHP_OS_FAMILY === 'Windows') {
+            $this->unavailable = 'Browser tests against a separate frontend do not run on Windows yet.';
+
+            throw new FrontendUnavailableException($this->unavailable);
+        }
+
+        if ($this->bridge()->port === $this->port) {
+            $this->unavailable = sprintf('The browser bridge and the frontend both use port %d. Choose another port with [->bridgePort()].', $this->port);
+
+            throw new FrontendUnavailableException($this->unavailable);
+        }
+
+        $lock = fopen($this->devServer()->file('lock'), 'ce');
 
         try {
             if ($lock !== false) {
                 flock($lock, LOCK_EX);
             }
 
-            $bridge = $this->bridge();
-            $bridge->ensureRunning();
+            $http = ServerManager::instance()->http();
 
-            $this->devServer()->ensureRunning($bridge);
+            if ($http instanceof LaravelHttpServer) {
+                $http->probing($this->laneHost($subdomain));
+            }
+
+            try {
+                $bridge = $this->bridge();
+
+                $this->joinBridge($bridge);
+
+                $this->devServer()->ensureRunning($bridge, $this->laneHost($subdomain));
+            } finally {
+                if ($http instanceof LaravelHttpServer) {
+                    $http->probing(null);
+                }
+            }
         } catch (FrontendUnavailableException $exception) {
+            $this->terminate();
+
             $this->unavailable = $exception->getMessage();
 
             throw $exception;
@@ -304,21 +333,27 @@ final class Frontend
     }
 
     /**
-     * Publishes the URL of the HTTP server of this process to the bridge.
+     * Starts the HTTP server of this process, then starts or reuses the bridge and publishes the URL of the server to it.
+     *
+     * @throws FrontendUnavailableException
      */
-    private function registerLane(): void
+    private function joinBridge(Bridge $bridge): void
     {
         $http = ServerManager::instance()->http();
+
+        $http instanceof LaravelHttpServer ? $http->serve() : $http->start();
 
         $backendUrl = $http instanceof LaravelHttpServer
             ? sprintf('http://%s:%d', $http->host, $http->port)
             : $http->rewrite('/');
 
         if (! str_starts_with($backendUrl, 'http')) {
+            $bridge->ensureRunning();
+
             return;
         }
 
-        $this->bridge()->register(self::lane(), $backendUrl);
+        $bridge->join(self::lane(), $backendUrl);
 
         $this->registeredLane = self::lane();
     }

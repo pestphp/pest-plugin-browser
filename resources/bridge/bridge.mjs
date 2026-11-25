@@ -1,6 +1,7 @@
 import { Agent, createServer, request as httpRequest } from "node:http";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { domainToUnicode } from "node:url";
 
 const PORT = Number(process.env.PEST_BRIDGE_PORT);
 const LANES = process.env.PEST_BRIDGE_LANES;
@@ -11,7 +12,7 @@ const ROUTE_HEADERS = (process.env.PEST_BRIDGE_ROUTE_HEADERS ?? "")
     .filter((header) => header !== "");
 const FORWARD_LANE_HOST = process.env.PEST_BRIDGE_FORWARD_LANE_HOST === "1";
 const IDENTITY_PATH = "/__pest-bridge";
-const LANE_PATTERN = /-w(\d+)(?=[.:/]|$)/;
+const LANE_PATTERN = /-w(\d+)(?=[.:]|$)/g;
 
 const upstreamAgent = new Agent({ keepAlive: false });
 
@@ -31,20 +32,32 @@ const liveLanes = () =>
         .map(Number)
         .filter(isAlive);
 
-const hostOf = (value) => {
+const urlOf = (value) => {
     try {
-        return new URL(value.includes("://") ? value : `http://${value}`).host;
+        return new URL(value.includes("://") ? value : `http://${value}`);
     } catch {
         return null;
     }
 };
 
-const laneOf = (req) => {
-    const explicit = req.headers["x-pest-lane"];
+// The lane is read in the Unicode form of the name: an internationalized label is written in ASCII as a whole
+// ("café-w4123" becomes "xn--caf-w4123-d4a"), which hides the lane Pest appended to it.
+const laneNameOf = (url) => `${domainToUnicode(url.hostname) || url.hostname}${url.port === "" ? "" : `:${url.port}`}`;
 
-    if (explicit !== undefined && /^\d+$/.test(String(explicit))) {
-        return { lane: Number(explicit), host: null };
+// The URL parser drops a default port ("pest-w4123.localhost:80" becomes "pest-w4123.localhost"); the host forwarded
+// to the backend keeps the port the header names, or the backend would build its links on its own port.
+const hostOf = (value, url) => {
+    const authority = (value.includes("://") ? value.slice(value.indexOf("://") + 3) : value).split(/[/?#]/)[0];
+
+    if (url.port !== "" || !/:\d+$/.test(authority)) {
+        return url.host;
     }
+
+    return `${url.host}:${url.protocol === "https:" ? 443 : 80}`;
+};
+
+const routeHeaderLanes = (req) => {
+    const found = [];
 
     for (const header of ROUTE_HEADERS) {
         const value = req.headers[header];
@@ -53,11 +66,29 @@ const laneOf = (req) => {
             continue;
         }
 
-        const match = LANE_PATTERN.exec(String(value));
+        const url = urlOf(String(value));
+        const matches = url === null ? [] : [...laneNameOf(url).matchAll(LANE_PATTERN)];
 
-        if (match) {
-            return { lane: Number(match[1]), host: hostOf(String(value)) };
+        if (matches.length > 0) {
+            found.push({ lane: Number(matches[matches.length - 1][1]), host: hostOf(String(value), url) });
         }
+    }
+
+    return found;
+};
+
+const laneOf = (req) => {
+    const explicit = req.headers["x-pest-lane"];
+    const found = routeHeaderLanes(req);
+
+    if (explicit !== undefined && /^\d+$/.test(String(explicit))) {
+        const lane = Number(explicit);
+
+        return { lane, host: found.find((entry) => entry.lane === lane)?.host ?? null };
+    }
+
+    if (found.length > 0) {
+        return found[0];
     }
 
     const lanes = liveLanes();
@@ -73,9 +104,9 @@ const fail = (res, status, message) => {
 };
 
 createServer((req, res) => {
-    if (req.url.endsWith(IDENTITY_PATH)) {
+    if (req.url.split("?")[0].endsWith(IDENTITY_PATH)) {
         res.writeHead(200, { "content-type": "application/json" });
-        res.end(JSON.stringify({ bridge: "pest", port: PORT, pid: process.pid, signature: SIGNATURE }));
+        res.end(JSON.stringify({ bridge: "pest", port: PORT, pid: process.pid, signature: SIGNATURE, lanes: LANES }));
 
         return;
     }
@@ -103,6 +134,11 @@ createServer((req, res) => {
     }
 
     const headers = { ...req.headers, connection: "close", "x-pest-bridge": "1" };
+    delete headers["x-pest-lane-host"];
+
+    if (routed.host !== null) {
+        headers["x-pest-lane-host"] = routed.host;
+    }
     headers.host = FORWARD_LANE_HOST && routed.host !== null ? routed.host : backend.host;
 
     const proxied = httpRequest(
