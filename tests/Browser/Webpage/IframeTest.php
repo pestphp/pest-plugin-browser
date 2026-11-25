@@ -258,13 +258,13 @@ it('waits for a container and its iframe that are inserted after the page has lo
             }, 500);
         </script>
         HTML,
-    'container and iframe inserted together' => <<<'HTML'
-        <script>
-            setTimeout(() => {
-                document.body.insertAdjacentHTML('beforeend', '<div class="iframe-container"><iframe src="/iframe"></iframe></div>');
-            }, 500);
-        </script>
-        HTML,
+    'container and iframe inserted together' => <<<'HTML_WRAP'
+    <script>
+        setTimeout(() => {
+            document.body.insertAdjacentHTML('beforeend', '<div class="iframe-container"><iframe src="/iframe"></iframe></div>');
+        }, 500);
+    </script>
+    HTML_WRAP,
 ]);
 
 it('waits for nested iframes that are inserted after their pages have loaded', function (): void {
