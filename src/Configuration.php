@@ -9,6 +9,8 @@ use Pest\Browser\Contracts\HttpServer;
 use Pest\Browser\Drivers\LaravelHttpServer;
 use Pest\Browser\Enums\BrowserType;
 use Pest\Browser\Enums\ColorScheme;
+use Pest\Browser\Frontend\Frontend;
+use Pest\Browser\Frontend\FrontendConfiguration;
 use Pest\Browser\Playwright\Playwright;
 
 /**
@@ -28,6 +30,16 @@ final readonly class Configuration
         ServerManager::instance()->setHttpServerFactory($factory);
 
         return $this;
+    }
+
+    /**
+     * Drives a separate frontend application, such as a Next.js app, against the HTTP server of each test process.
+     *
+     * The command replaces "{port}" and "{host}". A relative path is relative to the root of the test suite.
+     */
+    public function frontend(string $path, string $command, int $port, string $host = 'localhost'): FrontendConfiguration
+    {
+        return new FrontendConfiguration(Frontend::configure($path, $command, $port, $host));
     }
 
     /**

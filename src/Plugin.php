@@ -10,6 +10,7 @@ use Pest\Browser\Enums\ColorScheme;
 use Pest\Browser\Exceptions\BrowserNotSupportedException;
 use Pest\Browser\Exceptions\OptionNotSupportedInParallelException;
 use Pest\Browser\Filters\UsesBrowserTestCaseMethodFilter;
+use Pest\Browser\Frontend\Frontend;
 use Pest\Browser\Playwright\Playwright;
 use Pest\Browser\Playwright\Tracing;
 use Pest\Browser\Support\TraceReporter;
@@ -155,6 +156,10 @@ final class Plugin implements Bootable, HandlesArguments, Terminable // @pest-ar
         try {
             if (Parallel::isWorker() || Parallel::isEnabled() === false) {
                 ServerManager::instance()->http()->stop();
+
+                if (Frontend::configured()) {
+                    Frontend::instance()->terminate();
+                }
 
                 Playwright::close();
             }
