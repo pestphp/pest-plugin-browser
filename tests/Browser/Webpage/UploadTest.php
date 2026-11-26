@@ -118,9 +118,7 @@ it('cleans an upload replaced by a later nested field', function (): void {
             <button type="submit">Upload</button>
         </form>
     ');
-    Route::post('/upload', function (Request $request): string {
-        return sprintf('avatar: %s', $request->file('files.avatar')?->getClientOriginalName() ?? 'none');
-    });
+    Route::post('/upload', fn (Request $request): string => sprintf('avatar: %s', $request->file('files.avatar')?->getClientOriginalName() ?? 'none'));
 
     $firstContent = 'first-'.uniqid('', true);
     $secondContent = 'second-'.uniqid('', true);
