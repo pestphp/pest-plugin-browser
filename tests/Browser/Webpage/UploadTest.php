@@ -109,3 +109,48 @@ it('nests files whose field names use brackets, as PHP does', function (): void 
         unlink($path);
     }
 });
+
+it('cleans an upload replaced by a later nested field', function (): void {
+    Route::get('/', fn (): string => '
+        <form method="post" action="/upload" enctype="multipart/form-data">
+            <input type="file" id="first" name="files">
+            <input type="file" id="avatar" name="files[avatar]">
+            <button type="submit">Upload</button>
+        </form>
+    ');
+    Route::post('/upload', function (Request $request): string {
+        return sprintf('avatar: %s', $request->file('files.avatar')?->getClientOriginalName() ?? 'none');
+    });
+
+    $firstContent = 'first-'.uniqid('', true);
+    $secondContent = 'second-'.uniqid('', true);
+    $first = tempnam(sys_get_temp_dir(), 'first');
+    $second = tempnam(sys_get_temp_dir(), 'second');
+    file_put_contents($first, $firstContent);
+    file_put_contents($second, $secondContent);
+
+    try {
+        visit('/')
+            ->attach('#first', $first)
+            ->attach('#avatar', $second)
+            ->click('Upload')
+            ->assertSee(sprintf('avatar: %s', basename($second)));
+
+        $leakedUploads = [];
+        foreach (scandir(sys_get_temp_dir()) ?: [] as $name) {
+            if (! str_starts_with($name, 'pest-upload-')) {
+                continue;
+            }
+
+            $content = @file_get_contents(sys_get_temp_dir().DIRECTORY_SEPARATOR.$name);
+            if ($content === $firstContent || $content === $secondContent) {
+                $leakedUploads[] = $name;
+            }
+        }
+
+        expect($leakedUploads)->toBe([]);
+    } finally {
+        unlink($first);
+        unlink($second);
+    }
+});
