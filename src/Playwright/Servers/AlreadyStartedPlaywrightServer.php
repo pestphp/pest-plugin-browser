@@ -19,6 +19,7 @@ final readonly class AlreadyStartedPlaywrightServer implements PlaywrightServer
     public function __construct(
         public string $host,
         public int $port,
+        public ?string $endpoint = null,
     ) {
         //
     }
@@ -39,11 +40,13 @@ final readonly class AlreadyStartedPlaywrightServer implements PlaywrightServer
         }
 
         // @phpstan-ignore-next-line
-        ['host' => $host, 'port' => $port] = json_decode($path, true, 512, JSON_THROW_ON_ERROR);
+        ['host' => $host, 'port' => $port, 'endpoint' => $endpoint] = json_decode($path, true, 512, JSON_THROW_ON_ERROR) + ['endpoint' => null];
 
         assert(is_string($host) && is_numeric($port), 'Invalid Playwright server data persisted.');
 
-        return new self($host, (int) $port);
+        assert($endpoint === null || is_string($endpoint), 'Invalid Playwright endpoint persisted.');
+
+        return new self($host, (int) $port, $endpoint);
     }
 
     /**
@@ -53,11 +56,12 @@ final readonly class AlreadyStartedPlaywrightServer implements PlaywrightServer
      *
      * @throws JsonException
      */
-    public static function persist(string $host, int $port): void
+    public static function persist(string $host, int $port, ?string $endpoint = null): void
     {
         $data = [
             'host' => $host,
             'port' => $port,
+            'endpoint' => $endpoint,
         ];
 
         $path = self::path();
@@ -108,7 +112,7 @@ final readonly class AlreadyStartedPlaywrightServer implements PlaywrightServer
      */
     public function url(): string
     {
-        return sprintf('%s:%d', $this->host, $this->port);
+        return $this->endpoint ?? sprintf('%s:%d', $this->host, $this->port);
     }
 
     /**
