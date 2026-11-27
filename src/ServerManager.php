@@ -75,11 +75,6 @@ final class ServerManager
                 $port,
                 'Listening on',
             );
-
-            AlreadyStartedPlaywrightServer::persist(
-                $host,
-                $port,
-            );
         }
 
         return $this->playwright;

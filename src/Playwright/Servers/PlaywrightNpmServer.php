@@ -29,6 +29,11 @@ final class PlaywrightNpmServer implements PlaywrightServer
     private ?SystemProcess $systemProcess = null;
 
     /**
+     * Whether this process wrote the state file that the parallel workers read.
+     */
+    private bool $persistedStateFile = false;
+
+    /**
      * Creates a new playwright npm server instance.
      */
     private function __construct(
@@ -89,6 +94,8 @@ final class PlaywrightNpmServer implements PlaywrightServer
             $this->host,
             $this->port,
         );
+
+        $this->persistedStateFile = true;
     }
 
     /**
@@ -104,7 +111,11 @@ final class PlaywrightNpmServer implements PlaywrightServer
 
         $this->systemProcess = null;
 
-        AlreadyStartedPlaywrightServer::markAsStopped();
+        if ($this->persistedStateFile) {
+            AlreadyStartedPlaywrightServer::markAsStopped();
+
+            $this->persistedStateFile = false;
+        }
     }
 
     /**
