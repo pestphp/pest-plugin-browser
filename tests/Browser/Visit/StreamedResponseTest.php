@@ -90,3 +90,71 @@ it('delivers every server-sent event to the browser', function (): void {
 
     expect($page->text('#received'))->toBe('first,second');
 });
+
+it('may serve a streamed response that flushes the output buffer', function (): void {
+    Route::get('/', fn (): string => '<div>Home</div>');
+    Route::get('/flushed', fn (): StreamedResponse => response()->stream(
+        function (): void {
+            echo 'first,';
+            ob_flush();
+            flush();
+            echo 'second';
+        },
+        200,
+        ['Content-Type' => 'text/plain'],
+    ));
+
+    $page = visit('/');
+
+    $page->assertScript("async () => (await fetch('/flushed')).text()", 'first,second');
+});
+
+it('may serve a streamed response that cleans the output buffer', function (): void {
+    Route::get('/', fn (): string => '<div>Home</div>');
+    Route::get('/cleaned', fn (): StreamedResponse => response()->stream(
+        function (): void {
+            echo 'discarded';
+            ob_clean();
+            echo 'kept';
+        },
+        200,
+        ['Content-Type' => 'text/plain'],
+    ));
+
+    $page = visit('/');
+
+    $page->assertScript("async () => (await fetch('/cleaned')).text()", 'kept');
+});
+
+it('may serve a streamed response that closes the output buffer', function (): void {
+    Route::get('/', fn (): string => '<div>Home</div>');
+    Route::get('/closed', fn (): StreamedResponse => response()->stream(
+        function (): void {
+            echo 'streamed';
+            ob_end_flush();
+        },
+        200,
+        ['Content-Type' => 'text/plain'],
+    ));
+
+    $page = visit('/');
+
+    $page->assertScript("async () => (await fetch('/closed')).text()", 'streamed');
+});
+
+it('may serve a streamed response that leaves an output buffer open', function (): void {
+    Route::get('/', fn (): string => '<div>Home</div>');
+    Route::get('/open', fn (): StreamedResponse => response()->stream(
+        function (): void {
+            echo 'first,';
+            ob_start();
+            echo 'second';
+        },
+        200,
+        ['Content-Type' => 'text/plain'],
+    ));
+
+    $page = visit('/');
+
+    $page->assertScript("async () => (await fetch('/open')).text()", 'first,second');
+});

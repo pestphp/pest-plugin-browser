@@ -32,6 +32,7 @@ use Pest\Browser\GlobalState;
 use Pest\Browser\Playwright\Playwright;
 use Psr\Http\Message\UriInterface;
 use Psr\Log\NullLogger;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Symfony\Component\Mime\MimeTypes;
 use Throwable;
 
@@ -389,14 +390,21 @@ final class LaravelHttpServer implements HttpServer
             $content = $response->getContent();
 
             if ($content === false) {
+                $content = '';
+                $level = ob_get_level();
+
                 try {
-                    ob_start();
+                    ob_start(static function (string $buffer, int $phase) use (&$content): string {
+                        if (($phase & PHP_OUTPUT_HANDLER_CLEAN) === 0) {
+                            $content .= $buffer;
+                        }
+
+                        return '';
+                    });
                     $response->sendContent();
                 } finally {
-                    $buffer = ob_get_clean();
+                    SymfonyResponse::closeOutputBuffers($level, true);
                 }
-
-                $content = $buffer === false ? '' : $buffer;
             }
         } finally {
             // Clean every temporary path, including uploads replaced by a later part with the same field name.
