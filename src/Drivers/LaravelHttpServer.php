@@ -392,15 +392,17 @@ final class LaravelHttpServer implements HttpServer
             if ($content === false) {
                 $content = '';
                 $level = ob_get_level();
+                $capture = static function (string $buffer, int $phase) use (&$content): string {
+                    if (($phase & PHP_OUTPUT_HANDLER_CLEAN) === 0) {
+                        $content .= $buffer;
+                    }
+
+                    return '';
+                };
 
                 try {
-                    ob_start(static function (string $buffer, int $phase) use (&$content): string {
-                        if (($phase & PHP_OUTPUT_HANDLER_CLEAN) === 0) {
-                            $content .= $buffer;
-                        }
-
-                        return '';
-                    });
+                    ob_start($capture);
+                    ob_start($capture);
                     $response->sendContent();
                 } finally {
                     SymfonyResponse::closeOutputBuffers($level, true);

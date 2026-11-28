@@ -130,8 +130,9 @@ it('may serve a streamed response that closes the output buffer', function (): v
     Route::get('/', fn (): string => '<div>Home</div>');
     Route::get('/closed', fn (): StreamedResponse => response()->stream(
         function (): void {
-            echo 'streamed';
+            echo 'first,';
             ob_end_flush();
+            echo 'second';
         },
         200,
         ['Content-Type' => 'text/plain'],
@@ -139,7 +140,24 @@ it('may serve a streamed response that closes the output buffer', function (): v
 
     $page = visit('/');
 
-    $page->assertScript("async () => (await fetch('/closed')).text()", 'streamed');
+    $page->assertScript("async () => (await fetch('/closed')).text()", 'first,second');
+});
+
+it('may serve a streamed response that discards and closes the output buffer', function (): void {
+    Route::get('/', fn (): string => '<div>Home</div>');
+    Route::get('/discarded', fn (): StreamedResponse => response()->stream(
+        function (): void {
+            echo 'discarded';
+            ob_end_clean();
+            echo 'kept';
+        },
+        200,
+        ['Content-Type' => 'text/plain'],
+    ));
+
+    $page = visit('/');
+
+    $page->assertScript("async () => (await fetch('/discarded')).text()", 'kept');
 });
 
 it('may serve a streamed response that leaves an output buffer open', function (): void {
