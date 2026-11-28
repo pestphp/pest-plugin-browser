@@ -6,6 +6,7 @@ namespace Pest\Browser\Playwright;
 
 use Generator;
 use Pest\Browser\Playwright\Concerns\InteractsWithPlaywright;
+use Pest\Browser\Support\JavaScriptSerializer;
 use Pest\Browser\Support\Selector;
 use RuntimeException;
 
@@ -459,6 +460,19 @@ final readonly class Locator
     public function filterBySelector(string $selector): self
     {
         return new self($this->frameGuid, $this->selector.':has('.$selector.')');
+    }
+
+    /**
+     * Evaluates a JavaScript function with all elements matching this locator.
+     */
+    public function evaluateAll(string $pageFunction, mixed $arg = null): mixed
+    {
+        $response = $this->sendMessage('evalOnSelectorAll', [
+            'expression' => $pageFunction,
+            'arg' => JavaScriptSerializer::serializeArgument($arg),
+        ]);
+
+        return $this->processResultResponse($response);
     }
 
     /**

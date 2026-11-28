@@ -18,17 +18,9 @@ trait MakesElementAssertions
      */
     public function assertFocused(string $selector): Webpage
     {
-        $selector = $this->guessLocator($selector)->selector();
-
-        $escapedSelector = json_encode($selector);
-
-        $isFocused = $this->page->evaluate("
-            () => {
-                const element = document.querySelector({$escapedSelector});
-                const focusedElement = document.activeElement;
-                return element && focusedElement ? element === focusedElement : false;
-            }
-        ");
+        $isFocused = $this->guessLocator($selector)->evaluateAll(
+            'elements => elements.includes(document.activeElement)',
+        );
 
         expect($isFocused)->toBeTrue("Expected element [{$selector}] to be focused on the page [{$this->initialUrl}], but it was not.");
 
@@ -40,17 +32,9 @@ trait MakesElementAssertions
      */
     public function assertNotFocused(string $selector): Webpage
     {
-        $selector = $this->guessLocator($selector)->selector();
-
-        $escapedSelector = json_encode($selector);
-
-        $isNotFocused = $this->page->evaluate("
-            () => {
-                const element = document.querySelector({$escapedSelector});
-                const focusedElement = document.activeElement;
-                return element && focusedElement ? element !== focusedElement : true;
-            }
-        ");
+        $isNotFocused = $this->guessLocator($selector)->evaluateAll(
+            'elements => !elements.includes(document.activeElement)',
+        );
 
         expect($isNotFocused)->toBeTrue("Expected element [{$selector}] not to be focused on the page [{$this->initialUrl}], but it was.");
 

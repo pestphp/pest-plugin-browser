@@ -42,3 +42,17 @@ it('may fail when asserting an element is not focused but it is', function (): v
 
     $page->assertNotFocused('@firstname');
 })->throws(ExpectationFailedException::class);
+
+it('assert an element selected by text is focused', function (): void {
+    Route::get('/', fn (): string => <<<'HTML'
+    <div>
+        <button type="button" autofocus>Save changes</button>
+        <button type="button">Cancel</button>
+    </div>
+    HTML);
+
+    $page = visit('/');
+
+    $page->assertFocused('Save changes');
+    $page->assertNotFocused('Cancel');
+});
