@@ -143,6 +143,46 @@ it('may serve a streamed response that closes the output buffer', function (): v
     $page->assertScript("async () => (await fetch('/closed')).text()", 'first,second');
 });
 
+it('may serve a streamed response that closes two output buffers', function (): void {
+    Route::get('/', fn (): string => '<div>Home</div>');
+    Route::get('/closed-twice', fn (): StreamedResponse => response()->stream(
+        function (): void {
+            echo 'first,';
+            ob_end_flush();
+            ob_end_flush();
+            echo 'second';
+        },
+        200,
+        ['Content-Type' => 'text/plain'],
+    ));
+
+    $page = visit('/');
+
+    $page->assertScript("async () => (await fetch('/closed-twice')).text()", 'first,second');
+});
+
+it('keeps earlier test output when a streamed response closes two output buffers', function (): void {
+    Route::get('/', fn (): string => '<div>Home</div>');
+    Route::get('/closed-twice', fn (): StreamedResponse => response()->stream(
+        function (): void {
+            echo 'first,';
+            ob_end_flush();
+            ob_end_flush();
+            echo 'second';
+        },
+        200,
+        ['Content-Type' => 'text/plain'],
+    ));
+
+    echo 'é';
+
+    $page = visit('/');
+
+    $page->assertScript("async () => (await fetch('/closed-twice')).text()", 'first,second');
+
+    $this->expectOutputString('é');
+});
+
 it('may serve a streamed response that discards and closes the output buffer', function (): void {
     Route::get('/', fn (): string => '<div>Home</div>');
     Route::get('/discarded', fn (): StreamedResponse => response()->stream(
