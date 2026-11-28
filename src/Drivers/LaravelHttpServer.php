@@ -32,6 +32,7 @@ use Pest\Browser\GlobalState;
 use Pest\Browser\Playwright\Playwright;
 use Psr\Http\Message\UriInterface;
 use Psr\Log\NullLogger;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Symfony\Component\Mime\MimeTypes;
 use Throwable;
 
@@ -389,14 +390,35 @@ final class LaravelHttpServer implements HttpServer
             $content = $response->getContent();
 
             if ($content === false) {
+                $content = '';
+                $level = ob_get_level();
+                $offset = (int) ob_get_length();
+                $capture = static function (string $buffer, int $phase) use (&$content): string {
+                    if (($phase & PHP_OUTPUT_HANDLER_CLEAN) === 0) {
+                        $content .= $buffer;
+                    }
+
+                    return '';
+                };
+
                 try {
-                    ob_start();
+                    // Two buffers, so the body is still captured after the
+                    // callback closes one of them.
+                    ob_start($capture);
+                    ob_start($capture);
                     $response->sendContent();
                 } finally {
-                    $buffer = ob_get_clean();
-                }
+                    SymfonyResponse::closeOutputBuffers($level, true);
 
-                $content = $buffer === false ? '' : $buffer;
+                    // A callback that closes both capture buffers writes the
+                    // rest of the body into the enclosing buffer.
+                    if (ob_get_level() === $level && ob_get_length() > $offset) {
+                        $outer = (string) ob_get_contents();
+                        $content .= mb_substr($outer, $offset, null, '8bit');
+                        ob_clean();
+                        echo mb_substr($outer, 0, $offset, '8bit');
+                    }
+                }
             }
         } finally {
             // Clean every temporary path, including uploads replaced by a later part with the same field name.
