@@ -58,6 +58,40 @@ it('detects \visit() with a URL argument', function (): void {
     expect(callUsesFunction($closure, 'visit'))->toBeTrue();
 });
 
+// visit detection — wrapped in another function call
+
+it('detects visit() wrapped in another function call', function (): void {
+    $closure = function (): void {
+        acknowledgeEnvironment(visit('/'));
+    };
+
+    expect(callUsesFunction($closure, 'visit'))->toBeTrue();
+});
+
+it('detects \visit() wrapped in another function call', function (): void {
+    $closure = function (): void {
+        acknowledgeEnvironment(\visit('/'));
+    };
+
+    expect(callUsesFunction($closure, 'visit'))->toBeTrue();
+});
+
+it('detects visit() in wrapped arguments without whitespace', function (string $call): void {
+    $fixture = tempnam(sys_get_temp_dir(), 'pest-browser-visit-');
+
+    try {
+        file_put_contents($fixture, "<?php\nreturn function (): void {\n    {$call};\n};\n");
+        $closure = require $fixture;
+
+        expect(callUsesFunction($closure, 'visit'))->toBeTrue();
+    } finally {
+        unlink($fixture);
+    }
+})->with([
+    'later argument' => "acknowledgeEnvironment(true,visit('/'))",
+    'named argument' => "acknowledgeEnvironment(page:visit('/'))",
+]);
+
 // visit detection — Livewire
 
 it('detects Livewire::visit()', function (): void {
