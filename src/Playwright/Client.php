@@ -8,6 +8,7 @@ use Amp\Websocket\Client\WebsocketConnection;
 use Amp\Websocket\WebsocketMessage;
 use Generator;
 use Pest\Browser\Exceptions\PlaywrightOutdatedException;
+use Pest\Browser\Support\JavaScriptSerializer;
 use PHPUnit\Framework\ExpectationFailedException;
 use RuntimeException;
 use Throwable;
@@ -40,6 +41,13 @@ final class Client
      * @var array<string, array<int, array{file: string, line: int, function: string}>>
      */
     private array $stacks = [];
+
+    /**
+     * Ids of the binding call resolutions sent for browser reports, whose responses are skipped.
+     *
+     * @var array<string, true>
+     */
+    private array $reportResolutions = [];
 
     /**
      * Returns the current client instance.
@@ -108,8 +116,23 @@ final class Client
 
         while (true) {
             $responseJson = $this->fetch($this->websocketConnection);
+            $decoded = json_decode($responseJson, true);
+
+            if (is_array($decoded) && $this->handleInternalMessage($decoded)) {
+                continue;
+            }
+
             /** @var array{id: string|null, params: array{add: string|null}, error: array{error: array{message: string|null}}, errorDetails: array{customErrorMessage: string|null}} $response */
-            $response = json_decode($responseJson, true);
+            $response = $decoded;
+
+            // A response addressed to another request was stranded by a generator
+            // abandoned before its final frame was read — a caller that returns on
+            // a __create__ event, such as querySelector() or evaluateHandle(), leaves
+            // its response unconsumed. Processing it here would desynchronize the
+            // stream, and an error in that stranded response would fail this command.
+            if (isset($response['id']) && $response['id'] !== $requestId) {
+                continue;
+            }
 
             if (isset($response['error']['error']['message'])) {
                 $message = $response['error']['error']['message'];
@@ -223,6 +246,55 @@ final class Client
         if ($frames !== []) {
             $this->stacks[$requestId] = $frames;
         }
+    }
+
+    /**
+     * Consumes the messages the client handles itself: browser reports and their resolutions.
+     *
+     * @param  array<mixed>  $message
+     */
+    private function handleInternalMessage(array $message): bool
+    {
+        $id = $message['id'] ?? null;
+
+        if (is_string($id) && isset($this->reportResolutions[$id])) {
+            unset($this->reportResolutions[$id]);
+
+            return true;
+        }
+
+        $params = $message['params'] ?? null;
+
+        if (($message['method'] ?? null) !== '__create__'
+            || ! is_array($params)
+            || ($params['type'] ?? null) !== 'BindingCall'
+            || ! is_string($params['guid'] ?? null)
+            || ! is_array($params['initializer'] ?? null)
+            || ($params['initializer']['name'] ?? null) !== InitScript::BINDING_NAME) {
+            return false;
+        }
+
+        $initializer = $params['initializer'];
+        $frameGuid = is_array($initializer['frame'] ?? null) ? ($initializer['frame']['guid'] ?? null) : null;
+        $entry = JavaScriptSerializer::parseValue(is_array($initializer['args'] ?? null) ? ($initializer['args'][0] ?? null) : null);
+
+        if (is_string($frameGuid) && is_array($entry)) {
+            /** @var array<string, mixed> $entry */
+            BrowserLogCollector::add($frameGuid, $entry);
+        }
+
+        $requestId = uniqid();
+        $this->reportResolutions[$requestId] = true;
+
+        $this->websocketConnection?->sendText((string) json_encode([
+            'id' => $requestId,
+            'guid' => $params['guid'],
+            'method' => 'resolve',
+            'params' => ['result' => JavaScriptSerializer::serializeArgument(null)],
+            'metadata' => ['timeout' => $this->timeout],
+        ]));
+
+        return true;
     }
 
     /**

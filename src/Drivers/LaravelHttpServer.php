@@ -14,6 +14,7 @@ use Amp\Http\Server\Request as AmpRequest;
 use Amp\Http\Server\RequestHandler\ClosureRequestHandler;
 use Amp\Http\Server\Response;
 use Amp\Http\Server\SocketHttpServer;
+use Amp\Socket\BindContext;
 use Amp\Socket\InternetAddress;
 use Closure;
 use Illuminate\Contracts\Debug\ExceptionHandler;
@@ -112,15 +113,22 @@ final class LaravelHttpServer implements HttpServer
         // Increase the body size limit beyond Amp's 128-KiB
         // default to prevent deadlocks when reading large
         // JSON payloads in POST, PUT, and PATCH requests.
+        //
+        // The browser is on the same machine, so compressing a response
+        // costs CPU time and saves nothing.
         $this->socket = $server = SocketHttpServer::createForDirectAccess(
             logger: $logger = new NullLogger(),
+            enableCompression: false,
             httpDriverFactory: new DefaultHttpDriverFactory(
                 logger: $logger,
                 bodySizeLimit: 64 * 1024 * 1024,
             ),
         );
 
-        $server->expose("{$this->host}:{$this->port}");
+        // Amp writes a response's headers and its body as two writes. With
+        // Nagle's algorithm on, the body waits for the browser to acknowledge
+        // the headers, and the browser delays that acknowledgement.
+        $server->expose("{$this->host}:{$this->port}", (new BindContext)->withTcpNoDelay());
         $server->start(
             new ClosureRequestHandler($this->handleRequest(...)),
             new DefaultErrorHandler(),
@@ -213,7 +221,10 @@ final class LaravelHttpServer implements HttpServer
         $exceptionHandler = app(ExceptionHandler::class);
 
         if ($exceptionHandler instanceof WithoutExceptionHandlingHandler) {
-            throw $this->lastThrowable;
+            $throwable = $this->lastThrowable;
+            $this->lastThrowable = null;
+
+            throw $throwable;
         }
     }
 
@@ -294,6 +305,16 @@ final class LaravelHttpServer implements HttpServer
     {
         GlobalState::flush();
 
+        // A document navigation starts a fresh page lifecycle, so any throwable
+        // left by the previous page must go here. Do not clear it when a
+        // subrequest succeeds: a stylesheet/script/XHR belongs to the current
+        // page and must not erase the exception that made it fail (#324).
+        $secFetchDest = mb_strtolower($request->getHeader('sec-fetch-dest') ?? '');
+        if ($secFetchDest === 'document'
+            || ($secFetchDest === '' && str_contains($request->getHeader('accept') ?? '', 'text/html'))) {
+            $this->lastThrowable = null;
+        }
+
         if (Execution::instance()->isWaiting() === false) {
             Execution::instance()->tick();
         }
@@ -326,11 +347,12 @@ final class LaravelHttpServer implements HttpServer
         $rawBody = (string) $request->getBody();
         $parameters = [];
         $files = [];
+        $uploadPaths = [];
         if ($method !== 'GET' && str_starts_with(mb_strtolower($contentType), 'application/x-www-form-urlencoded')) {
             parse_str($rawBody, $parameters);
         }
         if ($method !== 'GET' && preg_match('/^multipart\/form-data;.*boundary="?([^";]+)"?/i', $contentType, $boundary) === 1) {
-            [$parameters, $files] = $this->parseMultipartBody($rawBody, $boundary[1]);
+            [$parameters, $files, $uploadPaths] = $this->parseMultipartBody($rawBody, $boundary[1]);
         }
         $cookies = array_map(fn (RequestCookie $cookie): string => urldecode($cookie->getValue()), $request->getCookies());
         $cookies = array_merge($cookies, test()->prepareCookiesForRequest()); // @phpstan-ignore-line
@@ -364,7 +386,6 @@ final class LaravelHttpServer implements HttpServer
                 $response = $kernel->handle($laravelRequest = Request::createFromBase($symfonyRequest));
             } catch (Throwable $e) {
                 $this->lastThrowable = $e;
-                $this->removeUploads($files);
 
                 throw $e;
             } finally {
@@ -372,9 +393,6 @@ final class LaravelHttpServer implements HttpServer
             }
 
             $kernel->terminate($laravelRequest, $response);
-
-            // PHP removes the temporary files at shutdown, after terminate: a listener reading an upload there still finds it.
-            $this->removeUploads($files);
 
             if (property_exists($response, 'exception') && $response->exception !== null) {
                 assert($response->exception instanceof Throwable);
@@ -395,6 +413,8 @@ final class LaravelHttpServer implements HttpServer
                 $content = $buffer === false ? '' : $buffer;
             }
         } finally {
+            // Clean every temporary path, including uploads replaced by a later part with the same field name.
+            $this->removeUploads($uploadPaths);
             $this->forgetScopedInstancesSince($scopedInstances);
         }
 
@@ -487,12 +507,57 @@ final class LaravelHttpServer implements HttpServer
     /**
      * Remove the temporary files of the uploads.
      *
-     * @param  array<string, UploadedFile>  $files
+     * @param  list<string>  $uploadPaths
      */
-    private function removeUploads(array $files): void
+    private function removeUploads(array $uploadPaths): void
     {
-        foreach ($files as $file) {
-            @unlink($file->getPathname());
+        foreach ($uploadPaths as $path) {
+            @unlink($path);
+        }
+    }
+
+    /**
+     * Puts a file under its field name the way PHP does: `files[]` appends to
+     * a list, `files[avatar]` sets a key, and a plain name sets the key.
+     *
+     * @param  array<string, mixed>  $files
+     */
+    private function addFile(array &$files, string $name, UploadedFile $file): void
+    {
+        if (preg_match('/^([^\[]+)((?:\[[^\]]*\])+)$/', $name, $matches) !== 1) {
+            $files[$name] = $file;
+
+            return;
+        }
+
+        preg_match_all('/\[([^\]]*)\]/', $matches[2], $segments);
+
+        $target = &$files;
+        foreach ([$matches[1], ...$segments[1]] as $index => $segment) {
+            $isLast = $index === count($segments[1]);
+
+            if ($segment === '') {
+                if ($isLast) {
+                    $target[] = $file;
+
+                    return;
+                }
+
+                $target[] = [];
+                $segment = array_key_last($target);
+            }
+
+            if ($isLast) {
+                $target[$segment] = $file;
+
+                return;
+            }
+
+            if (! isset($target[$segment]) || ! is_array($target[$segment])) {
+                $target[$segment] = [];
+            }
+
+            $target = &$target[$segment];
         }
     }
 
@@ -543,16 +608,17 @@ final class LaravelHttpServer implements HttpServer
      * Reads a multipart body the way PHP does for a real upload: the fields
      * into the parameters, each file into a temporary file wrapped in an
      * upload in test mode (there is no real upload for `is_uploaded_file()`
-     * to recognise here). Two parts with the same name keep the last file,
-     * and a nested name such as `files[avatar]` stays flat where PHP would
-     * nest it.
+     * to recognise here). File names nest as PHP nests them: `files[]` gives
+     * a list and `files[avatar]` a keyed array; two parts with the same plain
+     * name keep the last file.
      *
-     * @return array{0: array<int|string, mixed>, 1: array<string, UploadedFile>}
+     * @return array{0: array<int|string, mixed>, 1: array<string, mixed>, 2: list<string>}
      */
     private function parseMultipartBody(string $body, string $boundary): array
     {
         $fields = '';
         $files = [];
+        $uploadPaths = [];
 
         foreach (explode("--{$boundary}", $body) as $part) {
             // Without '8bit', mbstring re-encodes the part and rewrites non-UTF-8 bytes as "?".
@@ -569,9 +635,10 @@ final class LaravelHttpServer implements HttpServer
 
             if (preg_match('/filename="([^"]*)"/', $rawHeaders, $fileName) === 1) {
                 $path = (string) tempnam(sys_get_temp_dir(), 'pest-upload-');
+                $uploadPaths[] = $path;
                 file_put_contents($path, $content);
                 $mimeType = preg_match('/Content-Type:\s*([^\r\n]+)/i', $rawHeaders, $type) === 1 ? mb_trim($type[1]) : null;
-                $files[$name[1]] = new UploadedFile($path, $fileName[1], $mimeType, null, true);
+                $this->addFile($files, $name[1], new UploadedFile($path, $fileName[1], $mimeType, null, true));
 
                 continue;
             }
@@ -583,6 +650,6 @@ final class LaravelHttpServer implements HttpServer
         $parameters = [];
         parse_str($fields, $parameters);
 
-        return [$parameters, $files];
+        return [$parameters, $files, $uploadPaths];
     }
 }

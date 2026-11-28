@@ -71,3 +71,84 @@ it('hands the application a binary file byte for byte', function (): void {
 
     unlink($tempFile);
 });
+
+it('nests files whose field names use brackets, as PHP does', function (): void {
+    Route::get('/', fn (): string => '
+        <form method="post" action="/upload" enctype="multipart/form-data">
+            <input type="file" id="first" name="files[]">
+            <input type="file" id="second" name="files[]">
+            <input type="file" id="cv" name="docs[cv]">
+            <button type="submit">Upload</button>
+        </form>
+    ');
+    Route::post('/upload', function (Request $request): string {
+        $names = array_map(fn ($file): string => $file->getClientOriginalName(), $request->file('files') ?? []);
+
+        return sprintf(
+            'files: %s; cv: %s',
+            implode('+', $names),
+            $request->file('docs.cv')?->getClientOriginalName() ?? 'none',
+        );
+    });
+
+    $first = tempnam(sys_get_temp_dir(), 'first');
+    $second = tempnam(sys_get_temp_dir(), 'second');
+    $cv = tempnam(sys_get_temp_dir(), 'cv');
+    foreach ([$first, $second, $cv] as $path) {
+        file_put_contents($path, 'content');
+    }
+
+    $page = visit('/');
+    $page->attach('#first', $first)
+        ->attach('#second', $second)
+        ->attach('#cv', $cv)
+        ->click('Upload')
+        ->assertSee(sprintf('files: %s+%s; cv: %s', basename($first), basename($second), basename($cv)));
+
+    foreach ([$first, $second, $cv] as $path) {
+        unlink($path);
+    }
+});
+
+it('cleans an upload replaced by a later nested field', function (): void {
+    Route::get('/', fn (): string => '
+        <form method="post" action="/upload" enctype="multipart/form-data">
+            <input type="file" id="first" name="files">
+            <input type="file" id="avatar" name="files[avatar]">
+            <button type="submit">Upload</button>
+        </form>
+    ');
+    Route::post('/upload', fn (Request $request): string => sprintf('avatar: %s', $request->file('files.avatar')?->getClientOriginalName() ?? 'none'));
+
+    $firstContent = 'first-'.uniqid('', true);
+    $secondContent = 'second-'.uniqid('', true);
+    $first = tempnam(sys_get_temp_dir(), 'first');
+    $second = tempnam(sys_get_temp_dir(), 'second');
+    file_put_contents($first, $firstContent);
+    file_put_contents($second, $secondContent);
+
+    try {
+        visit('/')
+            ->attach('#first', $first)
+            ->attach('#avatar', $second)
+            ->click('Upload')
+            ->assertSee(sprintf('avatar: %s', basename($second)));
+
+        $leakedUploads = [];
+        foreach (scandir(sys_get_temp_dir()) ?: [] as $name) {
+            if (! str_starts_with($name, 'pest-upload-')) {
+                continue;
+            }
+
+            $content = @file_get_contents(sys_get_temp_dir().DIRECTORY_SEPARATOR.$name);
+            if ($content === $firstContent || $content === $secondContent) {
+                $leakedUploads[] = $name;
+            }
+        }
+
+        expect($leakedUploads)->toBe([]);
+    } finally {
+        unlink($first);
+        unlink($second);
+    }
+});
