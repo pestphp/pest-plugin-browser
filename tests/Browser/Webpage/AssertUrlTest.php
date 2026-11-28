@@ -28,6 +28,22 @@ it('may fail when asserting URL path using path-only notation but it does not ma
     $page->assertUrlIs('/wrong-path');
 })->throws(ExpectationFailedException::class);
 
+it('may assert current URL matches a wildcard URL', function (): void {
+    Route::get('/login', fn (): string => 'Login Page');
+
+    $page = visit('/login');
+
+    $page->assertUrlIs('*://*/login');
+});
+
+it('may fail when asserting URL matches a wildcard URL but it does not', function (): void {
+    Route::get('/login', fn (): string => 'Login Page');
+
+    $page = visit('/login');
+
+    $page->assertUrlIs('*://*/wrong-path');
+})->throws(ExpectationFailedException::class);
+
 it('may fail when asserting URL matches but it does not', function (): void {
     Route::get('/test-url', fn (): string => 'Test URL Page');
 

@@ -22,7 +22,7 @@ trait MakesUrlAssertions
         /** @var array{ scheme: string, host: string, port?: int, path?: string} $segments */
         $segments = parse_url($this->page->url());
 
-        if (parse_url($url, PHP_URL_SCHEME) !== null) {
+        if (! str_starts_with($url, '/')) {
             $currentUrl = sprintf(
                 '%s://%s%s%s',
                 $segments['scheme'],
