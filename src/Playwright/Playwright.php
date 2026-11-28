@@ -6,6 +6,7 @@ namespace Pest\Browser\Playwright;
 
 use Pest\Browser\Enums\BrowserType;
 use Pest\Browser\Enums\ColorScheme;
+use Pest\Browser\Enums\TraceMode;
 use Throwable;
 
 /**
@@ -50,9 +51,9 @@ final class Playwright
     private static bool $shouldDiffOnScreenshotAssertions = false;
 
     /**
-     * Whether to record a trace of each test, kept when the test fails.
+     * Which recorded traces to keep after each test.
      */
-    private static bool $shouldTrace = false;
+    private static TraceMode $traceMode = TraceMode::OFF;
 
     /**
      * Whether to open the trace of a failed test once the test suite has finished, when not running on CI.
@@ -236,11 +237,15 @@ final class Playwright
     }
 
     /**
-     * Set whether to record a trace of each test, kept when the test fails.
+     * Set whether to record a trace of each test, and which traces to keep.
      */
-    public static function setShouldTrace(?bool $open = null): void
+    public static function setShouldTrace(?bool $open = null, ?TraceMode $mode = null): void
     {
-        self::$shouldTrace = true;
+        if ($mode instanceof TraceMode) {
+            self::$traceMode = $mode;
+        } elseif (self::$traceMode === TraceMode::OFF) {
+            self::$traceMode = TraceMode::RETAIN_ON_FAILURE;
+        }
 
         if ($open !== null) {
             self::$shouldOpenTraces = $open;
@@ -256,11 +261,27 @@ final class Playwright
     }
 
     /**
-     * Whether to record a trace of each test, kept when the test fails.
+     * Whether to record a trace of each test.
      */
     public static function shouldTrace(): bool
     {
-        return self::$shouldTrace;
+        return self::$traceMode->isEnabled();
+    }
+
+    /**
+     * Which recorded traces to keep after each test.
+     */
+    public static function traceMode(): TraceMode
+    {
+        return self::$traceMode;
+    }
+
+    /**
+     * Whether a recorded trace should be kept for the given test outcome.
+     */
+    public static function shouldSaveTrace(bool $failed): bool
+    {
+        return self::$traceMode->shouldSave($failed);
     }
 
     /**

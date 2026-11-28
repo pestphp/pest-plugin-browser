@@ -14,6 +14,11 @@ use ZipArchive;
 final class Trace
 {
     /**
+     * The ZIP archive comment marking a trace that belongs to a failed test.
+     */
+    private const string FAILED_ARCHIVE_COMMENT = 'pest-browser:failed';
+
+    /**
      * Return the path to the traces' directory.
      */
     public static function dir(): string
@@ -57,10 +62,42 @@ final class Trace
             return [];
         }
 
-        // In the order the tests failed, so the trace that is opened is the one of the first failure.
+        // In the order the tests ran, so the first failure is opened first when only failures are kept.
         usort($files, fn (string $a, string $b): int => filemtime($a) <=> filemtime($b));
 
         return $files;
+    }
+
+    /**
+     * Return the paths of the traces saved for failed tests during the test run.
+     *
+     * @return array<int, string>
+     */
+    public static function failed(): array
+    {
+        return array_values(array_filter(self::saved(), self::isFailed(...)));
+    }
+
+    /**
+     * Determine whether the given trace archive belongs to a failed test.
+     */
+    public static function isFailed(string $path): bool
+    {
+        if (class_exists(ZipArchive::class) === false) {
+            return false;
+        }
+
+        $zip = new ZipArchive();
+
+        if ($zip->open($path) !== true) {
+            return false;
+        }
+
+        $comment = $zip->getArchiveComment();
+
+        $zip->close();
+
+        return $comment === self::FAILED_ARCHIVE_COMMENT;
     }
 
     /**
@@ -68,7 +105,7 @@ final class Trace
      *
      * @param  array<string, array<int, array{file: string, line: int, function: string}>>  $stacks
      */
-    public static function save(string $path, string $archive, array $stacks): void
+    public static function save(string $path, string $archive, array $stacks, bool $failed = false): void
     {
         if (is_dir(self::dir()) === false) {
             @mkdir(self::dir(), 0755, true);
@@ -76,13 +113,23 @@ final class Trace
 
         file_put_contents($path, $archive);
 
-        if ($stacks === [] || class_exists(ZipArchive::class) === false) {
+        if (($stacks === [] && ! $failed) || class_exists(ZipArchive::class) === false) {
             return;
         }
 
         $zip = new ZipArchive();
 
         if ($zip->open($path) !== true) {
+            return;
+        }
+
+        if ($failed) {
+            $zip->setArchiveComment(self::FAILED_ARCHIVE_COMMENT);
+        }
+
+        if ($stacks === []) {
+            $zip->close();
+
             return;
         }
 

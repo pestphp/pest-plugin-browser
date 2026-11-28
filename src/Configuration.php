@@ -9,6 +9,7 @@ use Pest\Browser\Contracts\HttpServer;
 use Pest\Browser\Drivers\LaravelHttpServer;
 use Pest\Browser\Enums\BrowserType;
 use Pest\Browser\Enums\ColorScheme;
+use Pest\Browser\Enums\TraceMode;
 use Pest\Browser\Playwright\Playwright;
 
 /**
@@ -148,12 +149,16 @@ final readonly class Configuration
     }
 
     /**
-     * Records a trace of each test, and keeps it when the test fails. Unless running on CI,
+     * Records a trace of each test. By default, traces are kept only when a test fails.
+     * Pass all: true to keep the trace of every test. Unless running on CI,
      * the trace of a failed test is opened once the test suite has finished.
      */
-    public function trace(bool $open = true): self
+    public function trace(bool $open = true, bool $all = false): self
     {
-        Playwright::setShouldTrace($open);
+        Playwright::setShouldTrace(
+            $open,
+            $all ? TraceMode::ON : TraceMode::RETAIN_ON_FAILURE,
+        );
 
         return $this;
     }
