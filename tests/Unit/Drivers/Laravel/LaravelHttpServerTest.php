@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Amp\Http\Server\SocketHttpServer;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Foundation\Http\Events\RequestHandled;
 use Illuminate\Http\Request;
@@ -9,6 +10,7 @@ use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
+use Pest\Browser\ServerManager;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 use function Pest\Laravel\withServerVariables;
@@ -55,6 +57,33 @@ it('serves JS files bigger than the stream chunk size', function (): void {
     visit('/large')
         ->assertTitle('end of file')
         ->assertNoJavascriptErrors();
+});
+
+it('accepts connections with Nagle\'s algorithm off', function (): void {
+    visit('/');
+
+    $http = ServerManager::instance()->http();
+    $server = new ReflectionProperty($http, 'socket')->getValue($http);
+
+    assert($server instanceof SocketHttpServer);
+
+    expect($server->getServers()[0]->getBindContext()->hasTcpNoDelay())->toBeTrue();
+});
+
+it('serves responses without compressing them', function (): void {
+    // Text over the 860 bytes from which Amp's compression middleware would compress it.
+    $filename = 'plain-'.uniqid('', true).'.js';
+    @file_put_contents($filepath = public_path($filename), str_repeat('// '.str_repeat('x', 77)."\n", 110));
+
+    try {
+        $page = visit('/');
+
+        $encoding = $page->script("async () => { const response = await fetch('/{$filename}', { cache: 'no-store' }); await response.arrayBuffer(); return response.headers.get('content-encoding'); }");
+
+        expect($encoding)->toBeNull();
+    } finally {
+        @unlink($filepath);
+    }
 });
 
 it('serves empty JS files', function (): void {
@@ -163,6 +192,45 @@ it('forgets scoped instances when the request throws', function (): void {
     })->toThrow(RuntimeException::class, 'The request failed.');
 
     expect(app('scoped-probe'))->toHaveCount(0);
+});
+
+it('does not leak server exceptions from an earlier request into subsequent requests', function (): void {
+    $this->withoutExceptionHandling();
+
+    Route::get('/failing-route', function (): never {
+        throw new RuntimeException('First request failed.');
+    });
+    Route::get('/successful-route', fn (): string => 'success');
+
+    expect(function (): void {
+        visit('/failing-route')->assertPathIs('/failing-route');
+    })->toThrow(RuntimeException::class, 'First request failed.');
+
+    visit('/successful-route')->assertSee('success');
+});
+
+it('keeps the server exception when a 500 page loads a successful stylesheet', function (): void {
+    $this->withoutExceptionHandling();
+
+    Route::get('/failing-with-css', fn () => response('<link rel="stylesheet" href="/site.css">failed', 500)
+        ->withException(new RuntimeException('Page failed.')));
+    Route::get('/site.css', fn (): Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response => response('body { color: red; }', 200, ['Content-Type' => 'text/css']));
+
+    expect(function (): void {
+        visit('/failing-with-css')->assertSee('failed');
+    })->toThrow(RuntimeException::class, 'Page failed.');
+});
+
+it('keeps the server exception when a 500 page loads a successful iframe', function (): void {
+    $this->withoutExceptionHandling();
+
+    Route::get('/failing-with-iframe', fn () => response('<iframe src="/frame.html"></iframe>failed', 500)
+        ->withException(new RuntimeException('Page failed.')));
+    Route::get('/frame.html', fn (): Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response => response('<p>frame</p>', 200, ['Content-Type' => 'text/html']));
+
+    expect(function (): void {
+        visit('/failing-with-iframe')->assertSee('failed');
+    })->toThrow(RuntimeException::class, 'Page failed.');
 });
 
 it('forgets scoped instances when a streamed response throws', function (): void {

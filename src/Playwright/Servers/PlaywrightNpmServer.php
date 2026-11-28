@@ -29,6 +29,11 @@ final class PlaywrightNpmServer implements PlaywrightServer
     private ?SystemProcess $systemProcess = null;
 
     /**
+     * Whether this process wrote the state file that the parallel workers read.
+     */
+    private bool $persistedStateFile = false;
+
+    /**
      * Creates a new playwright npm server instance.
      */
     private function __construct(
@@ -60,7 +65,10 @@ final class PlaywrightNpmServer implements PlaywrightServer
             return;
         }
 
-        $this->systemProcess = SystemProcess::fromShellCommandline(sprintf(
+        // `exec` makes the shell replace itself with node, so stop() signals the
+        // server itself. Without it, PHP's `sh -c` wrapper receives the signal and
+        // node is re-parented to PID 1 together with the browsers it launched.
+        $this->systemProcess = SystemProcess::fromShellCommandline($this->execPrefix().sprintf(
             $this->command,
             $this->host,
             $this->port,
@@ -86,6 +94,8 @@ final class PlaywrightNpmServer implements PlaywrightServer
             $this->host,
             $this->port,
         );
+
+        $this->persistedStateFile = true;
     }
 
     /**
@@ -94,12 +104,18 @@ final class PlaywrightNpmServer implements PlaywrightServer
     public function stop(): void
     {
         if ($this->systemProcess instanceof SystemProcess && $this->isRunning()) {
-            $this->systemProcess->stop(timeout: 0.1);
+            // Give node a moment to close its browsers on SIGTERM before Symfony
+            // escalates to SIGKILL; the browsers exit on their own once node is gone.
+            $this->systemProcess->stop(timeout: 2.0);
         }
 
         $this->systemProcess = null;
 
-        AlreadyStartedPlaywrightServer::markAsStopped();
+        if ($this->persistedStateFile) {
+            AlreadyStartedPlaywrightServer::markAsStopped();
+
+            $this->persistedStateFile = false;
+        }
     }
 
     /**
@@ -162,6 +178,14 @@ final class PlaywrightNpmServer implements PlaywrightServer
         if (version_compare($version, self::PLAYWRIGHT_VERSION, '<')) {
             throw new PlaywrightOutdatedException();
         }
+    }
+
+    /**
+     * The shell prefix that hands the process its own PID (POSIX only).
+     */
+    private function execPrefix(): string
+    {
+        return DIRECTORY_SEPARATOR === '/' ? 'exec ' : '';
     }
 
     /**

@@ -109,6 +109,8 @@ final class Playwright
         }
 
         self::$browserTypes = [];
+
+        BrowserLogCollector::flush();
     }
 
     /**

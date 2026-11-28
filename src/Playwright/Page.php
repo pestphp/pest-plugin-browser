@@ -262,11 +262,8 @@ final class Page
             'arg' => JavaScriptSerializer::serializeArgument($arg),
         ];
 
-        Client::instance()->execute(
-            $this->guid,
-            'waitForFunction',
-            $params
-        );
+        $response = $this->sendMessage('waitForFunction', $params);
+        $this->processVoidResponse($response);
 
         return $this;
     }
@@ -461,9 +458,10 @@ final class Page
      */
     public function consoleLogs(): array
     {
-        $consoleLogs = $this->evaluate('window.__pestBrowser.consoleLogs || []');
+        $this->flushBrowserReports();
 
         /** @var array<int, array{message: string}> $consoleLogs */
+        $consoleLogs = BrowserLogCollector::consoleLogs($this->frameGuid);
 
         return $consoleLogs;
     }
@@ -515,9 +513,10 @@ final class Page
      */
     public function javaScriptErrors(): array
     {
-        $jsErrors = $this->evaluate('window.__pestBrowser.jsErrors || []');
+        $this->flushBrowserReports();
 
         /** @var array<int, array{message: string}> $jsErrors */
+        $jsErrors = BrowserLogCollector::javaScriptErrors($this->frameGuid);
 
         return $jsErrors;
     }
@@ -600,6 +599,14 @@ final class Page
     public function isClosed(): bool
     {
         return $this->closed;
+    }
+
+    /**
+     * Round-trips to the page so reports it already sent are read off the socket.
+     */
+    private function flushBrowserReports(): void
+    {
+        $this->evaluate('() => undefined');
     }
 
     /**
