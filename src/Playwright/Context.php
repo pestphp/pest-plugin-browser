@@ -122,6 +122,17 @@ final class Context
     }
 
     /**
+     * Exposes a binding on pages created in this context.
+     */
+    public function exposeBinding(string $name): self
+    {
+        $response = $this->sendMessage('exposeBinding', ['name' => $name]);
+        $this->processVoidResponse($response);
+
+        return $this;
+    }
+
+    /**
      * Adds a script which will be evaluated.
      */
     public function addInitScript(string $script): self

@@ -12,7 +12,7 @@ use Pest\Browser\Playwright\Playwright;
 use Pest\Browser\Support\ComputeUrl;
 
 /**
- * @mixin Webpage|AwaitableWebpage
+ * @mixin AwaitableWebpage
  */
 final class PendingAwaitablePage
 {
@@ -180,6 +180,7 @@ final class PendingAwaitablePage
             ...$options,
         ]);
 
+        $context->exposeBinding(InitScript::BINDING_NAME);
         $context->addInitScript(InitScript::get());
 
         if (Playwright::shouldTrace()) {
