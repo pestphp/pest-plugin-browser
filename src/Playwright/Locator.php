@@ -726,6 +726,12 @@ final readonly class Locator
     public function frameLocator(string $selector): self
     {
         $directLocator = new self($this->frameGuid, $selector, $this->strictMode);
+
+        // Wait for the element first: `contentFrame()` does not wait, so an iframe that is
+        // still being inserted would be treated as a container and the lookup below would
+        // wait for an `iframe` inside the iframe itself, which can never match.
+        $directLocator->waitFor(['state' => 'attached']);
+
         $contentFrame = null;
 
         try {
